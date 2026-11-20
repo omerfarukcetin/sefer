@@ -622,19 +622,19 @@ function badgeSvg(icon, color, ok){
 }
 
 /* ================= HEDEFLER, KUTLAMA, HAFTALIK ================= */
-const STORY = [
-  "Peygamberimiz (s.a.v.) “Ameller niyetlere göredir” buyurdu (Buhârî, Müslim). Yolculuğun bir niyetle başladı; her adımın değeri o niyetten gelir.",
-  "“Allah katında amellerin en sevimlisi, az da olsa devamlı olanıdır.” (Buhârî, Müslim) İki haftadır az ama devamlı yürüyorsun.",
-  "“Kişi dostunun dini üzeredir; kiminle dost olduğunuza dikkat edin.” (Ebû Dâvûd, Tirmizî) Kervanda kimlerle yürüdüğün de yolun parçasıdır.",
-  "“Şüphesiz zorlukla beraber bir kolaylık vardır.” (İnşirâh, 5-6) Bir aydır çölde yürüyorsun; işte vaha.",
-  "“Bir toplum kendini değiştirmedikçe Allah onların durumunu değiştirmez.” (Ra'd, 11) Köprüyü geçen sensin.",
-  "“İnsan için ancak çalıştığının karşılığı vardır.” (Necm, 39) Çarşıda emeğinin karşılığını görüyorsun.",
-  "“Allah hiçbir kimseye gücünün yetmediği bir şeyi yüklemez.” (Bakara, 286) En dik yokuşu aştın; demek ki gücün yetiyormuş.",
-  "“Dillerinizin ve renklerinizin farklı olması da O'nun ayetlerindendir.” (Rûm, 22) Limanda her dilden yolcular var.",
-  "“Oku! Yaratan Rabbinin adıyla.” (Alak, 1) İlk emir okumaktı; sahaflar çarşısı ilim yolcusunu bekliyor.",
-  "“Sabredenlere mükâfatları hesapsız ödenecektir.” (Zümer, 10) Kale kapısı sebat edene açılır.",
-  "“İki nimet vardır ki insanların çoğu onlarda aldanmıştır: sağlık ve boş vakit.” (Buhârî) Sen vaktini yeşerttin.",
-  "“Sana yakîn (ölüm) gelinceye kadar Rabbine kulluk et.” (Hicr, 99) Bu sefer bitti; asıl yolculuk devam ediyor."
+const STORY = [ // konak metinleri: kullanıcının vereceği kaynaklarla değiştirilecek
+  "Kervan ilk kez çeşme başında durdu. Yolun uzun ama ilk adımı attın; şimdi önemli olan bırakmamak.",
+  "Hurma ağaçlarının gölgesinde soluklanıyorsun. İki haftadır her gün biraz yürüdün; az ama devamlı olan yol alır.",
+  "Kervansarayda başka yolcularla aynı ateşin başındasın. Kimlerle yürüdüğün, nereye varacağını da belirler.",
+  "Bir aydır çöldesin ve işte vaha. Zorlu günlerin ardından gelen bu serinlik, sebatının karşılığı.",
+  "Taş köprüyü geçtin. Eski alışkanlıkların karşı kıyıda kaldı; geri dönmek için bir sebep yok.",
+  "Çarşıdasın. Biriktirdiğin emek artık görünür oldu; her gün attığın küçük adımlar burada değer buluyor.",
+  "Yolun en dik yokuşu buydu. Nefes nefese ama zirvedesin; demek ki gücün yetiyormuş.",
+  "Limana vardın. Farklı diyarlardan gelen gemiler var; öğrendiğin her yeni kelime sana yeni bir kapı açıyor.",
+  "Sahaflar çarşısındasın. Raflar arasında dolaşırken okuduğun her sayfanın seni nasıl değiştirdiğini fark ediyorsun.",
+  "Kale kapısı önünde duruyorsun. Kapılar ancak sabredip yürümeye devam edene açılır.",
+  "Gül bahçesine vardın. Yolun dikenlerinden geçtin; şimdi emeğinin çiçek açtığını görüyorsun.",
+  "Bu seferin son konağındasın. Neredeyse bir yıl her gün yürüdün. Yeni bir sefere hazırsın."
 ];
 const weekStart = k => { const [y,m,d]=k.split('-').map(Number), dt=new Date(y,m-1,d); return addDays(k,-((dt.getDay()+6)%7)); };
 function weekCount(k=dk()){ const s=weekStart(k); let n=0; for(let i=0;i<7;i++) if(qualified(addDays(s,i))) n++; return n; }
