@@ -175,6 +175,48 @@ button.zikr:active{transform:scale(.97)}
 .excuse-link button{display:block;margin:0 auto 4px;font-weight:700;color:var(--white);text-decoration:underline;text-underline-offset:3px;font-size:15px}
 .excuse-link button:disabled{opacity:.4}
 
+/* ---------- hedefler ve kutlama ---------- */
+.goals{margin-top:18px}
+.goals h3{font-size:17px;margin-bottom:4px}
+.grow{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:10px 0;border-bottom:1px solid var(--lapis3)}
+.grow:last-child{border:0;padding-bottom:0}
+.grow .tx b{font-size:15px}
+.mbar{display:block;height:6px;border-radius:9px;background:var(--lapis3);overflow:hidden;margin-top:6px}
+.mbar i{display:block;height:100%;border-radius:9px;transition:width .5s}
+.mbar.big{height:10px}
+.why{display:inline-block;margin-left:8px;font-size:12px;font-weight:700;color:#7a5a34;background:rgba(232,176,60,.25);padding:2px 8px;border-radius:99px}
+.bprog{display:block;margin:4px 6px 0;font-size:11px;color:var(--mist)}
+.bprog .mbar{height:4px;margin:0 0 3px}
+.badge.no{opacity:1}.badge.no svg{opacity:.4}
+.weekbar{margin-top:12px;background:var(--lapis2);border:1px solid var(--lapis3);border-radius:var(--r-md);padding:12px}
+.wdots{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:10px}
+.wdots i{font-style:normal;text-align:center;font-size:12px;font-weight:700;padding:7px 0;border-radius:9px;background:var(--lapis);color:var(--mist)}
+.wdots i.on{background:var(--turq);color:var(--lapis)}
+.wdots i.ex{background:repeating-linear-gradient(45deg,var(--lapis),var(--lapis) 4px,var(--lapis3) 4px,var(--lapis3) 8px)}
+.wdots i.today{outline:2px solid var(--saffron);outline-offset:-2px}
+.nico{position:relative;display:inline-flex}
+.ndot{position:absolute;top:-2px;right:-4px;width:9px;height:9px;border-radius:50%;background:var(--coral);border:2px solid var(--lapis)}
+.hero.risk .lantern{animation:flick 1.6s ease-in-out infinite}
+.hero.risk h2{color:var(--coral)}
+@keyframes flick{0%,100%{opacity:1}45%{opacity:.55}55%{opacity:.85}70%{opacity:.5}}
+.celebrate{text-align:center;padding:6px 0 0}
+.celebrate h3{font-size:24px;margin-top:6px}
+.celebrate>p{color:var(--mist);margin:8px auto 0;max-width:36ch;line-height:1.45}
+.celebrate blockquote{margin:12px auto 0;max-width:40ch;font-size:16px;line-height:1.55;font-weight:600;padding:14px 16px;border-radius:14px;background:var(--parch);color:var(--ink)}
+.celebrate .reslist{margin:14px 0 4px}
+.cel-lantern{width:150px;margin:0 auto}
+.cel-lantern .lantern{width:150px}
+.cel-lv,.cel-konak{width:110px;height:110px;margin:4px auto 0;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle,rgba(232,176,60,.35),transparent 70%)}
+.cel-lv b{width:84px;height:84px;border-radius:50%;display:grid;place-items:center;font-size:40px;font-weight:800;color:var(--ink);background:var(--saffron);box-shadow:0 0 0 6px rgba(232,176,60,.3)}
+.cel-konak{position:relative}.cel-konak span{position:absolute;inset:16px;background:var(--saffron);transform:rotate(45deg);border-radius:14px}.cel-konak b{position:relative;font-size:36px;font-weight:800;color:var(--ink)}
+.cel-note{display:inline-flex;align-items:center;gap:6px;margin-top:10px;font-size:14px;font-weight:700;color:var(--saffron)}
+.cel-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:16px 0 10px}
+.cel-stats div{background:var(--lapis);border:1px solid var(--lapis3);border-radius:12px;padding:10px 6px}
+.cel-stats b{display:block;font-size:22px;color:var(--saffron)}
+.cel-stats small{font-size:12px;color:var(--mist);font-weight:600}
+.celebrate .cel-lv,.celebrate .cel-konak,.celebrate .cel-lantern{animation:pop .6s cubic-bezier(.2,1.4,.4,1)}
+@keyframes pop{from{transform:scale(.4);opacity:0}}
+
 /* ---------- ayarlar ---------- */
 .setwrap{max-width:680px}
 .seg{display:flex;flex-wrap:wrap;gap:4px;background:var(--lapis2);border:1px solid var(--lapis3);border-radius:14px;padding:4px}
@@ -293,7 +335,9 @@ nav button.on:before{content:"";position:absolute;top:0;width:28px;height:3px;bo
   .cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:32px;align-items:start}
   .group.first,.panel.first{margin-top:0}
   .v-bugun{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr)}
-  .v-bugun .a-hero{position:sticky;top:100px}
+  .v-bugun{grid-template-areas:"hero tasks" "goals tasks";grid-template-rows:auto 1fr}
+  .v-bugun .a-hero{grid-area:hero}.v-bugun .a-tasks{grid-area:tasks}.v-bugun .a-goals{grid-area:goals}
+  .v-bugun .a-goals .goals{margin-top:0}
   .hero .txt h2{font-size:30px}
   .v-harita{grid-template-columns:min(600px,calc((100vh - 170px)*.818)) minmax(0,1fr)}
   .v-harita .a-map,.v-harita .reslist{margin-top:0}
@@ -409,7 +453,7 @@ const KEY = 'sefer-v1';
 function defaults(){
   return {xp:0, res:{huzur:0,ilim:0,guc:0,lisan:0}, tlEarned:0, transfers:[],
     goal:{name:'1 gram altın', amt:3500}, builds:{gonul:0,ilim:0,kuvvet:0,liman:0},
-    days:{}, tasks:JSON.parse(JSON.stringify(DEF_TASKS)), comp:'Kandil', ui:{theme:'dark',font:1,vib:true,sound:true,fx:true}};
+    days:{}, tasks:JSON.parse(JSON.stringify(DEF_TASKS)), comp:'Kandil', weekGoal:5, weeks:{}, ui:{theme:'dark',font:1,vib:true,sound:true,fx:true}};
 }
 function merge(o){ const d=defaults(); return {...d, ...o, res:{...d.res,...(o.res||{})}, builds:{...d.builds,...(o.builds||{})}, goal:{...d.goal,...(o.goal||{})}, ui:{...d.ui,...(o.ui||{})}}; }
 function load(){ try{ const r=localStorage.getItem(KEY); if(r) return merge(JSON.parse(r)); }catch(e){} return defaults(); }
@@ -577,9 +621,100 @@ function badgeSvg(icon, color, ok){
     <g transform="translate(-10 -10) scale(.84)" fill="none" stroke="${ok?color:TC.subDim}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${IC[icon]}</g></g></svg>`;
 }
 
+/* ================= HEDEFLER, KUTLAMA, HAFTALIK ================= */
+const STORY = [
+  "Peygamberimiz (s.a.v.) “Ameller niyetlere göredir” buyurdu (Buhârî, Müslim). Yolculuğun bir niyetle başladı; her adımın değeri o niyetten gelir.",
+  "“Allah katında amellerin en sevimlisi, az da olsa devamlı olanıdır.” (Buhârî, Müslim) İki haftadır az ama devamlı yürüyorsun.",
+  "“Kişi dostunun dini üzeredir; kiminle dost olduğunuza dikkat edin.” (Ebû Dâvûd, Tirmizî) Kervanda kimlerle yürüdüğün de yolun parçasıdır.",
+  "“Şüphesiz zorlukla beraber bir kolaylık vardır.” (İnşirâh, 5-6) Bir aydır çölde yürüyorsun; işte vaha.",
+  "“Bir toplum kendini değiştirmedikçe Allah onların durumunu değiştirmez.” (Ra'd, 11) Köprüyü geçen sensin.",
+  "“İnsan için ancak çalıştığının karşılığı vardır.” (Necm, 39) Çarşıda emeğinin karşılığını görüyorsun.",
+  "“Allah hiçbir kimseye gücünün yetmediği bir şeyi yüklemez.” (Bakara, 286) En dik yokuşu aştın; demek ki gücün yetiyormuş.",
+  "“Dillerinizin ve renklerinizin farklı olması da O'nun ayetlerindendir.” (Rûm, 22) Limanda her dilden yolcular var.",
+  "“Oku! Yaratan Rabbinin adıyla.” (Alak, 1) İlk emir okumaktı; sahaflar çarşısı ilim yolcusunu bekliyor.",
+  "“Sabredenlere mükâfatları hesapsız ödenecektir.” (Zümer, 10) Kale kapısı sebat edene açılır.",
+  "“İki nimet vardır ki insanların çoğu onlarda aldanmıştır: sağlık ve boş vakit.” (Buhârî) Sen vaktini yeşerttin.",
+  "“Sana yakîn (ölüm) gelinceye kadar Rabbine kulluk et.” (Hicr, 99) Bu sefer bitti; asıl yolculuk devam ediyor."
+];
+const weekStart = k => { const [y,m,d]=k.split('-').map(Number), dt=new Date(y,m-1,d); return addDays(k,-((dt.getDay()+6)%7)); };
+function weekCount(k=dk()){ const s=weekStart(k); let n=0; for(let i=0;i<7;i++) if(qualified(addDays(s,i))) n++; return n; }
+const WEEK_BONUS = {xp:100, each:15};
+function checkWeek(){ // haftalık hedef ödülünü verir ya da geri alır; verildiyse true
+  S.weeks=S.weeks||{}; const wk=weekStart(dk()), goal=+S.weekGoal||5, n=weekCount(), w=S.weeks[wk]||{};
+  if(n>=goal && !w.claimed){ S.weeks[wk]={claimed:true}; S.xp+=WEEK_BONUS.xp; Object.keys(S.res).forEach(k=>S.res[k]+=WEEK_BONUS.each); return true; }
+  if(n<goal && w.claimed){ S.weeks[wk]={claimed:false}; S.xp=Math.max(0,S.xp-WEEK_BONUS.xp); Object.keys(S.res).forEach(k=>S.res[k]=Math.max(0,S.res[k]-WEEK_BONUS.each)); }
+  return false;
+}
+function badgeList(){
+  const q=qualifiedCount(), bs=bestStreak(), built=Object.values(S.builds).reduce((a,b)=>a+b,0);
+  return [
+    ['flame','#e8b03c','İlk adım',q,1],['flame','#e0674f','7 gün seri',bs,7],['flame','#d4413a','30 gün seri',bs,30],['flame','#ff9a3d','100 gün seri',bs,100],
+    ['huzur','#2bb3b1',"40 gün Kur'an",taskDays('kuran'),40],['huzur','#4fd1c5','40 gün tesbihat',taskDays('tesbih'),40],
+    ['guc','#e0674f','30 gün spor',taskDays('spor'),30],['lisan','#6cc28a','30 gün İngilizce',taskDays('ing'),30],
+    ['ilim','#8fa8ff','30 gün kitap',taskDays('kitap'),30],['map','#e8b03c','İlk yapı',built,1],
+    ['tl','#e8b03c','İlk aktarım',S.transfers.length,1],['huzur','#2bb3b1','Vadi tamam',S.builds.gonul,3]
+  ].map(([i,c,n,cur,goal])=>({i,c,n,cur:Math.min(cur,goal),goal,ok:cur>=goal}));
+}
+function nextBuild(){ // en yakın inşa hedefi
+  const lv=level(); let best=null;
+  for(const R of REGIONS){ if(lv<R.unlock) continue; const b=S.builds[R.id], B=R.builds[b]; if(!B) continue;
+    const left=Math.max(0,B.c-S.res[R.res]); if(!best||left/B.c<best.left/best.B.c) best={R,B,left}; }
+  return best;
+}
+const canBuildAny = () => { const nb=nextBuild(); return REGIONS.some(R=>level()>=R.unlock && R.builds[S.builds[R.id]] && S.res[R.res]>=R.builds[S.builds[R.id]].c); };
+function multGoal(){ const s=streak(); if(s>=30) return {txt:'En yüksek çarpandasın: ×2',cur:1,goal:1};
+  const g=s>=7?30:7, m=s>=7?'×2':'×1,5'; return {txt:`${g-s} gün daha devam edersen birikim hakların ${m} olur`,cur:s,goal:g}; }
+function goalsPanel(){
+  const wk=weekCount(), wg=+S.weekGoal||5, claimed=(S.weeks||{})[weekStart(dk())]?.claimed;
+  const mg=multGoal(), nb=nextBuild();
+  const bad=badgeList().filter(b=>!b.ok).sort((a,b)=>b.cur/b.goal-a.cur/a.goal)[0];
+  const row=(icon,color,title,sub,cur,goal,act,id)=>`<button class="grow" ${act?`data-act="${act}" data-id="${id||''}"`:''}><span class="medal sm" style="--c:${color}">${ico(icon)}</span>
+    <span class="tx"><b>${title}</b><small>${sub}</small><span class="mbar"><i style="width:${Math.round(Math.min(1,cur/(goal||1))*100)}%;background:${color}"></i></span></span></button>`;
+  let h='';
+  h+=row('route','#e8b03c','Haftalık hedef', claimed?`Tamamlandı. Bonus alındı: +${WEEK_BONUS.xp} XP ve her kaynaktan +${WEEK_BONUS.each}`:`Bu hafta ${wk} / ${wg} konak günü. Ödül: +${WEEK_BONUS.xp} XP, her kaynaktan +${WEEK_BONUS.each}`, wk, wg);
+  h+=row('flame','#e0674f','Seri bonusu', mg.txt, mg.cur, mg.goal);
+  if(nb) h+=row(nb.R.res, RES[nb.R.res].color, nb.left?`${nb.B.n} için ${nb.left} ${RES[nb.R.res].name} kaldı`:`${nb.B.n} inşa edilebilir`, nb.left?nb.R.name:`${nb.R.name} bölgesine git ve inşa et`, S.res[nb.R.res], nb.B.c, 'tab','harita');
+  if(bad) h+=row(bad.i, bad.c, `${bad.n} rozeti`, `${bad.cur} / ${bad.goal}`, bad.cur, bad.goal, 'tab','sefer');
+  return `<div class="panel goals"><h3>Yakın hedefler</h3>${h}</div>`;
+}
+function celebrate(ev){
+  const q=qualifiedCount(), into=q%7, k=Math.floor(q/7), s=streak(), lv=level();
+  const r=rec(), tot={}; let tlSum=0;
+  Object.values(r.done).forEach(e=>{ tot[e.res]=(tot[e.res]||0)+e.amt; tlSum+=e.tl; });
+  if(r.card&&r.card.done){ tot[r.card.earn.res]=(tot[r.card.earn.res]||0)+r.card.earn.amt; tlSum+=r.card.earn.tl; }
+  const gains=Object.entries(tot).map(([k2,v])=>`<span class="res" style="--c:${RES[k2].color}">${ico(k2)}<em>+${v}</em> ${RES[k2].name}</span>`).join('')+(tlSum?`<span class="res" style="--c:var(--saffron)">${ico('tl')}<em>+${tl(tlSum)}</em></span>`:'');
+  let top='', title='', body='';
+  if(ev.level){ const op=REGIONS.filter(x=>x.unlock===ev.level).map(x=>x.name);
+    top=`<div class="cel-lv"><b>${ev.level}</b></div>`; title=`Seviye ${ev.level}: ${title_(ev.level)}`;
+    body=op.length?`<p>${op.join(', ')} haritada sisten çıktı. Biriken kaynaklarınla orada da inşa edebilirsin.</p>`:`<p>Yolculuğunda yeni bir unvan kazandın.</p>`; }
+  else if(ev.konak!=null){ const K2=KONAK[ev.konak];
+    top=`<div class="cel-konak"><span></span><b>${ev.konak+1}</b></div>`; title=`Yeni konak: ${K2.n}`;
+    body=`<blockquote>${esc(STORY[ev.konak]||K2.p)}</blockquote>`; }
+  else { top=`<div class="cel-lantern">${lanternSvg(1)}</div>`; title='Bugünün konağına vardın'; body=`<p>Kandilin tam yandı, kervanın bir adım ilerledi.</p>`; }
+  const week = ev.week ? `<div class="cel-note">${ico('route')} Haftalık hedef tamam: +${WEEK_BONUS.xp} XP ve her kaynaktan +${WEEK_BONUS.each}</div>` : '';
+  modal(`<div class="celebrate">${top}<h3>${title}</h3>${body}
+    <div class="reslist" style="justify-content:center">${gains}</div>${week}
+    <div class="cel-stats"><div><b>${s}</b><small>günlük seri</small></div><div><b>${into}/7</b><small>${KONAK[k]?KONAK[k].n+' konağına':'sonraki konağa'}</small></div><div><b>${lv}</b><small>seviye</small></div></div>
+    <p class="muted" style="font-size:14px">${multGoal().txt}.</p></div>`);
+  if(S.ui.fx!==false) setTimeout(()=>{ const el=document.querySelector('.celebrate h3'); if(el){ burst(el,'#e8b03c'); burst(el,'#2bb3b1'); } },250);
+}
+const title_ = l => title(l);
+function evening(){ return new Date().getHours()>=20; }
+function smartCard(){
+  const lv=level(), today=dk();
+  const resOk = Object.keys(RES).filter(k=>{ const R=REGIONS.find(x=>x.res===k); return !R || lv>=R.unlock || S.tasks.some(t=>t.res===k); });
+  const idle = k => { const la=lastActive(k); return la? daysBetween(la,today) : 999; };
+  const scored = resOk.map(k=>({k,d:idle(k)+Math.random()*.5})).sort((a,b)=>b.d-a.d);
+  const pick = scored[0] ? scored[0].k : 'ilim';
+  const pool = CARDS.map((c,i)=>({c,i})).filter(x=>x.c.res===pick);
+  const ch = pool[Math.floor(Math.random()*pool.length)] || {i:Math.floor(Math.random()*CARDS.length)};
+  const d = idle(pick);
+  return {i:ch.i, why: d>=999 ? `${RES[pick].name} alanında henüz başlamadın` : d>=2 ? `${d} gündür ${RES[pick].name} kazanmadın` : ''};
+}
+
 /* ================= EFEKTLER ================= */
-let toastT;
-function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2800); }
+let toastT, celebrateAt=0;
+function toast(m){ if(Date.now()-celebrateAt<1500) return; const t=$('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2800); }
 function burst(el,color){ if(S.ui.fx===false) return;
   const b=el.getBoundingClientRect(), x=b.left+b.width-30, y=b.top+b.height/2;
   const cols=[color,'#e8b03c','#f1e6cc'];
@@ -594,11 +729,10 @@ function closeModal(){ $('modal').classList.remove('open'); }
 /* ================= OYUN MANTIĞI ================= */
 function applyEarn(e,s){ S.res[e.res]=Math.max(0,(S.res[e.res]||0)+s*e.amt); S.tlEarned=Math.max(0,S.tlEarned+s*e.tl); S.xp=Math.max(0,S.xp+s*e.xp); }
 function afterGain(before){
-  const lv=level();
-  if(lv>before.lv){ const op=REGIONS.filter(r=>r.unlock===lv).map(r=>r.name);
-    toast(`Seviye ${lv}: ${title(lv)}.`+(op.length?` ${op.join(', ')} haritada açıldı.`:'')); }
-  else if(qualifiedCount()>before.q){ const q=qualifiedCount();
-    toast(q%7===0&&KONAK[q/7-1] ? `Yeni konağa vardın: ${KONAK[q/7-1].n}` : 'Bugünün konağına vardın. Kervan bir adım ilerledi.'); }
+  const week=checkWeek(), lv=level(), q=qualifiedCount();
+  const ev={level: lv>before.lv?lv:null, konak: (q>before.q && q%7===0 && KONAK[q/7-1]) ? q/7-1 : null, week};
+  if(ev.level||ev.konak!=null||q>before.q){ save(); celebrateAt=Date.now(); setTimeout(()=>celebrate(ev),60); }
+  else if(week) toast(`Haftalık hedef tamam: +${WEEK_BONUS.xp} XP ve her kaynaktan +${WEEK_BONUS.each}`);
 }
 function completeTask(id,el,n=1){
   const t=S.tasks.find(x=>x.id===id); if(!t) return; const r=rec(); if(r.done[id]) return;
@@ -608,7 +742,7 @@ function completeTask(id,el,n=1){
 }
 function undoTask(id){
   const r=rec(); if(!r.done[id]) return; applyEarn(r.done[id],-1); delete r.done[id];
-  if(r.prog) delete r.prog[id]; save(); render();
+  if(r.prog) delete r.prog[id]; checkWeek(); save(); render();
 }
 function toggleTask(id,el){
   const t=S.tasks.find(x=>x.id===id); if(!t) return;
@@ -717,10 +851,10 @@ function excuseBox(n){
   return `<div class="excuse-link"><button data-act="excuse" data-id="${t}" ${left<=0?'disabled':''}>Bugün mazeretliyim</button><span>Hastalık, yolculuk gibi günler için. Bu ay ${Math.max(0,left)} hakkın kaldı.</span></div>`;
 }
 let justDrew=false;
-function drawCard(){ const r=rec(); if(r.card) return; r.card={i:Math.floor(Math.random()*CARDS.length),done:false,earn:null}; save(); justDrew=true; render(); justDrew=false; }
+function drawCard(){ const r=rec(); if(r.card) return; const sc=smartCard(); r.card={i:sc.i,why:sc.why,done:false,earn:null}; save(); justDrew=true; render(); justDrew=false; }
 function toggleCard(_,el){
   const r=rec(); if(!r.card) return; const C=CARDS[r.card.i], before={lv:level(),q:qualifiedCount()};
-  if(r.card.done){ applyEarn(r.card.earn,-1); r.card.done=false; r.card.earn=null; }
+  if(r.card.done){ applyEarn(r.card.earn,-1); r.card.done=false; r.card.earn=null; checkWeek(); }
   else{ const e={res:C.res,amt:C.amt,tl:C.dini?0:Math.round(C.tl*mult()),xp:15}; r.card.done=true; r.card.earn=e; applyEarn(e,1); burst(el,RES[C.res].color); afterGain(before); }
   save(); render();
 }
@@ -752,24 +886,27 @@ function taskRow(t,r){
 }
 function vBugun(){
   const r=rec(), n=doneCount(r), m=mult(), p=Math.min(1,n/MIN);
-  const head = n===0 ? `${esc(S.comp)} seni bekliyor` : n<MIN ? `${MIN-n} görev daha` : 'Bugünün konağına vardın';
-  const sub = n===0 ? `Bugün ${MIN} görev tamamladığında kandilin tam yanar ve kervanın bir adım ilerler.`
+  const risk = evening() && n<MIN && !excused(dk());
+  const st = streakFrom(addDays(dk(),-1));
+  let head = n===0 ? `${esc(S.comp)} seni bekliyor` : n<MIN ? `${MIN-n} görev daha` : 'Bugünün konağına vardın';
+  let sub = n===0 ? `Bugün ${MIN} görev tamamladığında kandilin tam yanar ve kervanın bir adım ilerler.`
     : n<MIN ? 'Her görev kandilini biraz daha aydınlatıyor.' : 'Allah kabul etsin. Dilersen kalan görevlerle daha fazla kaynak topla.';
+  if(risk){ head=`${esc(S.comp)} sönmek üzere`; sub = st>0 ? `Gece yarısına kadar ${MIN-n} görev daha tamamla, ${st} günlük serin korunsun.` : `Gece yarısına kadar ${MIN-n} görev daha tamamlarsan yeni bir seri başlatırsın.`; }
   const dini=S.tasks.filter(t=>t.dini), gel=S.tasks.filter(t=>!t.dini), ex=excuseBox(n);
   let card;
-  if(!r.card) card=`<button class="draw" data-act="draw"><span style="color:var(--saffron)">${ico('card')}</span><span><b>Günün kartını çek</b><small>Her gün rastgele bir bonus görev</small></span></button>`;
+  if(!r.card) card=`<button class="draw" data-act="draw"><span style="color:var(--saffron)">${ico('card')}</span><span><b>Günün kartını çek</b><small>En çok ihmal ettiğin alandan bir bonus görev</small></span></button>`;
   else{ const C=CARDS[r.card.i], R=RES[C.res], d=r.card.done, tlv=d?r.card.earn.tl:(C.dini?0:Math.round(C.tl*m));
     card=`<div class="tile-card ${justDrew?'new':''}">
-      <div class="in"><h3>Günün kartı</h3><p>${esc(C.t)}</p>
+      <div class="in"><h3>Günün kartı${r.card.why?`<span class="why">${esc(r.card.why)}</span>`:''}</h3><p>${esc(C.t)}</p>
       <div class="row"><span class="gain"><span style="color:${R.color==='#8fa8ff'?'#4a5fc4':R.color}">+${C.amt} ${R.name}</span>${tlv?`<span style="color:#9a6b10">+${tl(tlv)}</span>`:''}<span>+15 XP</span></span>
       <button class="btn ${d?'turq':'dark'}" style="margin-left:auto" data-act="card">${d?ico('check')+' Tamamlandı':'Tamamladım'}</button></div></div></div>`; }
-  return `<div class="cols v-bugun"><div class="a-hero"><section class="hero">${lanternSvg(p)}<div class="txt"><h2>${head}</h2><p>${sub}</p>
+  return `<div class="cols v-bugun"><div class="a-hero"><section class="hero ${risk?'risk':''}">${lanternSvg(p)}<div class="txt"><h2>${head}</h2><p>${sub}</p>
       ${m>1?`<span class="mult">${ico('flame')} Seri bonusu ×${String(m).replace('.',',')}</span>`:''}</div></section>
     ${ex.includes('warn')?ex:''}
     ${card}</div><div class="a-tasks">
     <div class="group first"><div class="ghead"><h3>Dini görevler</h3><small>Huzur, seri ve rozet</small></div>${dini.map(t=>taskRow(t,r)).join('')||'<p class="muted">Ayarlar\'dan görev ekleyebilirsin.</p>'}</div>
     <div class="group"><div class="ghead"><h3>Gelişim görevleri</h3><small>Birikim hakkı kazandırır</small></div>${gel.map(t=>taskRow(t,r)).join('')||'<p class="muted">Ayarlar\'dan görev ekleyebilirsin.</p>'}</div>
-    ${ex.includes('warn')?'':ex}</div></div>`;
+    ${ex.includes('warn')?'':ex}</div><div class="a-goals">${goalsPanel()}</div></div>`;
 }
 function vHarita(){
   const lv=level();
@@ -815,20 +952,14 @@ function openDay(k){
     ${rows+card||''}`);
 }
 function vSefer(){
-  const q=qualifiedCount(), bs=bestStreak(), built=Object.values(S.builds).reduce((a,b)=>a+b,0);
-  const B=[
-    ['flame','#e8b03c','İlk adım',q>=1],['flame','#e0674f','7 gün seri',bs>=7],['flame','#d4413a','30 gün seri',bs>=30],['flame','#ff9a3d','100 gün seri',bs>=100],
-    ['huzur','#2bb3b1',"40 gün Kur'an",taskDays('kuran')>=40],['huzur','#4fd1c5','40 gün tesbihat',taskDays('tesbih')>=40],
-    ['guc','#e0674f','30 gün spor',taskDays('spor')>=30],['lisan','#6cc28a','30 gün İngilizce',taskDays('ing')>=30],
-    ['ilim','#8fa8ff','30 gün kitap',taskDays('kitap')>=30],['map','#e8b03c','İlk yapı',built>=1],
-    ['tl','#e8b03c','İlk aktarım',S.transfers.length>0],['huzur','#2bb3b1','Vadi tamam',S.builds.gonul>=3]
-  ];
+  const q=qualifiedCount(), bs=bestStreak(), B=badgeList(), wk=weekCount(), wg=+S.weekGoal||5;
   return `<header class="phead"><h1>Sefer yolu</h1><p>En az ${MIN} görev yaptığın her gün kervanın bir adım ilerler, yedi adımda yeni bir konağa varırsın.</p></header><div class="cols v-sefer"><div class="a-stats">
-    <div class="stats"><div class="stat"><b>${q}</b><small>gün yol</small></div><div class="stat"><b>${streak()}</b><small>günlük seri</small></div><div class="stat"><b>${bs}</b><small>en uzun seri</small></div></div></div>
+    <div class="stats"><div class="stat"><b>${q}</b><small>gün yol</small></div><div class="stat"><b>${streak()}</b><small>günlük seri</small></div><div class="stat"><b>${bs}</b><small>en uzun seri</small></div></div>
+    <div class="weekbar"><div class="between"><b>Bu hafta</b><span class="muted">${wk} / ${wg} konak günü</span></div><div class="wdots">${[0,1,2,3,4,5,6].map(i=>{ const k2=addDays(weekStart(dk()),i); return `<i class="${qualified(k2)?'on':excused(k2)?'ex':''} ${k2===dk()?'today':''}">${['Pt','Sa','Ça','Pe','Cu','Ct','Pz'][i]}</i>`; }).join('')}</div></div></div>
     <div class="a-cal">${vCal()}</div>
     <div class="a-route route">${routeSvg(q)}</div>
-    <div class="a-badges group"><div class="ghead"><h3>Rozetler</h3><small>${B.filter(b=>b[3]).length} / ${B.length}</small></div>
-    <div class="badges">${B.map(b=>`<div class="badge ${b[3]?'':'no'}">${badgeSvg(b[0],b[1],b[3])}${b[2]}</div>`).join('')}</div></div></div>`;
+    <div class="a-badges group"><div class="ghead"><h3>Rozetler</h3><small>${B.filter(b=>b.ok).length} / ${B.length}</small></div>
+    <div class="badges">${B.map(b=>`<div class="badge ${b.ok?'':'no'}">${badgeSvg(b.i,b.c,b.ok)}${b.n}${b.ok?'':`<span class="bprog"><span class="mbar"><i style="width:${Math.round(b.cur/b.goal*100)}%;background:${b.c}"></i></span>${b.cur}/${b.goal}</span>`}</div>`).join('')}</div></div></div>`;
 }
 function vHazine(){
   const T=transferred(), bal=balance(), g=S.goal, pct=Math.min(100,Math.round(T/(g.amt||1)*100)), m=mult();
@@ -840,7 +971,7 @@ function vHazine(){
   <div class="panel"><div class="between"><h3>${esc(g.name)}</h3><span class="muted">%${pct}</span></div>
     <div class="bar"><i style="width:${pct}%"></i></div><p class="muted" style="margin-top:8px;font-size:14px">${tl(T)} birikti, hedef ${tl(g.amt)}</p>
     <div class="tiers">${VAULT.map(v=>`<div class="${T>=v.a?'ok':''}">${bldSvg(v.k,60,50).replace('class="bld"','')}${v.n}<br><span class="muted">${tl(v.a)}</span></div>`).join('')}</div></div></div><div class="a-right">
-  <div class="panel first"><h3>Seri bonusu</h3><p class="muted" style="line-height:1.45">7 gün aralıksız devam edersen birikim hakların 1,5 katına, 30 günde 2 katına çıkar. Şu anki çarpanın: <b style="color:var(--saffron)">×${String(m).replace('.',',')}</b>. Dini görevler para kazandırmaz; karşılıkları Huzur, seri ve rozettir.</p></div>
+  <div class="panel first"><h3>Seri bonusu</h3><div class="mbar big" style="margin:4px 0 10px"><i style="width:${Math.round(multGoal().cur/multGoal().goal*100)}%;background:var(--coral)"></i></div><p style="font-weight:700;margin-bottom:6px">${multGoal().txt}.</p><p class="muted" style="line-height:1.45">7 gün aralıksız devam edersen birikim hakların 1,5 katına, 30 günde 2 katına çıkar. Şu anki çarpanın: <b style="color:var(--saffron)">×${String(m).replace('.',',')}</b>. Dini görevler para kazandırmaz; karşılıkları Huzur, seri ve rozettir.</p></div>
   ${S.transfers.length?`<div class="panel"><h3>Aktarımlar</h3>${S.transfers.slice().reverse().slice(0,15).map(t=>`<div class="log"><span class="muted">${new Date(t.d).toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'})}</span><b>${tl(t.a)}</b></div>`).join('')}</div>`:''}</div></div>`;
 }
 let setTab='gorevler';
@@ -887,6 +1018,7 @@ function vAyarlar(){
       <label class="switch"><span><b>Hareketli efektler</b><small>Kutlama parçacıkları ve geçişler</small></span><input type="checkbox" data-f="uiFx" ${u.fx!==false?'checked':''}></label></div>`;
   } else if(setTab==='genel'){
     body=`<div class="panel first"><label><span class="lab">Kandilinin adı</span><input value="${esc(S.comp)}" data-f="comp"></label>
+      <label style="display:block;margin-top:12px"><span class="lab">Haftalık hedef (konak günü)</span><input type="number" min="1" max="7" value="${esc(S.weekGoal||5)}" data-f="weekGoal"></label>
       <div style="margin-top:12px"><span class="lab">Birikim hedefi</span><div class="between"><input value="${esc(S.goal.name)}" data-f="goalName" aria-label="Hedef adı"><input type="number" style="max-width:130px" value="${esc(S.goal.amt)}" data-f="goalAmt" aria-label="Hedef tutarı"></div></div></div>
       <div class="panel"><h3>Telefona kur</h3>${installHtml()}</div>
       <div class="panel"><h3>Günlük hatırlatıcı</h3><p class="muted" style="font-size:14px;line-height:1.45">Her gün seçtiğin saatte telefonunun takvimi sana SEFER'i hatırlatır.</p>
@@ -924,7 +1056,7 @@ function readHash(){ const h=location.hash.slice(1); tab=TABS.some(t=>t[0]===h)?
 function render(){
   $('hdr').innerHTML=vHeader();
   $('view').innerHTML=TABS.find(t=>t[0]===tab)[3]();
-  $('nav').innerHTML=TABS.map(t=>`<button class="${t[0]===tab?'on':''}" data-act="tab" data-id="${t[0]}" aria-current="${t[0]===tab?'page':'false'}">${ico(t[1])}${t[2]}</button>`).join('');
+  $('nav').innerHTML=TABS.map(t=>`<button class="${t[0]===tab?'on':''}" data-act="tab" data-id="${t[0]}" aria-current="${t[0]===tab?'page':'false'}"><span class="nico">${ico(t[1])}${t[0]==='harita'&&canBuildAny()?'<i class="ndot" aria-label="İnşa edilebilir yapı var"></i>':''}</span>${t[2]}</button>`).join('');
 }
 function go(id){ tab=id; try{ history.replaceState(null,'','#'+id); }catch(e){} render(); window.scrollTo(0,0); }
 
@@ -941,7 +1073,7 @@ const ACT={
   treset:()=>{ if(!TM) return; TM.left=TM.total; TM.running=false; tmSave(); clearInterval(tmInt); renderTimer(); render(); },
   pg:d=>{ const i=$('pgn'); i.value=Math.max(1,Math.round(+i.value||1)+(+d)); pgPreview(S.tasks.find(x=>x.id===i.dataset.task)); },
   pgsave:id=>savePages(id,Math.max(1,Math.round(+$('pgn').value||1))),
-  excuse:k=>{ if(excuseLeft(k)<=0) return toast('Bu ayki mazeret hakların bitti.'); rec(k).excused=true; save();
+  excuse:k=>{ if(excuseLeft(k)<=0) return toast('Bu ayki mazeret hakların bitti.'); rec(k).excused=true; checkWeek(); save();
     toast(k===dk()?'Bugün mazeretli sayıldı. Serin korunuyor.':'Dün mazeretli sayıldı. Serin kurtarıldı.'); render(); },
   unexcuse:k=>{ if(S.days[k]) S.days[k].excused=false; save(); render(); },
   day:k=>openDay(k),
@@ -998,6 +1130,7 @@ document.addEventListener('keydown',e=>{
 document.addEventListener('change',e=>{
   const el=e.target, f=el.dataset&&el.dataset.f; if(!f) return;
   if(f==='uiVib'||f==='uiSound'||f==='uiFx'){ S.ui[{uiVib:'vib',uiSound:'sound',uiFx:'fx'}[f]]=el.checked; save(); applyUI(); return; }
+  if(f==='weekGoal'){ S.weekGoal=Math.min(7,Math.max(1,Math.round(+el.value||5))); checkWeek(); save(); return; }
   if(f==='comp') S.comp=el.value.trim()||'Kandil';
   else if(f==='goalName') S.goal.name=el.value.trim()||'Hedef';
   else if(f==='goalAmt') S.goal.amt=Math.max(1,+el.value||1);
@@ -1022,7 +1155,8 @@ if('serviceWorker' in navigator && location.protocol==='https:' && !/claude/.tes
   window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
 }
 document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'){ tick(); render(); } });
-readHash(); tmRestore(); applyUI(); render();
+readHash(); tmRestore(); applyUI(); const wkNew=checkWeek(); save(); render();
+if(wkNew) setTimeout(()=>toast(`Haftalık hedef tamam: +${WEEK_BONUS.xp} XP ve her kaynaktan +${WEEK_BONUS.each}`),400);
 </script>
 </body>
 </html>
