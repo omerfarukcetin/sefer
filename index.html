@@ -866,7 +866,7 @@ const ACT={
   day:k=>openDay(k),
   calm:d=>{ const [y,m]=(calM||dk().slice(0,7)).split('-').map(Number); const n=new Date(y,m-1+(+d),1); calM=dk(n).slice(0,7); render(); },
   install:async()=>{ if(!deferredPrompt) return; deferredPrompt.prompt(); try{ await deferredPrompt.userChoice; }catch(e){} deferredPrompt=null; render(); },
-  ics:()=>{ const [hh,mm]=(($('rmt')||{}).value||'21:00').split(':'); const d=new Date(); const ymd=dk(d).replace(/-/g,'');
+  ics:()=>{ if(/claude/.test(location.hostname)) return toast('Hatırlatıcıyı GitHub adresindeki SEFER\'den ekleyebilirsin.'); const [hh,mm]=(($('rmt')||{}).value||'21:00').split(':'); const d=new Date(); const ymd=dk(d).replace(/-/g,'');
     const stamp=new Date().toISOString().replace(/[-:]/g,'').slice(0,15)+'Z', url=location.href.split('#')[0];
     const ics=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//SEFER//TR','CALSCALE:GREGORIAN','BEGIN:VEVENT','UID:sefer-gunluk@omerfarukcetin.github.io','DTSTAMP:'+stamp,
       `DTSTART:${ymd}T${hh}${mm}00`,'DURATION:PT10M','RRULE:FREQ=DAILY','SUMMARY:SEFER: Günün görevleri','DESCRIPTION:Kandilini yakmayı unutma. '+url,'URL:'+url,
