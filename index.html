@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#13294b">
+<meta name="description" content="Kendi gelişim yolculuğunu oynadığın oyun: günlük görevler, harita, sefer yolu ve birikim.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="SEFER">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>SEFER — Kendi Yolculuğun</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --lapis:#13294b; --lapis2:#1a3561; --lapis3:#27497d; --line:#2e5390;
+  --turq:#2bb3b1; --coral:#e0674f; --saffron:#e8b03c; --leaf:#6cc28a; --sky:#8fa8ff;
+  --parch:#f1e6cc; --parch2:#e4d3ac; --ink:#22202b; --mist:#a9b8d3; --white:#f7f3ea;
+  --r-lg:22px; --r-md:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--lapis);color:var(--white);font-family:"Plus Jakarta Sans",system-ui,sans-serif;font-weight:500;font-size:16px;-webkit-tap-highlight-color:transparent}
+body{min-height:100vh;padding-bottom:92px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='.045' stroke-width='1'%3E%3Crect x='18' y='18' width='20' height='20'/%3E%3Crect x='18' y='18' width='20' height='20' transform='rotate(45 28 28)'/%3E%3C/g%3E%3C/svg%3E")}
+.wrap{max-width:520px;margin:0 auto;padding:0 max(16px,env(safe-area-inset-right)) 0 max(16px,env(safe-area-inset-left))}
+h1,h2,h3,.serif{font-family:"Plus Jakarta Sans",system-ui,sans-serif}
+h1,h2,h3{letter-spacing:-.02em}
+h2{font-size:28px;font-weight:800;line-height:1.15}
+h3{font-weight:800}
+b,strong{font-weight:800}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--saffron);outline-offset:2px}
+input,select,textarea{font:inherit;color:var(--white);background:var(--lapis);border:1px solid var(--line);border-radius:10px;padding:9px 11px;width:100%}
+input:disabled{opacity:.4}
+.muted{color:var(--mist)}
+.ico{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+
+/* ---------- header ---------- */
+#hdr{position:sticky;top:0;z-index:5;padding:calc(14px + env(safe-area-inset-top)) 0 12px;background:linear-gradient(var(--lapis) 75%,rgba(19,41,75,0))}
+.hrow{display:flex;align-items:center;gap:12px}
+.ring{position:relative;width:46px;height:46px;flex:none}
+.ring svg{position:absolute;inset:0;transform:rotate(-90deg)}
+.ring b{position:absolute;inset:0;display:grid;place-items:center;font-family:"Plus Jakarta Sans",sans-serif;font-size:18px;font-weight:800;color:var(--saffron)}
+.who{line-height:1.15}
+.who strong{font-family:"Plus Jakarta Sans",sans-serif;font-size:19px;font-weight:800;letter-spacing:.5px}
+.who span{display:block;font-size:13px;color:var(--mist)}
+.pills{margin-left:auto;display:flex;gap:6px}
+.pill{display:flex;align-items:center;gap:5px;background:var(--lapis2);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-weight:700;font-size:14px;white-space:nowrap}
+.pill .ico{width:16px;height:16px}
+
+/* ---------- today ---------- */
+.hero{display:flex;align-items:center;gap:16px;padding:6px 0 4px}
+.lantern{width:128px;flex:none}
+.hero .txt h2{font-size:26px}
+.hero .txt p{color:var(--mist);margin-top:6px;line-height:1.4}
+.mult{display:inline-flex;align-items:center;gap:6px;margin-top:10px;font-size:14px;font-weight:700;color:var(--saffron);background:rgba(232,176,60,.12);border:1px solid rgba(232,176,60,.35);border-radius:999px;padding:4px 10px}
+
+.group{margin-top:22px}
+.ghead{display:flex;align-items:baseline;justify-content:space-between;margin:0 2px 8px}
+.ghead h3{font-size:19px;font-weight:700}
+.ghead small{color:var(--mist);font-size:13px}
+
+.task{width:100%;display:flex;align-items:center;gap:12px;background:var(--lapis2);border:1px solid var(--lapis3);border-radius:var(--r-md);padding:11px 12px;margin-bottom:8px;text-align:left;transition:background .25s,border-color .25s,transform .12s}
+.task:active{transform:scale(.985)}
+.medal{width:40px;height:40px;flex:none;border-radius:12px;display:grid;place-items:center;color:var(--c);background:color-mix(in srgb,var(--c) 16%,transparent);border:1px solid color-mix(in srgb,var(--c) 40%,transparent)}
+.tx{flex:1;min-width:0}
+.tx b{display:block;font-size:16px;font-weight:800;letter-spacing:-.01em}
+.tx small{color:var(--mist);font-size:13px;font-weight:600}
+.gain{display:flex;flex-direction:column;align-items:flex-end;gap:2px;font-size:13px;font-weight:800}
+.gain span{display:flex;align-items:center;gap:3px}
+.gain .ico{width:14px;height:14px}
+.tick{width:28px;height:28px;flex:none;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;transition:.25s}
+.tick .ico{width:16px;height:16px;stroke-width:2.6;opacity:0;transform:scale(.5);transition:.25s}
+.task.done{background:color-mix(in srgb,var(--turq) 14%,var(--lapis2));border-color:color-mix(in srgb,var(--turq) 45%,var(--lapis3))}
+.task.done .tick{background:var(--turq);border-color:var(--turq);color:var(--lapis)}
+.task.done .tick .ico{opacity:1;transform:none}
+.task.done .tx b{color:var(--mist)}
+
+/* surprise card = iznik tile */
+.tile-card{position:relative;margin-top:18px;border-radius:var(--r-lg);overflow:hidden;background:var(--parch);color:var(--ink);box-shadow:inset 0 0 0 3px #1d4f8a,inset 0 0 0 7px var(--parch),inset 0 0 0 8.5px #2bb3b1}
+.tile-card .border{position:absolute;inset:0;pointer-events:none}
+.tile-card .in{position:relative;padding:22px 20px 18px}
+.tile-card h3{font-size:14px;font-weight:700;color:#8a3a2a}
+.tile-card p{font-family:"Plus Jakarta Sans",sans-serif;font-size:21px;font-weight:700;line-height:1.25;margin:4px 0 14px}
+.tile-card .row{display:flex;align-items:center;gap:10px}
+.tile-card .gain{flex-direction:row;gap:10px;color:#5a4a2c}
+.tile-card.new{animation:turn .6s cubic-bezier(.2,.8,.2,1)}
+@keyframes turn{from{transform:perspective(600px) rotateY(80deg);opacity:.2}}
+.draw{width:100%;margin-top:18px;border-radius:var(--r-lg);border:1.5px dashed var(--saffron);padding:20px;display:flex;align-items:center;gap:14px;text-align:left;background:rgba(232,176,60,.06)}
+.draw b{display:block;font-family:"Plus Jakarta Sans",sans-serif;font-size:19px}
+.draw small{color:var(--mist)}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;background:var(--saffron);color:var(--ink);font-weight:800;border-radius:12px;padding:10px 16px;white-space:nowrap}
+.btn.turq{background:var(--turq)}
+.btn.ghost{background:transparent;color:var(--white);border:1px solid var(--line)}
+.btn.dark{background:var(--ink);color:var(--parch)}
+.btn.red{background:var(--coral);color:#fff}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+
+/* ---------- map ---------- */
+.reslist{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0}
+.res{display:flex;align-items:center;gap:5px;font-weight:700;font-size:14px;padding:5px 10px;border-radius:999px;background:var(--lapis2);border:1px solid var(--lapis3);color:var(--c)}
+.res em{font-style:normal;color:var(--white)}
+.res .ico{width:16px;height:16px}
+.mapwrap{border-radius:var(--r-lg);overflow:hidden;box-shadow:0 14px 40px rgba(0,0,0,.35)}
+.mapwrap svg{display:block;width:100%;height:auto}
+.rg{cursor:pointer}
+.rg.faded{filter:saturate(.15) brightness(.92)}
+.rg:focus{outline:none}
+.maphint{font-size:14px;color:var(--mist);margin-top:12px;line-height:1.45}
+
+/* ---------- sefer ---------- */
+.route svg{width:100%;height:auto;display:block}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0 6px}
+.stat{background:var(--lapis2);border:1px solid var(--lapis3);border-radius:var(--r-md);padding:12px 10px}
+.stat b{display:block;font-family:"Plus Jakarta Sans",sans-serif;font-size:26px;font-weight:800;color:var(--saffron);line-height:1}
+.stat small{color:var(--mist);font-size:13px}
+.badges{display:grid;grid-template-columns:repeat(4,1fr);gap:12px 6px;margin-top:10px}
+.badge{text-align:center;font-size:12px;font-weight:700;line-height:1.2}
+.badge svg{width:58px;height:58px;display:block;margin:0 auto 4px}
+.badge.no{opacity:.35}
+
+/* ---------- hazine ---------- */
+.vaultcard{background:var(--parch);color:var(--ink);border-radius:var(--r-lg);padding:20px;margin-top:12px;position:relative;overflow:hidden}
+.vaultcard .amt{font-family:"Plus Jakarta Sans",sans-serif;font-size:44px;font-weight:800;line-height:1;margin:6px 0 4px;color:#6b4a12}
+.vaultcard p{color:#5d5446;font-size:15px;line-height:1.4}
+.vaultcard .row{display:flex;gap:8px;margin-top:14px}
+.vaultcard input{background:#fff;color:var(--ink);border-color:var(--parch2)}
+.panel{background:var(--lapis2);border:1px solid var(--lapis3);border-radius:var(--r-lg);padding:16px;margin-top:12px}
+.panel h3{font-size:18px;font-weight:700;margin-bottom:8px}
+.bar{height:12px;background:var(--lapis);border-radius:99px;overflow:hidden;border:1px solid var(--line)}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,#c98a1c,var(--saffron));border-radius:99px;transition:width .6s}
+.tiers{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px;text-align:center;font-size:13px}
+.tiers div{padding:10px 4px;border-radius:12px;border:1px solid var(--line)}
+.tiers div.ok{border-color:var(--saffron);background:rgba(232,176,60,.1)}
+.tiers svg{width:60px;height:50px;display:block;margin:0 auto 4px}
+.tiers div:not(.ok) svg{opacity:.35}
+.log{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--lapis3);font-size:15px}
+.log:last-child{border:0}
+
+/* ---------- settings ---------- */
+.trow{border:1px solid var(--lapis3);background:var(--lapis2);border-radius:var(--r-md);padding:12px;margin-bottom:10px;display:grid;gap:8px}
+.g3{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:8px}
+.lab{display:block;font-size:13px;color:var(--mist);margin-bottom:3px}
+.ck{display:flex;gap:8px;align-items:center;font-size:14px}
+.ck input{width:18px;height:18px;accent-color:var(--turq)}
+.between{display:flex;justify-content:space-between;align-items:center;gap:8px}
+textarea{min-height:90px;font-size:12px}
+
+/* ---------- araçlar ---------- */
+.g2{display:grid;grid-template-columns:1.4fr 1fr;gap:8px}
+.tick.tool{border-color:transparent;background:var(--lapis);color:var(--mist)}
+.tick.tool .ico{opacity:1;transform:none;stroke-width:1.9}
+.zikr{position:relative;display:block;width:min(260px,72vw);aspect-ratio:1;margin:18px auto;border-radius:50%;background:radial-gradient(circle,#1f3f72 0 60%,var(--lapis) 61%);user-select:none;-webkit-user-select:none;touch-action:manipulation}
+button.zikr:active{transform:scale(.97)}
+.zikr .zr{position:absolute;inset:0;width:100%;height:100%}
+.zikr #zring{transition:stroke-dasharray .2s}
+.zc{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.zc b{font-family:"Plus Jakarta Sans",sans-serif;font-size:62px;font-weight:800;line-height:1}
+.zc small{color:var(--mist);font-size:15px}
+.zc em{font-style:normal;font-family:"Plus Jakarta Sans",sans-serif;font-size:19px;color:var(--turq);margin-top:6px;min-height:24px}
+.stepper{display:flex;gap:10px;align-items:center;justify-content:center;margin:20px 0 8px}
+.stepper .btn{width:52px;height:52px;font-size:24px;padding:0;border-radius:50%}
+.stepper input{width:110px;text-align:center;font-family:"Plus Jakarta Sans",sans-serif;font-size:34px;font-weight:800;padding:6px}
+.excuse{display:flex;flex-direction:column;align-items:flex-start;gap:12px;margin-top:22px}
+.excuse p{flex:1;font-size:14px;line-height:1.4;color:var(--mist)}
+.excuse.warn{border-color:color-mix(in srgb,var(--coral) 60%,transparent);background:color-mix(in srgb,var(--coral) 10%,var(--lapis2))}
+.excuse.warn p{color:var(--white)}
+.excuse-link{margin-top:22px;text-align:center;font-size:13px;color:var(--mist)}
+.excuse-link button{display:block;margin:0 auto 4px;font-weight:700;color:var(--white);text-decoration:underline;text-underline-offset:3px;font-size:15px}
+.excuse-link button:disabled{opacity:.4}
+
+/* ---------- nav ---------- */
+nav#side{position:fixed;bottom:0;left:0;right:0;z-index:6;background:rgba(15,33,61,.96);backdrop-filter:blur(8px);border-top:1px solid var(--lapis3);padding-bottom:env(safe-area-inset-bottom)}
+nav .in{display:flex;max-width:520px;margin:0 auto}
+.brand,.side-foot{display:none}
+nav button{flex:1;padding:10px 0 12px;font-size:12px;font-weight:700;color:var(--mist);display:flex;flex-direction:column;align-items:center;gap:4px;position:relative}
+nav button .ico{width:23px;height:23px}
+nav button.on{color:var(--saffron)}
+nav button.on:before{content:"";position:absolute;top:0;width:28px;height:3px;border-radius:0 0 4px 4px;background:var(--saffron)}
+
+/* ---------- modal / toast / particles ---------- */
+#modal{position:fixed;inset:0;background:rgba(8,16,30,.6);display:none;align-items:flex-end;justify-content:center;z-index:20}
+#modal.open{display:flex}
+.sheet{background:var(--lapis2);border-top:1px solid var(--line);width:100%;max-width:520px;border-radius:24px 24px 0 0;padding:10px 18px calc(18px + env(safe-area-inset-bottom));max-height:86vh;overflow:auto;animation:up .28s cubic-bezier(.2,.8,.2,1)}
+.sheet:before{content:"";display:block;width:40px;height:4px;border-radius:9px;background:var(--line);margin:0 auto 14px}
+@keyframes up{from{transform:translateY(60px);opacity:0}}
+.sheet h3{font-size:24px;font-weight:800}
+.brow{display:flex;align-items:center;gap:12px;padding:10px;border-radius:var(--r-md);margin-top:10px;border:1px solid var(--lapis3);background:var(--lapis)}
+.brow svg.bld{width:64px;height:52px;flex:none;background:var(--parch);border-radius:10px}
+.brow .tx small{display:flex;align-items:center;gap:4px}
+.brow.built{border-color:color-mix(in srgb,var(--turq) 50%,transparent)}
+.brow.lock{opacity:.45}
+#toast{position:fixed;left:50%;top:14px;transform:translate(-50%,-220%);visibility:hidden;background:var(--parch);color:var(--ink);padding:12px 18px;border-radius:14px;font-weight:700;font-size:15px;z-index:30;transition:transform .4s cubic-bezier(.2,.8,.2,1);max-width:92vw;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+#toast.show{transform:translate(-50%,0);visibility:visible}
+.p{position:fixed;pointer-events:none;z-index:40;width:8px;height:8px;border-radius:2px;animation:fly .8s ease-out forwards}
+@keyframes fly{to{transform:translate(var(--dx),var(--dy)) rotate(200deg) scale(.4);opacity:0}}
+/* ---------- harita yan liste ---------- */
+.ptitle{margin-top:4px}
+.v-harita .reslist{margin-top:14px}
+.rlist{display:grid;gap:8px;margin-top:14px}
+.rrow{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--lapis2);border:1px solid var(--lapis3);border-radius:var(--r-md);padding:10px 12px}
+.rpips{display:flex;gap:4px}.rpips i{width:8px;height:8px;border-radius:50%;background:var(--lapis3)}.rpips i.on{background:var(--saffron)}
+.v-harita .a-map{margin-top:12px}
+
+/* ---------- takvim ---------- */
+.calbox{margin-top:16px}
+.cnav{width:40px;height:40px;padding:0;font-size:22px;border-radius:12px}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-top:12px}
+.cal>b{font-size:12px;color:var(--mist);text-align:center;padding-bottom:4px;font-weight:700}
+.cd{position:relative;aspect-ratio:1;border-radius:10px;background:var(--lapis);border:1px solid var(--lapis3);font-weight:700;font-size:14px;display:grid;place-items:center}
+.cd i{position:absolute;right:4px;bottom:2px;font-style:normal;font-size:9px;opacity:.75}
+.cd.part{background:color-mix(in srgb,var(--turq) 22%,var(--lapis));border-color:color-mix(in srgb,var(--turq) 40%,transparent)}
+.cd.full{background:var(--turq);border-color:var(--turq);color:var(--lapis)}
+.cd.ex{background:repeating-linear-gradient(135deg,rgba(232,176,60,.22) 0 5px,transparent 5px 10px);border-color:rgba(232,176,60,.6)}
+.cd.today{box-shadow:0 0 0 2px var(--saffron)}
+.cd.fut{opacity:.3}
+.calleg{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;font-size:12px;color:var(--mist);font-weight:600}
+.calleg span{display:flex;align-items:center;gap:6px}
+.calleg i{width:12px;height:12px;border-radius:4px;display:inline-block}
+.calleg i.full{background:var(--turq)}.calleg i.part{background:color-mix(in srgb,var(--turq) 30%,var(--lapis))}.calleg i.ex{border:1px solid var(--saffron);background:rgba(232,176,60,.25)}
+.calsum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px;text-align:center}
+.calsum b{display:block;font-size:22px;color:var(--saffron)}.calsum small{color:var(--mist);font-size:12px;font-weight:600}
+.a-app{margin-top:22px}
+.a-app .ico{width:16px;height:16px;vertical-align:-3px;color:var(--turq)}
+
+/* ---------- tablet ---------- */
+@media (min-width:700px){
+  .wrap{max-width:720px;padding:0 28px}
+  nav .in{max-width:720px}
+  .badges{grid-template-columns:repeat(6,1fr)}
+  .rlist{grid-template-columns:1fr 1fr}
+}
+/* ---------- masaüstü ---------- */
+@media (min-width:1000px){
+  body{padding-bottom:40px}
+  nav#side{top:0;right:auto;width:232px;border-top:0;border-right:1px solid var(--lapis3);background:#0f213d;display:flex;flex-direction:column;padding:26px 16px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:22px;letter-spacing:.06em;padding:0 10px 26px}
+  .side-foot{display:block;margin-top:auto;padding:0 10px;color:var(--mist);font-size:13px;font-weight:600}
+  nav .in{flex-direction:column;gap:4px;max-width:none;margin:0}
+  nav button{flex:none;flex-direction:row;justify-content:flex-start;gap:12px;padding:12px 14px;border-radius:12px;font-size:15px}
+  nav button:hover{background:var(--lapis2);color:var(--white)}
+  nav button.on{background:var(--lapis2)}
+  nav button.on:before{top:12px;bottom:12px;left:0;width:3px;height:auto;border-radius:0 4px 4px 0}
+  .wrap{max-width:1180px;margin-left:232px;padding:0 44px}
+  #hdr{padding:26px 0 18px}
+  .who strong{display:none}
+  .who span{font-size:15px;color:var(--white);font-weight:700}
+  h2{font-size:32px}
+  .ptitle{margin:4px 0 18px}
+  .cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:32px;align-items:start}
+  .group.first,.panel.first{margin-top:0}
+  .v-bugun{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr)}
+  .v-bugun .a-hero{position:sticky;top:100px}
+  .hero .txt h2{font-size:30px}
+  .v-harita{grid-template-columns:min(600px,calc((100vh - 170px)*.818)) minmax(0,1fr)}
+  .v-harita .a-map,.v-harita .reslist{margin-top:0}
+  .v-harita .rlist{grid-template-columns:1fr}
+  .v-sefer{grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);grid-template-areas:"route stats" "route cal" "route badges";grid-template-rows:auto auto 1fr}
+  .v-sefer .a-cal{grid-area:cal}.v-sefer .a-cal .calbox{margin-top:0}
+  .v-sefer .a-stats{grid-area:stats}.v-sefer .a-route{grid-area:route}.v-sefer .a-badges{grid-area:badges;margin-top:0}
+  .v-sefer .a-stats p{margin-top:0!important}
+  .badges{grid-template-columns:repeat(4,1fr)}
+  .v-hazine .vaultcard{margin-top:0}
+  .v-ayarlar{grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);grid-template-areas:"prof tasks" "app tasks" "bk tasks";grid-template-rows:auto auto 1fr}
+  .v-ayarlar .a-app{grid-area:app;margin-top:0}
+  .v-ayarlar .a-prof{grid-area:prof}.v-ayarlar .a-tasks{grid-area:tasks;margin-top:0}.v-ayarlar .a-bk{grid-area:bk;margin-top:0!important}
+  #modal{align-items:center}
+  .sheet{border-radius:24px;border:1px solid var(--line);max-width:480px;padding-bottom:22px}
+  .sheet:before{display:none}
+  .task:hover,.rrow:hover{border-color:var(--line)}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<nav id="side"><div class="brand"><svg viewBox="0 0 24 24" class="ico" style="color:var(--saffron);width:26px;height:26px"><path d="M15.5 3.5a8.5 8.5 0 1 0 5 13.4A7 7 0 0 1 15.5 3.5z" fill="none" stroke="currentColor" stroke-width="2"/></svg>SEFER</div><div class="in" id="nav"></div><p class="side-foot">Her gün bir adım.</p></nav>
+<div class="wrap">
+  <header id="hdr"></header>
+  <main id="view"></main>
+</div>
+<div id="modal"><div class="sheet" id="sheet"></div></div>
+<div id="toast" role="status"></div>
+
+<script>
+/* ================= İKONLAR ================= */
+const IC = {
+  huzur:'<path d="M15.5 3.5a8.5 8.5 0 1 0 5 13.4A7 7 0 0 1 15.5 3.5z"/><path d="M18 7.5l.6 1.3 1.4.2-1 1 .2 1.4-1.2-.7-1.2.7.2-1.4-1-1 1.4-.2z"/>',
+  ilim:'<path d="M12 6.5C10 5 7 4.5 3.5 5v13c3.5-.5 6.5 0 8.5 1.5 2-1.5 5-2 8.5-1.5V5C17 4.5 14 5 12 6.5z"/><path d="M12 6.5v13"/>',
+  guc:'<path d="M6.5 7v10M3.5 9.5v5M17.5 7v10M20.5 9.5v5M6.5 12h11"/>',
+  lisan:'<path d="M4 5.5h16v10H10l-4.5 3.5v-3.5H4z"/><path d="M8 9.5h8M8 12h5"/>',
+  tl:'<circle cx="12" cy="12" r="9"/><path d="M10.5 7v10c2.8 0 4.5-1.6 4.5-4M8 11.5l6-2M8 14.5l6-2"/>',
+  check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  flame:'<path d="M12 3c1 3.5 5 5.5 5 10a5 5 0 0 1-10 0c0-2.2 1-3.6 2.2-4.7.2 1.6 1 2.7 2 3.2C10.6 9 11 5.6 12 3z"/>',
+  sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/>',
+  map:'<path d="M3 6.5l6-2.5 6 2.5 6-2.5v13.5l-6 2.5-6-2.5-6 2.5z"/><path d="M9 4v13.5M15 6.5V20"/>',
+  route:'<circle cx="6" cy="18" r="2.2"/><circle cx="18" cy="6" r="2.2"/><path d="M8.2 18H15a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h6.8"/>',
+  vault:'<ellipse cx="12" cy="6" rx="7" ry="2.8"/><path d="M5 6v4c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8V6M5 10v4c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8v-4M5 14v4c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8v-4"/>',
+  sliders:'<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/>',
+  card:'<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M12 7.5l1.4 3 3.1.4-2.3 2.1.6 3.1-2.8-1.6-2.8 1.6.6-3.1-2.3-2.1 3.1-.4z"/>',
+  lock:'<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  timer:'<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9.5 2.5h5"/>',
+  beads:'<circle cx="12" cy="5" r="1.9"/><circle cx="17.5" cy="9" r="1.9"/><circle cx="17.5" cy="15" r="1.9"/><circle cx="12" cy="19" r="1.9"/><circle cx="6.5" cy="15" r="1.9"/><circle cx="6.5" cy="9" r="1.9"/>',
+  page:'<path d="M6 3.5h9l3.5 3.5v13.5H6z"/><path d="M9.5 11.5h6M9.5 15h6"/>',
+  pin:'<path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>'
+};
+const ico = (k,cls='') => `<svg class="ico ${cls}" viewBox="0 0 24 24" aria-hidden="true">${IC[k]}</svg>`;
+
+/* ================= VERİ ================= */
+const RES = {
+  huzur:{name:'Huzur', color:'#2bb3b1'},
+  ilim: {name:'İlim',  color:'#8fa8ff'},
+  guc:  {name:'Güç',   color:'#e0674f'},
+  lisan:{name:'Lisan', color:'#6cc28a'}
+};
+const REGIONS = [
+  {id:'gonul', name:'Gönül Vadisi', res:'huzur', unlock:1, x:92,  y:118, desc:"Kur'an ve zikirle yeşeren vadi.",
+   builds:[{n:'Çeşme',k:'cesme',c:30},{n:'Gül bahçesi',k:'gul',c:80},{n:'Cami',k:'cami',c:160}]},
+  {id:'ilim',  name:'İlim Şehri',   res:'ilim',  unlock:1, x:268, y:112, desc:'Fıkıh ve kitaplarla büyüyen şehir.',
+   builds:[{n:'Kitap evi',k:'kitapevi',c:30},{n:'Kütüphane',k:'kutuphane',c:80},{n:'Medrese',k:'medrese',c:160}]},
+  {id:'kuvvet',name:'Kuvvet Dağı',  res:'guc',   unlock:2, x:90,  y:318, desc:'Her antrenmanla yükselen dağ.',
+   builds:[{n:'Patika',k:'patika',c:30},{n:'Er meydanı',k:'meydan',c:80},{n:'Kale',k:'kale',c:160}]},
+  {id:'liman', name:'Liman',        res:'lisan', unlock:3, x:272, y:326, desc:'Dünyaya açılan kapın: İngilizce.',
+   builds:[{n:'İskele',k:'iskele',c:30},{n:'Yelkenli',k:'yelkenli',c:80},{n:'Kalyon',k:'kalyon',c:160}]}
+];
+const REG = Object.fromEntries(REGIONS.map(r=>[r.id,r]));
+const VAULT = [{n:'Küp',k:'kup',a:500},{n:'Sandık',k:'sandik',a:2500},{n:'Hazine odası',k:'hazineodasi',a:10000}];
+
+const DEF_TASKS = [
+  {id:'kuran', name:"Kur'an-ı Kerim oku", hint:'Okuduğun sayfa kadar Huzur', res:'huzur', amt:5, tl:0, dini:true, type:'pages', goal:0},
+  {id:'tesbih',name:'Tesbihat',            hint:'33 / 33 / 33',  res:'huzur', amt:6,  tl:0, dini:true, type:'count', goal:99},
+  {id:'dinikitap', name:'Dini kitap oku',  hint:'Günde 8 sayfa', res:'ilim', amt:1, tl:0, dini:true, type:'pages', goal:8},
+  {id:'kitap', name:'Kitap oku',           hint:'20 sayfa',      res:'ilim',  amt:10, tl:15, type:'check', goal:0},
+  {id:'spor',  name:'Spor yap',            hint:'20 dakika',     res:'guc',   amt:10, tl:20, type:'timer', goal:20},
+  {id:'ing',   name:'İngilizce konuş',     hint:'10 dakika sesli pratik', res:'lisan', amt:10, tl:15, type:'timer', goal:10}
+];
+const CARDS = [
+  {t:'5 sayfa fazladan kitap oku', res:'ilim', amt:12, tl:10},
+  {t:'15 dakika yürüyüş yap', res:'guc', amt:12, tl:10},
+  {t:'20 şınav ve 20 mekik çek', res:'guc', amt:12, tl:10},
+  {t:'5 yeni İngilizce kelime öğren, her biriyle bir cümle kur', res:'lisan', amt:12, tl:10},
+  {t:'Kısa bir İngilizce video izle, 3 cümleyi sesli tekrar et', res:'lisan', amt:12, tl:10},
+  {t:'Okuduğun kitaptan 3 not çıkar', res:'ilim', amt:12, tl:10},
+  {t:'Bir saat telefonsuz zaman geçir', res:'ilim', amt:12, tl:10},
+  {t:'Bir aile büyüğünü ara, hâlini sor', res:'huzur', amt:12, tl:0, dini:true},
+  {t:'Kimse görmeden bir iyilik yap', res:'huzur', amt:12, tl:0, dini:true},
+  {t:'Bir hadis-i şerif ezberle', res:'huzur', amt:12, tl:0, dini:true},
+  {t:'Bir ayetin mealini ve tefsirini oku', res:'huzur', amt:12, tl:0, dini:true}
+];
+const KONAK = [
+  {n:'Çeşme Başı',   p:'Niyet ettin, yola çıktın. İlk suyu burada içtin.'},
+  {n:'Hurma Bahçesi',p:'İki haftalık sebat. Gölgede biraz soluklan.'},
+  {n:'Kervansaray',  p:'Yolun yarısı arkadaştır.'},
+  {n:'Vaha',         p:'Bir ay geçti. Çöl artık seni korkutmuyor.'},
+  {n:'Taş Köprü',    p:'Eski alışkanlıkların karşı kıyıda kaldı.'},
+  {n:'Çarşı',        p:'Emeğinin karşılığını görmeye başladın.'},
+  {n:'Dağ Geçidi',   p:'En dik yokuş buydu ve onu aştın.'},
+  {n:'Liman Hanı',   p:'Uzak diyarlardan haberler geliyor.'},
+  {n:'Sahaflar',     p:'İlim yolcusu için bir ziyafet.'},
+  {n:'Kale Kapısı',  p:'Kapılar sebat edene açılır.'},
+  {n:'Gül Bahçesi',  p:'Dikenlerden sonra güller.'},
+  {n:'Seferin Sonu', p:'Bir yıla yakın yol. Yeni sefer seni bekliyor.'}
+];
+const TITLES = ['Yolcu','Talebe','Sebatkâr','Kâşif','Rehber','Sefer ustası'];
+const MIN = 3;
+
+/* ================= DURUM ================= */
+const KEY = 'sefer-v1';
+function defaults(){
+  return {xp:0, res:{huzur:0,ilim:0,guc:0,lisan:0}, tlEarned:0, transfers:[],
+    goal:{name:'1 gram altın', amt:3500}, builds:{gonul:0,ilim:0,kuvvet:0,liman:0},
+    days:{}, tasks:JSON.parse(JSON.stringify(DEF_TASKS)), comp:'Kandil'};
+}
+function merge(o){ const d=defaults(); return {...d, ...o, res:{...d.res,...(o.res||{})}, builds:{...d.builds,...(o.builds||{})}, goal:{...d.goal,...(o.goal||{})}}; }
+function load(){ try{ const r=localStorage.getItem(KEY); if(r) return merge(JSON.parse(r)); }catch(e){} return defaults(); }
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+let S = load();
+if(S.comp==='Yoldaş') S.comp='Kandil';
+S.tasks.forEach(t=>{ if(!t.type){ const d=DEF_TASKS.find(x=>x.id===t.id);
+  t.type=d?d.type:'check'; t.goal=d?d.goal:0; if(d&&d.type==='pages'){ t.amt=d.amt; t.hint=d.hint; } } });
+{ const i=S.tasks.findIndex(t=>t.id==='fikih'&&t.name==='Fıkıh çalış');
+  if(i>=0 && !S.tasks.some(t=>t.id==='dinikitap')) S.tasks[i]=JSON.parse(JSON.stringify(DEF_TASKS.find(t=>t.id==='dinikitap'))); }
+S.tasks.forEach(t=>{ if(t.id==='dinikitap' && !t.goal){ t.goal=8; t.hint='Günde 8 sayfa'; } });
+const EXCUSES = 2; // ayda mazeret hakkı
+
+/* ================= YARDIMCILAR ================= */
+const dk = (d=new Date()) => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const addDays = (k,n) => { const [y,m,d]=k.split('-').map(Number); return dk(new Date(y,m-1,d+n)); };
+const esc = s => String(s??'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const tl = n => Math.round(n).toLocaleString('tr-TR')+' ₺';
+const $ = id => document.getElementById(id);
+function rec(k=dk()){ if(!S.days[k]) S.days[k]={done:{},card:null}; return S.days[k]; }
+function doneCount(r){ return r ? Object.keys(r.done||{}).length + (r.card&&r.card.done?1:0) : 0; }
+const qualified = k => doneCount(S.days[k]) >= MIN;
+const excused = k => !!(S.days[k]&&S.days[k].excused);
+const okDay = k => qualified(k)||excused(k);
+function streakFrom(k){ let n=0; while(okDay(k)){ if(qualified(k)) n++; k=addDays(k,-1); } return n; }
+function streak(){ const t=dk(); return okDay(t)?streakFrom(t):streakFrom(addDays(t,-1)); }
+function excuseLeft(k=dk()){ const m=k.slice(0,7); return EXCUSES-Object.keys(S.days).filter(d=>d.startsWith(m)&&S.days[d].excused).length; }
+function mult(){ const s=streakFrom(addDays(dk(),-1)); return s>=30?2:s>=7?1.5:1; }
+function qualifiedCount(){ return Object.keys(S.days).filter(qualified).length; }
+function bestStreak(){ const ks=Object.keys(S.days).filter(okDay).sort(); let b=0,c=0,p=null;
+  for(const k of ks){ c=(p&&addDays(p,1)===k)?c:0; if(qualified(k)) c++; b=Math.max(b,c); p=k; } return b; }
+function taskDays(id){ return Object.values(S.days).filter(r=>r.done&&r.done[id]).length; }
+const level = () => 1+Math.floor(Math.sqrt(S.xp/50));
+const title = l => TITLES[Math.min(l-1,TITLES.length-1)];
+const transferred = () => S.transfers.reduce((a,t)=>a+t.a,0);
+const balance = () => Math.max(0, S.tlEarned-transferred());
+function lastActive(res){ const ks=Object.keys(S.days).sort().reverse();
+  for(const k of ks){ const r=S.days[k];
+    if(Object.values(r.done||{}).some(e=>e.res===res)||(r.card&&r.card.done&&r.card.earn&&r.card.earn.res===res)) return k; }
+  return null; }
+function daysBetween(a,b){ const p=s=>{const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)}; return Math.round((p(b)-p(a))/864e5); }
+
+/* ================= ÇİZİMLER (minyatür tarzı) ================= */
+const K='#3b2a1a'; // kontur
+const SW=`stroke="${K}" stroke-width="1.3" stroke-linejoin="round"`;
+const BLD = {
+  cesme:`<rect x="-11" y="-11" width="22" height="11" fill="#f6eedb" ${SW}/><path d="M-11-11Q0-25 11-11z" fill="#2bb3b1" ${SW}/><path d="M-4 0v-6a4 4 0 0 1 8 0v6z" fill="#1d4f8a" ${SW}/><path d="M0-25v-4" ${SW}/>`,
+  gul:`<g ${SW}><circle cx="-10" cy="-6" r="6" fill="#4f8f4a"/><circle cx="0" cy="-9" r="7" fill="#5ea657"/><circle cx="10" cy="-6" r="6" fill="#4f8f4a"/></g><g fill="#d4413a"><circle cx="-10" cy="-8" r="1.8"/><circle cx="-2" cy="-12" r="1.8"/><circle cx="3" cy="-6" r="1.8"/><circle cx="11" cy="-8" r="1.8"/></g>`,
+  cami:`<rect x="-17" y="-15" width="34" height="15" fill="#f6eedb" ${SW}/><path d="M-13-15a13 12 0 0 1 26 0z" fill="#2bb3b1" ${SW}/><path d="M0-27v-5" ${SW}/><path d="M-3 0v-7a3 3 0 0 1 6 0v7z" fill="#1d4f8a" ${SW}/><rect x="20" y="-40" width="5" height="40" fill="#f6eedb" ${SW}/><path d="M19-30h7" ${SW}/><path d="M20-40l2.5-9 2.5 9z" fill="#2bb3b1" ${SW}/>`,
+  kitapevi:`<rect x="-12" y="-14" width="24" height="14" fill="#f6eedb" ${SW}/><path d="M-15-14L0-25l15 11z" fill="#d0553f" ${SW}/><rect x="-4" y="-9" width="8" height="9" fill="#1d4f8a" ${SW}/>`,
+  kutuphane:`<path d="M-20-20L0-31l20 11z" fill="#d0553f" ${SW}/><rect x="-18" y="-20" width="36" height="4" fill="#f6eedb" ${SW}/><g fill="#f6eedb" ${SW}><rect x="-15" y="-16" width="4" height="14"/><rect x="-6" y="-16" width="4" height="14"/><rect x="2" y="-16" width="4" height="14"/><rect x="11" y="-16" width="4" height="14"/></g><rect x="-20" y="-2" width="40" height="3" fill="#e4d3ac" ${SW}/>`,
+  medrese:`<rect x="-24" y="-16" width="48" height="16" fill="#f6eedb" ${SW}/><g fill="#1d4f8a" ${SW}><path d="M-19 0v-7a3 3 0 0 1 6 0v7z"/><path d="M-9 0v-7a3 3 0 0 1 6 0v7z"/><path d="M3 0v-7a3 3 0 0 1 6 0v7z"/><path d="M13 0v-7a3 3 0 0 1 6 0v7z"/></g><g fill="#8fa8ff" ${SW}><path d="M-20-16a6 6 0 0 1 12 0z"/><path d="M-6-16a6 7 0 0 1 12 0z"/><path d="M8-16a6 6 0 0 1 12 0z"/></g>`,
+  patika:`<path d="M-22 0C-10-4-14-12-2-14S8-24 16-30" fill="none" stroke="#7a5a34" stroke-width="2" stroke-dasharray="3 3"/><path d="M16-30v-12" ${SW}/><path d="M16-42l9 3-9 3z" fill="#d4413a" ${SW}/>`,
+  meydan:`<ellipse cx="0" cy="-5" rx="22" ry="7" fill="#d9b77a" ${SW}/><ellipse cx="0" cy="-6" rx="14" ry="4" fill="#efdcae" ${SW}/><path d="M-18-8v-16M18-8v-16" ${SW}/><path d="M-18-24l8 2.5-8 2.5z" fill="#2bb3b1" ${SW}/><path d="M18-24l8 2.5-8 2.5z" fill="#d4413a" ${SW}/>`,
+  kale:`<g fill="#e4d3ac" ${SW}><rect x="-22" y="-30" width="11" height="30"/><rect x="11" y="-30" width="11" height="30"/><rect x="-11" y="-20" width="22" height="20"/></g><g fill="#e4d3ac" ${SW}><path d="M-22-30v-4h3v4m2 0v-4h3v4m2 0v-4h3v4"/><path d="M11-30v-4h3v4m2 0v-4h3v4m2 0v-4h3v4"/></g><path d="M-4 0v-8a4 4 0 0 1 8 0v8z" fill="#3b2a1a"/><path d="M-16-30v-10" ${SW}/><path d="M-16-40l8 2.5-8 2.5z" fill="#d4413a" ${SW}/>`,
+  iskele:`<rect x="-22" y="-4" width="34" height="4" fill="#a0723f" ${SW}/><path d="M-18 0v6M-8 0v6M2 0v6M10 0v6" ${SW}/><circle cx="16" cy="-6" r="3" fill="none" ${SW}/>`,
+  yelkenli:`<path d="M-14-4h28l-5 7h-18z" fill="#a0723f" ${SW}/><path d="M0-4v-26" ${SW}/><path d="M1-29c9 6 10 16 9 23H1z" fill="#f6eedb" ${SW}/><path d="M-1-26c-6 5-8 13-8 20h8z" fill="#f6eedb" ${SW}/>`,
+  kalyon:`<path d="M-24-6h48l-7 10h-34z" fill="#7d5530" ${SW}/><rect x="14" y="-12" width="10" height="6" fill="#a0723f" ${SW}/><path d="M-8-6v-30M8-6v-24" ${SW}/><path d="M-7-34c8 4 9 13 8 22h-8z" fill="#f6eedb" ${SW}/><path d="M9-28c6 4 7 10 6 16H9z" fill="#f6eedb" ${SW}/><path d="M-8-36l8-3-8-3z" fill="#d4413a" ${SW}/>`,
+  kup:`<path d="M-6-22h12l-2 4c5 3 7 8 6 12-1 5-5 6-10 6s-9-1-10-6c-1-4 1-9 6-12z" fill="#c9733b" ${SW}/><path d="M-7-10h14" stroke="#f1d48a" stroke-width="2"/>`,
+  sandik:`<rect x="-14" y="-14" width="28" height="14" fill="#8a5a2b" ${SW}/><path d="M-14-14a14 8 0 0 1 28 0z" fill="#a8703a" ${SW}/><path d="M-14-9h28" stroke="#e8b03c" stroke-width="2"/><rect x="-3" y="-12" width="6" height="7" fill="#e8b03c" ${SW}/>`,
+  hazineodasi:`<g fill="#e8b03c" ${SW}><ellipse cx="-14" cy="-3" rx="6" ry="2.5"/><ellipse cx="-14" cy="-6" rx="6" ry="2.5"/><ellipse cx="14" cy="-3" rx="6" ry="2.5"/></g><rect x="-10" y="-18" width="20" height="18" fill="#8a5a2b" ${SW}/><path d="M-10-18a10 7 0 0 1 20 0z" fill="#e8b03c" ${SW}/><circle cx="0" cy="-26" r="10" fill="#f1d48a" opacity=".45"/>`
+};
+// her bölgede yapıların yerleşeceği noktalar (bölge merkezine göre)
+const SPOTS = [[-26,6],[24,10],[0,-18]];
+const bldSvg = (k,w=64,h=52) => `<svg class="bld" viewBox="-28 -44 56 50" width="${w}" height="${h}">${BLD[k]}</svg>`;
+
+function lanternSvg(p){ // p: 0..1 günlük ilerleme
+  const glow = .15 + .85*p, R=58, C=2*Math.PI*R;
+  return `<svg class="lantern" viewBox="0 0 140 150" role="img" aria-label="Günlük ilerleme">
+    <defs><radialGradient id="lg" cx=".5" cy=".55" r=".5"><stop offset="0" stop-color="#ffd27a" stop-opacity="${glow}"/><stop offset="1" stop-color="#ffd27a" stop-opacity="0"/></radialGradient>
+    <linearGradient id="gl" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#2bb3b1" stop-opacity=".35"/><stop offset="1" stop-color="#1d4f8a" stop-opacity=".55"/></linearGradient></defs>
+    <circle cx="70" cy="80" r="${R}" fill="none" stroke="#27497d" stroke-width="6"/>
+    <circle cx="70" cy="80" r="${R}" fill="none" stroke="#e8b03c" stroke-width="6" stroke-linecap="round" stroke-dasharray="${C*p} ${C}" transform="rotate(-90 70 80)" style="transition:stroke-dasharray .6s"/>
+    <circle cx="70" cy="84" r="52" fill="url(#lg)"/>
+    <path d="M70 10v14" stroke="#c99a3a" stroke-width="2"/>
+    <path d="M58 32h24l-4-8H62z" fill="#e8b03c" stroke="#8a6420" stroke-width="1.5"/>
+    <path d="M56 32h28c4 10 6 22 6 34s-3 22-6 30H56c-3-8-6-18-6-30s2-24 6-34z" fill="url(#gl)" stroke="#e8b03c" stroke-width="2"/>
+    <path d="M70 32v64M60 34c-3 10-4 22-4 32s1 20 4 30M80 34c3 10 4 22 4 32s-1 20-4 30" stroke="#e8b03c" stroke-width="1" opacity=".6" fill="none"/>
+    <path d="M70 ${76-18*p}c5 7 8 11 8 16a8 8 0 0 1-16 0c0-5 3-9 8-16z" fill="#ffcf5c" opacity="${.35+.65*p}"/>
+    <path d="M70 ${84-8*p}c2 3 3.5 5 3.5 7.5a3.5 3.5 0 0 1-7 0c0-2.5 1.5-4.5 3.5-7.5z" fill="#fff5d6" opacity="${.4+.6*p}"/>
+    <path d="M56 96h28l-3 8H59z" fill="#e8b03c" stroke="#8a6420" stroke-width="1.5"/>
+    <path d="M66 104h8l-4 8z" fill="#c99a3a"/></svg>`;
+}
+
+function mapSvg(){
+  const lv=level(), today=dk(), T=transferred();
+  const vk = [...VAULT].reverse().find(v=>T>=v.a);
+  const regions = REGIONS.map(R=>{
+    const locked=lv<R.unlock, b=S.builds[R.id], la=lastActive(R.res), idle=la?daysBetween(la,today):null;
+    const faded=!locked&&idle!==null&&idle>=3;
+    let g='';
+    for(let i=0;i<3;i++){ const [dx,dy]=SPOTS[i], x=R.x+dx, y=R.y+dy;
+      if(i<b) g+=`<g transform="translate(${x} ${y})">${BLD[R.builds[i].k]}</g>`;
+      else if(i===b && !locked) g+=`<g transform="translate(${x} ${y})" opacity=".8"><path d="M0 0v-14" stroke="${K}" stroke-width="1.2"/><path d="M0-14l8 2.5-8 2.5z" fill="#e8b03c" stroke="${K}" stroke-width="1"/><ellipse cx="0" cy="1" rx="9" ry="2.5" fill="none" stroke="${K}" stroke-dasharray="2 2"/></g>`;
+    }
+    const label = `<g transform="translate(${R.x} ${R.y+38})"><path d="M-46-10h92l-6 10 6 10h-92l6-10z" fill="#f6eedb" stroke="${K}" stroke-width="1.2"/><text text-anchor="middle" y="4.5" font-family="Plus Jakarta Sans,sans-serif" font-weight="800" font-size="11.5" fill="${K}">${R.name}</text></g>`;
+    const fog = locked ? `<g><g fill="#e9edf3" opacity=".96"><circle cx="${R.x-34}" cy="${R.y+6}" r="28"/><circle cx="${R.x}" cy="${R.y-10}" r="36"/><circle cx="${R.x+34}" cy="${R.y+8}" r="28"/><circle cx="${R.x-8}" cy="${R.y+26}" r="30"/><circle cx="${R.x+18}" cy="${R.y+30}" r="26"/></g>
+      <g transform="translate(${R.x-10} ${R.y-8}) scale(.85)" fill="none" stroke="#5c6a80" stroke-width="2">${IC.lock}</g>
+      <text x="${R.x}" y="${R.y+28}" text-anchor="middle" font-family="Plus Jakarta Sans,sans-serif" font-weight="700" font-size="12" fill="#5c6a80">Seviye ${R.unlock}'de açılır</text></g>` : '';
+    return `<g class="rg ${faded?'faded':''}" data-act="${locked?'locked':'region'}" data-id="${R.id}" tabindex="0" role="button" aria-label="${R.name}">
+      <circle cx="${R.x}" cy="${R.y}" r="62" fill="transparent"/>${g}${locked?'':label}${fog}
+      ${faded?`<text x="${R.x}" y="${R.y+64}" text-anchor="middle" font-family="Plus Jakarta Sans,sans-serif" font-weight="700" font-size="11" fill="#7a5a34">${idle} gündür bekliyor</text>`:''}</g>`;
+  }).join('');
+  return `<svg viewBox="0 0 360 440" role="img" aria-label="Dünya haritası">
+  <defs>
+    <pattern id="waves" width="24" height="10" patternUnits="userSpaceOnUse"><path d="M0 6c4-4 8-4 12 0s8 4 12 0" fill="none" stroke="#f6eedb" stroke-opacity=".5" stroke-width="1.2"/></pattern>
+    <radialGradient id="paper" cx=".5" cy=".45" r=".75"><stop offset="0" stop-color="#f4e9cf"/><stop offset="1" stop-color="#dcc699"/></radialGradient>
+  </defs>
+  <rect width="360" height="440" fill="url(#paper)"/>
+  <!-- deniz -->
+  <path d="M190 440C200 380 230 360 262 352S330 330 360 290V440z" fill="#2a6fa8"/>
+  <path d="M190 440C200 380 230 360 262 352S330 330 360 290V440z" fill="url(#waves)"/>
+  <!-- nehir -->
+  <path d="M176 0C170 40 196 70 182 110S150 170 176 210 214 270 206 320 214 370 232 368" fill="none" stroke="#3f86bf" stroke-width="9" stroke-linecap="round"/>
+  <path d="M176 0C170 40 196 70 182 110S150 170 176 210 214 270 206 320 214 370 232 368" fill="none" stroke="#7fb6db" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="6 10"/>
+  <!-- vadi tepeleri -->
+  <g stroke="${K}" stroke-width="1.2"><path d="M14 150C30 110 60 100 90 112S150 120 160 150z" fill="#8cbf6a"/><path d="M20 90C40 60 80 58 110 70S150 80 156 96C120 100 60 100 20 90z" fill="#a7cf80"/></g>
+  <g stroke="${K}" stroke-width="1.1"><path d="M30 70l5-20 5 20z" fill="#3f7a46"/><path d="M146 84l4-16 4 16z" fill="#3f7a46"/><path d="M24 146l5-18 5 18z" fill="#3f7a46"/></g>
+  <!-- şehir platosu -->
+  <path d="M200 150C210 120 230 92 270 90S340 100 352 130 340 160 300 160 210 168 200 150z" fill="#e3c88e" stroke="${K}" stroke-width="1.2"/>
+  <!-- dağlar -->
+  <g stroke="${K}" stroke-width="1.2" stroke-linejoin="round"><path d="M0 360L40 280 70 330 100 260 140 340 160 360z" fill="#b98b5c"/><path d="M40 280l-10 20 10-6 8 8zM100 260l-12 24 12-8 10 10z" fill="#f6eedb"/></g>
+  <!-- hazine vahası -->
+  <g transform="translate(180 226)"><ellipse rx="34" ry="12" fill="#9bc5a2" stroke="${K}" stroke-width="1.2"/><ellipse rx="16" ry="5" fill="#3f86bf"/>
+    <g stroke="${K}" stroke-width="1.1"><path d="M-22-2c0-10 1-16 3-22" fill="none"/><path d="M-19-24c-8-2-12 2-14 6M-19-24c6-4 11-2 13 2M-19-24c-2-6 2-9 5-10" fill="none" stroke="#3f7a46" stroke-width="2.5"/></g>
+    ${vk?`<g transform="translate(14 -2)">${BLD[vk.k]}</g>`:''}</g>
+  <g class="rg" data-act="tab" data-id="hazine" tabindex="0" role="button" aria-label="Hazine"><circle cx="180" cy="226" r="40" fill="transparent"/>
+    <g transform="translate(180 262)"><path d="M-34-10h68l-5 10 5 10h-68l5-10z" fill="#f6eedb" stroke="${K}" stroke-width="1.2"/><text text-anchor="middle" y="4.5" font-family="Plus Jakarta Sans,sans-serif" font-weight="800" font-size="11.5" fill="${K}">Hazine</text></g></g>
+  <!-- kervan yolu -->
+  <path d="M92 156C120 190 150 200 158 224M268 150C240 190 210 200 202 222M180 274C150 290 120 280 96 300M180 274C210 300 240 300 262 316" fill="none" stroke="#7a5a34" stroke-width="2" stroke-dasharray="1 6" stroke-linecap="round"/>
+  ${regions}
+  <!-- pusula -->
+  <g transform="translate(326 34)" stroke="${K}" stroke-width="1"><circle r="16" fill="#f6eedb"/><path d="M0-14L4 0 0 14-4 0z" fill="#d0553f"/><path d="M-14 0L0 4 14 0 0-4z" fill="#e4d3ac"/><text y="-19" text-anchor="middle" font-size="9" font-family="Plus Jakarta Sans,sans-serif" font-weight="800" fill="${K}" stroke="none">K</text></g>
+  <!-- çerçeve -->
+  <rect x="5" y="5" width="350" height="430" rx="14" fill="none" stroke="#8a6420" stroke-width="2"/>
+  <rect x="10" y="10" width="340" height="420" rx="10" fill="none" stroke="#8a6420" stroke-width=".8"/>
+  </svg>`;
+}
+
+function routeSvg(q){
+  const k=Math.floor(q/7), into=q%7, gap=96, top=40, W=360;
+  const pts = KONAK.map((_,i)=>[i%2?250:110, top+i*gap]);
+  let d=`M${pts[0][0]} ${pts[0][1]}`;
+  for(let i=1;i<pts.length;i++){ const [x0,y0]=pts[i-1],[x1,y1]=pts[i]; d+=` C${x0} ${y0+gap/2} ${x1} ${y1-gap/2} ${x1} ${y1}`; }
+  const H = top+(pts.length-1)*gap+50;
+  // ilerleme yolu: tamamlanan konaklar + şimdiki arada kısmi
+  const nodes = KONAK.map((K2,i)=>{ const [x,y]=pts[i], ok=i<k, cur=i===k; const left = x>W/2;
+    const tx = left? x-26 : x+26, anchor = left?'end':'start';
+    return `<g><circle cx="${x}" cy="${y}" r="${cur?17:14}" fill="${ok?'#e8b03c':cur?'#2bb3b1':'#1a3561'}" stroke="${ok?'#f1d48a':cur?'#bff0ee':'#2e5390'}" stroke-width="2"/>
+      <text x="${x}" y="${y+5}" text-anchor="middle" font-family="Plus Jakarta Sans,sans-serif" font-weight="800" font-size="14" fill="${ok||cur?'#13294b':'#a9b8d3'}">${i+1}</text>
+      <text x="${tx}" y="${y-2}" text-anchor="${anchor}" font-family="Plus Jakarta Sans,sans-serif" font-weight="800" font-size="17" fill="${ok||cur?'#f7f3ea':'#6f86ad'}">${K2.n}</text>
+      <text x="${tx}" y="${y+16}" text-anchor="${anchor}" font-family="Plus Jakarta Sans,sans-serif" font-size="12.5" fill="${ok?'#a9b8d3':cur?'#bff0ee':'#56709a'}">${ok?wrapShort(K2.p):cur?`${7-into} gün kaldı`:''}</text></g>`; }).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Sefer yolu">
+    <path d="${d}" fill="none" stroke="#27497d" stroke-width="5" stroke-linecap="round"/>
+    <path d="${d}" fill="none" stroke="#e8b03c" stroke-width="5" stroke-linecap="round" pathLength="${(KONAK.length-1)*7}" stroke-dasharray="${Math.min(q,(KONAK.length-1)*7)} 9999"/>
+    ${nodes}</svg>`;
+}
+function wrapShort(s){ return esc(s.length>30? s.slice(0,29)+'…' : s); }
+
+function badgeSvg(icon, color, ok){
+  return `<svg viewBox="0 0 60 60"><g transform="translate(30 30)">
+    <rect x="-20" y="-20" width="40" height="40" fill="${ok?color:'#1a3561'}" stroke="${ok?'#f1d48a':'#2e5390'}" stroke-width="1.5"/>
+    <rect x="-20" y="-20" width="40" height="40" fill="${ok?color:'#1a3561'}" stroke="${ok?'#f1d48a':'#2e5390'}" stroke-width="1.5" transform="rotate(45)"/>
+    <circle r="15" fill="${ok?'#13294b':'#13294b'}"/>
+    <g transform="translate(-10 -10) scale(.84)" fill="none" stroke="${ok?color:'#56709a'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${IC[icon]}</g></g></svg>`;
+}
+
+/* ================= EFEKTLER ================= */
+let toastT;
+function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2800); }
+function burst(el,color){
+  const b=el.getBoundingClientRect(), x=b.left+b.width-30, y=b.top+b.height/2;
+  const cols=[color,'#e8b03c','#f1e6cc'];
+  for(let i=0;i<12;i++){ const s=document.createElement('span'); s.className='p'; s.style.background=cols[i%3];
+    s.style.left=x+'px'; s.style.top=y+'px'; s.style.setProperty('--dx',(Math.random()*140-70)+'px'); s.style.setProperty('--dy',(-30-Math.random()*90)+'px');
+    document.body.appendChild(s); setTimeout(()=>s.remove(),850); }
+  try{ navigator.vibrate&&navigator.vibrate(12); }catch(e){}
+}
+function modal(h){ $('sheet').innerHTML=h+`<button class="btn ghost" style="width:100%;margin-top:16px" data-act="close">Kapat</button>`; $('modal').classList.add('open'); }
+function closeModal(){ $('modal').classList.remove('open'); }
+
+/* ================= OYUN MANTIĞI ================= */
+function applyEarn(e,s){ S.res[e.res]=Math.max(0,(S.res[e.res]||0)+s*e.amt); S.tlEarned=Math.max(0,S.tlEarned+s*e.tl); S.xp=Math.max(0,S.xp+s*e.xp); }
+function afterGain(before){
+  const lv=level();
+  if(lv>before.lv){ const op=REGIONS.filter(r=>r.unlock===lv).map(r=>r.name);
+    toast(`Seviye ${lv}: ${title(lv)}.`+(op.length?` ${op.join(', ')} haritada açıldı.`:'')); }
+  else if(qualifiedCount()>before.q){ const q=qualifiedCount();
+    toast(q%7===0&&KONAK[q/7-1] ? `Yeni konağa vardın: ${KONAK[q/7-1].n}` : 'Bugünün konağına vardın. Kervan bir adım ilerledi.'); }
+}
+function completeTask(id,el,n=1){
+  const t=S.tasks.find(x=>x.id===id); if(!t) return; const r=rec(); if(r.done[id]) return;
+  const before={lv:level(),q:qualifiedCount()};
+  const e={res:t.res,amt:Math.round((+t.amt||0)*n),tl:t.dini?0:Math.round((+t.tl||0)*mult()),xp:10,n};
+  r.done[id]=e; applyEarn(e,1); if(el) burst(el,RES[t.res].color); afterGain(before); save(); render();
+}
+function undoTask(id){
+  const r=rec(); if(!r.done[id]) return; applyEarn(r.done[id],-1); delete r.done[id];
+  if(r.prog) delete r.prog[id]; save(); render();
+}
+function toggleTask(id,el){
+  const t=S.tasks.find(x=>x.id===id); if(!t) return;
+  if(rec().done[id]) return undoTask(id);
+  if(t.type==='count') return openCounter(id);
+  if(t.type==='timer') return openTimer(id);
+  if(t.type==='pages') return openPages(id);
+  completeTask(id,el);
+}
+
+/* ---------- zikirmatik ---------- */
+const ZIKR=['Sübhanallah','Elhamdülillah','Allahu ekber'];
+function zikrPhase(t,n){ return (+t.goal===99) ? ZIKR[Math.min(2,Math.floor(n/33))] : ''; }
+function openCounter(id){
+  const t=S.tasks.find(x=>x.id===id), r=rec(); r.prog=r.prog||{}; const n=r.prog[id]||0, goal=Math.max(1,+t.goal||33);
+  modal(`<h3>${esc(t.name)}</h3><p class="muted" style="margin-top:2px">Daireye dokundukça sayılır. ${goal} olunca görev tamamlanır.</p>
+    <button class="zikr" data-act="tap" data-id="${esc(id)}" aria-label="Say">${ringSvg(n/goal)}
+      <span class="zc"><b id="zn">${n}</b><small id="zg">/ ${goal}</small><em id="zp">${zikrPhase(t,n)}</em></span></button>
+    <div class="between"><button class="btn ghost" data-act="zreset" data-id="${esc(id)}">Sıfırla</button>
+      <button class="btn ghost" data-act="manual" data-id="${esc(id)}">Saymadan tamamla</button></div>`);
+}
+function ringSvg(p){ const R=104,C=2*Math.PI*R;
+  return `<svg viewBox="0 0 240 240" class="zr"><circle cx="120" cy="120" r="${R}" fill="none" stroke="#27497d" stroke-width="10"/>
+    <circle id="zring" cx="120" cy="120" r="${R}" fill="none" stroke="#2bb3b1" stroke-width="10" stroke-linecap="round" stroke-dasharray="${C*Math.min(1,p)} ${C}" transform="rotate(-90 120 120)"/></svg>`; }
+function tapCounter(id,el){
+  const t=S.tasks.find(x=>x.id===id), r=rec(); if(r.done[id]) return; r.prog=r.prog||{};
+  const goal=Math.max(1,+t.goal||33), n=Math.min(goal,(r.prog[id]||0)+1); r.prog[id]=n; save();
+  const C=2*Math.PI*104; $('zn').textContent=n; $('zp').textContent=zikrPhase(t,n);
+  $('zring').setAttribute('stroke-dasharray',`${C*n/goal} ${C}`);
+  try{ navigator.vibrate&&navigator.vibrate(n%33===0?[30,40,30]:8); }catch(e){}
+  if(n%33===0 && n<goal) toast(zikrPhase(t,n-1)+' tamam.');
+  if(n>=goal){ burst(el,'#2bb3b1'); setTimeout(()=>{ closeModal(); completeTask(id,null); toast(`${t.name} tamamlandı. Allah kabul etsin.`); },450); }
+}
+
+/* ---------- zamanlayıcı ---------- */
+let TM=null, tmInt=null, actx=null;
+function tmSave(){ try{ TM ? localStorage.setItem('sefer-tm',JSON.stringify({...TM,day:dk()})) : localStorage.removeItem('sefer-tm'); }catch(e){} }
+function tmRestore(){
+  try{ const o=JSON.parse(localStorage.getItem('sefer-tm')||'null'); if(!o) return;
+    if(o.day!==dk() || !S.tasks.some(t=>t.id===o.id) || rec().done[o.id]){ localStorage.removeItem('sefer-tm'); return; }
+    TM={id:o.id,total:o.total,left:o.left,running:o.running,endAt:o.endAt};
+    if(TM.running){ clearInterval(tmInt); tmInt=setInterval(tick,250); setTimeout(tick,50); }
+  }catch(e){} }
+const mmss = ms => { const s=Math.max(0,Math.ceil(ms/1000)); return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0'); };
+const tmLeft = () => TM ? (TM.running ? TM.endAt-Date.now() : TM.left) : 0;
+function openTimer(id){
+  const t=S.tasks.find(x=>x.id===id);
+  if(TM && TM.id!==id && TM.running){ toast('Önce çalışan zamanlayıcıyı bitir ya da durdur.'); return openTimer(TM.id); }
+  if(!TM || TM.id!==id){ const ms=Math.max(1,+t.goal||10)*60000; TM={id,total:ms,left:ms,running:false,endAt:0}; }
+  renderTimer();
+}
+function renderTimer(){
+  if(!TM) return; const t=S.tasks.find(x=>x.id===TM.id); if(!t) return; const left=tmLeft();
+  modal(`<h3>${esc(t.name)}</h3><p class="muted" style="margin-top:2px">Süre dolunca görev kendiliğinden tamamlanır.</p>
+    <div class="zikr" style="cursor:default">${ringSvg(1-left/TM.total)}<span class="zc"><b id="tmv">${mmss(left)}</b><small>${Math.round(TM.total/60000)} dakika</small></span></div>
+    <div class="between"><button class="btn ghost" data-act="treset">Sıfırla</button>
+      <button class="btn ${TM.running?'ghost':'turq'}" data-act="${TM.running?'tpause':'tstart'}" style="min-width:120px">${TM.running?'Duraklat':'Başlat'}</button>
+      <button class="btn ghost" data-act="manual" data-id="${esc(TM.id)}">Süresiz tamamla</button></div>`);
+}
+function tick(){
+  if(!TM||!TM.running) return; const left=tmLeft(), C=2*Math.PI*104;
+  const v=$('tmv'); if(v){ v.textContent=mmss(left); const z=$('zring'); if(z) z.setAttribute('stroke-dasharray',`${C*(1-left/TM.total)} ${C}`); }
+  const h=document.getElementById('tmh-'+TM.id); if(h) h.textContent=`${mmss(left)} kaldı`;
+  if(left<=0){ const id=TM.id, name=(S.tasks.find(x=>x.id===id)||{}).name; TM=null; tmSave(); clearInterval(tmInt); beep();
+    try{ navigator.vibrate&&navigator.vibrate([200,100,200]); }catch(e){}
+    closeModal(); completeTask(id,null); toast(`Süre doldu. ${name} tamamlandı.`); }
+}
+function beep(){ try{ if(!actx) return; [0,.35,.7].forEach(d=>{ const o=actx.createOscillator(), g=actx.createGain(); o.frequency.value=880; o.connect(g); g.connect(actx.destination);
+  g.gain.setValueAtTime(.0001,actx.currentTime+d); g.gain.exponentialRampToValueAtTime(.3,actx.currentTime+d+.02); g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+d+.3);
+  o.start(actx.currentTime+d); o.stop(actx.currentTime+d+.32); }); }catch(e){} }
+
+/* ---------- sayfa girişi ---------- */
+function openPages(id){
+  const t=S.tasks.find(x=>x.id===id), R=RES[t.res], r=rec(), goal=+t.goal||0, have=(r.prog&&r.prog[id])||0;
+  const def = goal ? Math.max(1,goal-have) : 1;
+  const info = goal
+    ? `Günlük hedefin ${goal} sayfa. ${have?`Bugün ${have} sayfa okudun, ${Math.max(0,goal-have)} sayfa kaldı.`:'Gün içinde parça parça da girebilirsin.'} Her sayfa ${t.amt} ${R.name} kazandırır.`
+    : `Bugün kaç sayfa okudun? Her sayfa ${t.amt} ${R.name} kazandırır.`;
+  modal(`<h3>${esc(t.name)}</h3><p class="muted" style="margin-top:2px;line-height:1.45">${info}</p>
+    ${goal?`<div class="bar" style="margin-top:14px"><i style="width:${Math.min(100,have/goal*100)}%;background:linear-gradient(90deg,#5f7fe0,var(--sky))"></i></div>`:''}
+    <div class="stepper"><button class="btn ghost" data-act="pg" data-id="-1" aria-label="Azalt">−</button>
+      <input id="pgn" type="number" inputmode="numeric" min="1" value="${def}" aria-label="Sayfa sayısı"><button class="btn ghost" data-act="pg" data-id="1" aria-label="Artır">+</button></div>
+    <p class="muted" style="text-align:center" id="pgr"></p>
+    <button class="btn turq" style="width:100%;margin-top:12px" data-act="pgsave" data-id="${esc(id)}">Kaydet</button>`);
+  $('pgn').addEventListener('input',()=>pgPreview(t));
+  $('pgn').dataset.task=id; pgPreview(t);
+}
+function pgPreview(t){
+  const n=Math.max(1,Math.round(+$('pgn').value||1)), goal=+t.goal||0, have=((rec().prog||{})[t.id])||0;
+  $('pgr').textContent = goal && have+n<goal ? `${have+n} / ${goal} sayfa olacak` : `Görev tamamlanır, +${(have+n)*t.amt} ${RES[t.res].name}`;
+}
+function savePages(id,n){
+  const t=S.tasks.find(x=>x.id===id), r=rec(), goal=+t.goal||0; r.prog=r.prog||{};
+  const total=(r.prog[id]||0)+n;
+  if(goal && total<goal){ r.prog[id]=total; save(); closeModal(); render(); return toast(`${n} sayfa eklendi. Hedefe ${goal-total} sayfa kaldı.`); }
+  r.prog[id]=total; closeModal(); completeTask(id,null,total); toast(goal?`${total} sayfa, günlük hedef tamam. Allah kabul etsin.`:`${total} sayfa kaydedildi.`);
+}
+
+/* ---------- mazeret ---------- */
+function excuseBox(n){
+  const t=dk(), y=addDays(t,-1), left=excuseLeft(t);
+  if(excused(t)) return `<div class="panel excuse"><p>Bugün mazeretli. Serin korunuyor ama ilerlemiyor.</p><button class="btn ghost" data-act="unexcuse" data-id="${t}">Geri al</button></div>`;
+  if(!okDay(y) && streakFrom(addDays(y,-1))>0 && excuseLeft(y)>0)
+    return `<div class="panel excuse warn"><p>Dün ${MIN} görev tamamlanmadı, ${streakFrom(addDays(y,-1))} günlük serin bozulmak üzere. Bir mazeret hakkıyla kurtarabilirsin.</p><button class="btn" data-act="excuse" data-id="${y}">Dünü mazeretli say</button></div>`;
+  if(n>=MIN) return '';
+  return `<div class="excuse-link"><button data-act="excuse" data-id="${t}" ${left<=0?'disabled':''}>Bugün mazeretliyim</button><span>Hastalık, yolculuk gibi günler için. Bu ay ${Math.max(0,left)} hakkın kaldı.</span></div>`;
+}
+let justDrew=false;
+function drawCard(){ const r=rec(); if(r.card) return; r.card={i:Math.floor(Math.random()*CARDS.length),done:false,earn:null}; save(); justDrew=true; render(); justDrew=false; }
+function toggleCard(_,el){
+  const r=rec(); if(!r.card) return; const C=CARDS[r.card.i], before={lv:level(),q:qualifiedCount()};
+  if(r.card.done){ applyEarn(r.card.earn,-1); r.card.done=false; r.card.earn=null; }
+  else{ const e={res:C.res,amt:C.amt,tl:C.dini?0:Math.round(C.tl*mult()),xp:15}; r.card.done=true; r.card.earn=e; applyEarn(e,1); burst(el,RES[C.res].color); afterGain(before); }
+  save(); render();
+}
+
+/* ================= GÖRÜNÜMLER ================= */
+function vHeader(){
+  const lv=level(), lo=50*(lv-1)**2, hi=50*lv**2, p=(S.xp-lo)/(hi-lo), C=2*Math.PI*20;
+  return `<div class="hrow">
+    <div class="ring" title="${S.xp} / ${hi} XP"><svg viewBox="0 0 46 46"><circle cx="23" cy="23" r="20" fill="none" stroke="#27497d" stroke-width="4"/><circle cx="23" cy="23" r="20" fill="none" stroke="#e8b03c" stroke-width="4" stroke-linecap="round" stroke-dasharray="${C*p} ${C}" style="transition:stroke-dasharray .6s"/></svg><b>${lv}</b></div>
+    <div class="who"><strong>SEFER</strong><span>${title(lv)}, sonraki seviyeye ${hi-S.xp} XP</span></div>
+    <div class="pills"><span class="pill" style="color:var(--coral)">${ico('flame')}<span style="color:var(--white)">${streak()}</span></span><span class="pill" style="color:var(--saffron)">${ico('tl')}<span style="color:var(--white)">${tl(balance())}</span></span></div></div>`;
+}
+function taskRow(t,r){
+  const e=r.done[t.id], d=!!e, R=RES[t.res]||RES.huzur, tlv=d?e.tl:(t.dini?0:Math.round((+t.tl||0)*mult()));
+  const ty=t.type||'check', tool={count:'beads',timer:'timer',pages:'page'}[ty]||'';
+  const run = !d && TM && TM.id===t.id;
+  const prog = r.prog&&r.prog[t.id];
+  let hint = esc(t.hint);
+  if(d && ty==='pages') hint = `${e.n} sayfa okundu`;
+  else if(run) hint = `${mmss(tmLeft())} ${TM.running?'kaldı':'duraklatıldı'}`;
+  else if(!d && ty==='count' && prog) hint = `${prog} / ${t.goal} çekildi`;
+  else if(!d && ty==='pages' && +t.goal && prog) hint = `${prog} / ${t.goal} sayfa okundu`;
+  const amtTxt = d ? e.amt : esc(t.amt);
+  return `<button class="task ${d?'done':''}" data-act="toggle" data-id="${esc(t.id)}" aria-pressed="${d}">
+    <span class="medal" style="--c:${R.color}">${ico(t.res)}</span>
+    <span class="tx"><b>${esc(t.name)}</b><small ${run?`id="tmh-${esc(t.id)}" style="color:var(--turq)"`:''}>${hint}</small></span>
+    <span class="gain"><span style="color:${R.color}">+${amtTxt} ${R.name}${!d&&ty==='pages'?' / sayfa':''}</span>${tlv?`<span style="color:var(--saffron)">+${tl(tlv)}</span>`:''}</span>
+    <span class="tick ${d?'':'tool'}">${d||tool===''?ico('check'):ico(tool)}</span></button>`;
+}
+function vBugun(){
+  const r=rec(), n=doneCount(r), m=mult(), p=Math.min(1,n/MIN);
+  const head = n===0 ? `${esc(S.comp)} seni bekliyor` : n<MIN ? `${MIN-n} görev daha` : 'Bugünün konağına vardın';
+  const sub = n===0 ? `Bugün ${MIN} görev tamamladığında kandilin tam yanar ve kervanın bir adım ilerler.`
+    : n<MIN ? 'Her görev kandilini biraz daha aydınlatıyor.' : 'Allah kabul etsin. Dilersen kalan görevlerle daha fazla kaynak topla.';
+  const dini=S.tasks.filter(t=>t.dini), gel=S.tasks.filter(t=>!t.dini), ex=excuseBox(n);
+  let card;
+  if(!r.card) card=`<button class="draw" data-act="draw"><span style="color:var(--saffron)">${ico('card')}</span><span><b>Günün kartını çek</b><small>Her gün rastgele bir bonus görev</small></span></button>`;
+  else{ const C=CARDS[r.card.i], R=RES[C.res], d=r.card.done, tlv=d?r.card.earn.tl:(C.dini?0:Math.round(C.tl*m));
+    card=`<div class="tile-card ${justDrew?'new':''}">
+      <div class="in"><h3>Günün kartı</h3><p>${esc(C.t)}</p>
+      <div class="row"><span class="gain"><span style="color:${R.color==='#8fa8ff'?'#4a5fc4':R.color}">+${C.amt} ${R.name}</span>${tlv?`<span style="color:#9a6b10">+${tl(tlv)}</span>`:''}<span>+15 XP</span></span>
+      <button class="btn ${d?'turq':'dark'}" style="margin-left:auto" data-act="card">${d?ico('check')+' Tamamlandı':'Tamamladım'}</button></div></div></div>`; }
+  return `<div class="cols v-bugun"><div class="a-hero"><section class="hero">${lanternSvg(p)}<div class="txt"><h2>${head}</h2><p>${sub}</p>
+      ${m>1?`<span class="mult">${ico('flame')} Seri bonusu ×${String(m).replace('.',',')}</span>`:''}</div></section>
+    ${ex.includes('warn')?ex:''}
+    ${card}</div><div class="a-tasks">
+    <div class="group first"><div class="ghead"><h3>Dini görevler</h3><small>Huzur, seri ve rozet</small></div>${dini.map(t=>taskRow(t,r)).join('')||'<p class="muted">Ayarlar\'dan görev ekleyebilirsin.</p>'}</div>
+    <div class="group"><div class="ghead"><h3>Gelişim görevleri</h3><small>Birikim hakkı kazandırır</small></div>${gel.map(t=>taskRow(t,r)).join('')||'<p class="muted">Ayarlar\'dan görev ekleyebilirsin.</p>'}</div>
+    ${ex.includes('warn')?'':ex}</div></div>`;
+}
+function vHarita(){
+  const lv=level();
+  const list=REGIONS.map(R=>{ const lk=lv<R.unlock, rc=RES[R.res];
+    return `<button class="rrow" data-act="${lk?'locked':'region'}" data-id="${R.id}"><span class="medal" style="--c:${rc.color}">${ico(lk?'lock':R.res)}</span>
+      <span class="tx"><b>${R.name}</b><small>${lk?`Seviye ${R.unlock}'de açılır`:`${S.builds[R.id]} / 3 yapı`}</small></span>
+      <span class="rpips">${[0,1,2].map(i=>`<i class="${i<S.builds[R.id]?'on':''}"></i>`).join('')}</span></button>`; }).join('');
+  return `<h2 class="ptitle">Dünyan</h2><div class="cols v-harita"><div class="a-map"><div class="mapwrap">${mapSvg()}</div></div><div class="a-side">
+    <div class="reslist">${Object.entries(RES).map(([k,v])=>`<span class="res" style="--c:${v.color}">${ico(k)}<em>${S.res[k]}</em> ${v.name}</span>`).join('')}</div>
+    <p class="maphint">Bir bölgeye dokunup kaynaklarınla yapı inşa et. Üç gün ilgilenmediğin bölge renk kaybeder ama yapıların hep yerinde kalır.</p>
+    <div class="rlist">${list}</div></div></div>`;
+}
+let calM=null;
+const WD=['Pzt','Sal','Çar','Per','Cum','Cmt','Paz'];
+function vCal(){
+  const cur=dk().slice(0,7), m=calM||cur, [y,mo]=m.split('-').map(Number), today=dk();
+  const startDow=(new Date(y,mo-1,1).getDay()+6)%7, nd=new Date(y,mo,0).getDate();
+  const pageIds=new Set(S.tasks.filter(t=>t.type==='pages').map(t=>t.id));
+  let cells='', full=0, pages=0, ex=0;
+  for(let i=0;i<startDow;i++) cells+='<span></span>';
+  for(let d=1;d<=nd;d++){
+    const k=`${m}-${String(d).padStart(2,'0')}`, r=S.days[k], n=doneCount(r), fut=k>today;
+    if(n>=MIN) full++; if(excused(k)) ex++;
+    if(r) Object.entries(r.done||{}).forEach(([id,e])=>{ if(pageIds.has(id)&&e.n) pages+=e.n; });
+    const cls = fut?'fut' : excused(k)&&n<MIN?'ex' : n>=MIN?'full' : n>0?'part':'';
+    cells+=`<button class="cd ${cls} ${k===today?'today':''}" ${fut?'disabled':`data-act="day" data-id="${k}"`} aria-label="${d}, ${n} görev">${d}${n?`<i>${n}</i>`:''}</button>`;
+  }
+  const label=new Date(y,mo-1,1).toLocaleDateString('tr-TR',{month:'long',year:'numeric'});
+  return `<div class="calbox panel"><div class="between"><button class="btn ghost cnav" data-act="calm" data-id="-1" aria-label="Önceki ay">‹</button>
+      <h3 style="margin:0;text-transform:capitalize">${label}</h3>
+      <button class="btn ghost cnav" data-act="calm" data-id="1" aria-label="Sonraki ay" ${m>=cur?'disabled':''}>›</button></div>
+    <div class="cal">${WD.map(w=>`<b>${w}</b>`).join('')}${cells}</div>
+    <div class="calleg"><span><i class="full"></i>Konak günü</span><span><i class="part"></i>Eksik gün</span><span><i class="ex"></i>Mazeretli</span></div>
+    <div class="calsum"><div><b>${full}</b><small>konak günü</small></div><div><b>${pages}</b><small>sayfa okundu</small></div><div><b>${ex}</b><small>mazeret</small></div></div></div>`;
+}
+function openDay(k){
+  const r=S.days[k]||{done:{}}, name=id=>(S.tasks.find(t=>t.id===id)||{name:'Silinmiş görev'}).name;
+  const rows=Object.entries(r.done||{}).map(([id,e])=>`<div class="log"><span>${esc(name(id))}${e.n>1?` <span class="muted">(${e.n} sayfa)</span>`:''}</span><b style="color:${(RES[e.res]||{}).color}">+${e.amt} ${(RES[e.res]||{}).name||''}</b></div>`).join('');
+  const card = r.card&&r.card.done ? `<div class="log"><span>Günün kartı: ${esc(CARDS[r.card.i].t)}</span><b style="color:var(--saffron)">✓</b></div>` : '';
+  const tlSum = Object.values(r.done||{}).reduce((a,e)=>a+(e.tl||0),0)+(r.card&&r.card.done&&r.card.earn?r.card.earn.tl:0);
+  modal(`<h3>${new Date(k).toLocaleDateString('tr-TR',{weekday:'long',day:'numeric',month:'long'})}</h3>
+    <p class="muted" style="margin:4px 0 10px">${doneCount(r)>=MIN?'Konak günü: kervan bir adım ilerledi.':excused(k)?'Mazeretli gün: seri korundu.':doneCount(r)?`${doneCount(r)} görev yapılmış.`:'Bu gün görev yapılmamış.'}${tlSum?` Kazanılan birikim hakkı: ${tl(tlSum)}.`:''}</p>
+    ${rows+card||''}`);
+}
+function vSefer(){
+  const q=qualifiedCount(), bs=bestStreak(), built=Object.values(S.builds).reduce((a,b)=>a+b,0);
+  const B=[
+    ['flame','#e8b03c','İlk adım',q>=1],['flame','#e0674f','7 gün seri',bs>=7],['flame','#d4413a','30 gün seri',bs>=30],['flame','#ff9a3d','100 gün seri',bs>=100],
+    ['huzur','#2bb3b1',"40 gün Kur'an",taskDays('kuran')>=40],['huzur','#4fd1c5','40 gün tesbihat',taskDays('tesbih')>=40],
+    ['guc','#e0674f','30 gün spor',taskDays('spor')>=30],['lisan','#6cc28a','30 gün İngilizce',taskDays('ing')>=30],
+    ['ilim','#8fa8ff','30 gün kitap',taskDays('kitap')>=30],['map','#e8b03c','İlk yapı',built>=1],
+    ['tl','#e8b03c','İlk aktarım',S.transfers.length>0],['huzur','#2bb3b1','Vadi tamam',S.builds.gonul>=3]
+  ];
+  return `<h2 class="ptitle">Sefer yolu</h2><div class="cols v-sefer"><div class="a-stats">
+    <p class="muted" style="margin-top:6px;line-height:1.5">En az ${MIN} görev yaptığın her gün kervan bir adım ilerler. Yedi adımda bir yeni konağa varırsın.</p>
+    <div class="stats"><div class="stat"><b>${q}</b><small>gün yol</small></div><div class="stat"><b>${streak()}</b><small>günlük seri</small></div><div class="stat"><b>${bs}</b><small>en uzun seri</small></div></div></div>
+    <div class="a-cal">${vCal()}</div>
+    <div class="a-route route">${routeSvg(q)}</div>
+    <div class="a-badges group"><div class="ghead"><h3>Rozetler</h3><small>${B.filter(b=>b[3]).length} / ${B.length}</small></div>
+    <div class="badges">${B.map(b=>`<div class="badge ${b[3]?'':'no'}">${badgeSvg(b[0],b[1],b[3])}${b[2]}</div>`).join('')}</div></div></div>`;
+}
+function vHazine(){
+  const T=transferred(), bal=balance(), g=S.goal, pct=Math.min(100,Math.round(T/(g.amt||1)*100)), m=mult();
+  return `<h2 class="ptitle">Hazine</h2><div class="cols v-hazine"><div class="a-left">
+  <div class="vaultcard"><small style="color:#7a6a55;font-weight:700">Biriktirme hakkın</small><div class="amt">${tl(bal)}</div>
+    <p>Gelişim görevlerinden kazandın. Bu parayı gerçekten altına, fona ya da kumbarana koyduğunda buraya kaydet.</p>
+    <div class="row"><input id="tamt" type="number" inputmode="numeric" min="1" placeholder="Tutar" value="${bal||''}" aria-label="Aktarılan tutar">
+    <button class="btn dark" data-act="transfer" ${bal<=0?'disabled':''}>Birikime aktardım</button></div></div>
+  <div class="panel"><div class="between"><h3>${esc(g.name)}</h3><span class="muted">%${pct}</span></div>
+    <div class="bar"><i style="width:${pct}%"></i></div><p class="muted" style="margin-top:8px;font-size:14px">${tl(T)} birikti, hedef ${tl(g.amt)}</p>
+    <div class="tiers">${VAULT.map(v=>`<div class="${T>=v.a?'ok':''}">${bldSvg(v.k,60,50).replace('class="bld"','')}${v.n}<br><span class="muted">${tl(v.a)}</span></div>`).join('')}</div></div></div><div class="a-right">
+  <div class="panel first"><h3>Seri bonusu</h3><p class="muted" style="line-height:1.45">7 gün aralıksız devam edersen birikim hakların 1,5 katına, 30 günde 2 katına çıkar. Şu anki çarpanın: <b style="color:var(--saffron)">×${String(m).replace('.',',')}</b>. Dini görevler para kazandırmaz; karşılıkları Huzur, seri ve rozettir.</p></div>
+  ${S.transfers.length?`<div class="panel"><h3>Aktarımlar</h3>${S.transfers.slice().reverse().slice(0,15).map(t=>`<div class="log"><span class="muted">${new Date(t.d).toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'})}</span><b>${tl(t.a)}</b></div>`).join('')}</div>`:''}</div></div>`;
+}
+function vAyarlar(){
+  const opt=r=>Object.entries(RES).map(([k,v])=>`<option value="${k}" ${r===k?'selected':''}>${v.name}</option>`).join('');
+  const rows=S.tasks.map(t=>`<div class="trow">
+    <input value="${esc(t.name)}" data-f="name" data-id="${esc(t.id)}" aria-label="Görev adı">
+    <input value="${esc(t.hint)}" data-f="hint" data-id="${esc(t.id)}" placeholder="Açıklama, örneğin 20 dakika" aria-label="Açıklama">
+    <div class="g3"><label><span class="lab">Kaynak</span><select data-f="res" data-id="${esc(t.id)}">${opt(t.res)}</select></label>
+      <label><span class="lab">Miktar</span><input type="number" value="${esc(t.amt)}" data-f="amt" data-id="${esc(t.id)}"></label>
+      <label><span class="lab">₺ hakkı</span><input type="number" value="${esc(t.tl)}" data-f="tl" data-id="${esc(t.id)}" ${t.dini?'disabled':''}></label></div>
+    <div class="g2"><label><span class="lab">Nasıl tamamlanır</span><select data-f="type" data-id="${esc(t.id)}">${[['check','Tek dokunuş'],['count','Sayaçla (zikirmatik)'],['timer','Zamanlayıcıyla'],['pages','Sayfa sayısıyla']].map(([v,l])=>`<option value="${v}" ${(t.type||'check')===v?'selected':''}>${l}</option>`).join('')}</select></label>
+      <label><span class="lab">${t.type==='timer'?'Süre (dakika)':t.type==='count'?'Hedef sayı':t.type==='pages'?'Günlük sayfa (0 = serbest)':'Hedef'}</span><input type="number" value="${esc(t.goal||'')}" data-f="goal" data-id="${esc(t.id)}" ${t.type==='check'||!t.type?'disabled':''}></label></div>
+    <div class="between"><label class="ck"><input type="checkbox" data-f="dini" data-id="${esc(t.id)}" ${t.dini?'checked':''}> Dini görev, para kazandırmaz</label>
+      <button class="btn ghost" data-act="del" data-id="${esc(t.id)}">Sil</button></div></div>`).join('');
+  return `<h2 class="ptitle">Ayarlar</h2><div class="cols v-ayarlar">
+  <div class="a-prof panel first"><label><span class="lab">Kandilinin adı</span><input value="${esc(S.comp)}" data-f="comp"></label>
+    <div style="margin-top:10px"><span class="lab">Birikim hedefi</span><div class="between"><input value="${esc(S.goal.name)}" data-f="goalName" aria-label="Hedef adı"><input type="number" style="max-width:120px" value="${esc(S.goal.amt)}" data-f="goalAmt" aria-label="Hedef tutarı"></div></div></div>
+  <div class="a-tasks group"><div class="ghead"><h3>Görevler</h3><small>${S.tasks.length} görev</small></div>${rows}
+    <button class="btn" style="width:100%" data-act="add">${ico('plus')} Görev ekle</button></div>
+  <div class="a-app panel"><h3>Telefona kur</h3>${installHtml()}
+    <h3 style="margin-top:16px">Günlük hatırlatıcı</h3><p class="muted" style="font-size:14px;line-height:1.45">Her gün seçtiğin saatte telefonunun takvimi sana SEFER'i hatırlatır.</p>
+    <div class="between" style="margin-top:10px"><input type="time" id="rmt" value="21:00" style="max-width:160px" aria-label="Hatırlatma saati"><button class="btn" data-act="ics">Takvime ekle</button></div></div>
+  <div class="a-bk panel" style="margin-top:22px"><h3>Yedek</h3><p class="muted" style="font-size:14px;line-height:1.45">Verilerin bu tarayıcıda saklanıyor. Ara ara yedeği kopyalayıp bir yere kaydet. Başka bir cihazda metni yapıştırıp “Yedeği yükle” ile devam edebilirsin.</p>
+    <textarea id="bk" style="margin-top:10px" aria-label="Yedek metni">${esc(JSON.stringify(S))}</textarea>
+    <div class="between" style="margin-top:10px"><div style="display:flex;gap:8px"><button class="btn ghost" data-act="copy">Kopyala</button><button class="btn ghost" data-act="import">Yedeği yükle</button></div>
+    <button class="btn red" data-act="reset" id="rst">Sıfırla</button></div></div></div>`;
+}
+
+/* ================= YÖNLENDİRME ================= */
+const TABS=[['bugun','sun','Bugün',vBugun],['harita','map','Harita',vHarita],['sefer','route','Sefer',vSefer],['hazine','vault','Hazine',vHazine],['ayarlar','sliders','Ayarlar',vAyarlar]];
+let tab='bugun';
+function readHash(){ const h=location.hash.slice(1); tab=TABS.some(t=>t[0]===h)?h:'bugun'; }
+function render(){
+  $('hdr').innerHTML=vHeader();
+  $('view').innerHTML=TABS.find(t=>t[0]===tab)[3]();
+  $('nav').innerHTML=TABS.map(t=>`<button class="${t[0]===tab?'on':''}" data-act="tab" data-id="${t[0]}" aria-current="${t[0]===tab?'page':'false'}">${ico(t[1])}${t[2]}</button>`).join('');
+}
+function go(id){ tab=id; try{ history.replaceState(null,'','#'+id); }catch(e){} render(); window.scrollTo(0,0); }
+
+/* ================= EYLEMLER ================= */
+let resetArm=false;
+const ACT={
+  toggle:(id,el)=>toggleTask(id,el), draw:drawCard, card:toggleCard, tab:id=>{closeModal();go(id);}, close:closeModal,
+  tap:(id,el)=>tapCounter(id,el),
+  zreset:id=>{ const r=rec(); if(r.prog) r.prog[id]=0; save(); openCounter(id); render(); },
+  manual:id=>{ if(TM&&TM.id===id){ TM=null; tmSave(); clearInterval(tmInt); } closeModal(); completeTask(id,null); },
+  tstart:()=>{ if(!TM) return; try{ actx=actx||new (window.AudioContext||window.webkitAudioContext)(); actx.resume&&actx.resume(); }catch(e){}
+    TM.endAt=Date.now()+TM.left; TM.running=true; tmSave(); clearInterval(tmInt); tmInt=setInterval(tick,250); renderTimer(); render(); },
+  tpause:()=>{ if(!TM) return; TM.left=Math.max(0,TM.endAt-Date.now()); TM.running=false; tmSave(); clearInterval(tmInt); renderTimer(); render(); },
+  treset:()=>{ if(!TM) return; TM.left=TM.total; TM.running=false; tmSave(); clearInterval(tmInt); renderTimer(); render(); },
+  pg:d=>{ const i=$('pgn'); i.value=Math.max(1,Math.round(+i.value||1)+(+d)); pgPreview(S.tasks.find(x=>x.id===i.dataset.task)); },
+  pgsave:id=>savePages(id,Math.max(1,Math.round(+$('pgn').value||1))),
+  excuse:k=>{ if(excuseLeft(k)<=0) return toast('Bu ayki mazeret hakların bitti.'); rec(k).excused=true; save();
+    toast(k===dk()?'Bugün mazeretli sayıldı. Serin korunuyor.':'Dün mazeretli sayıldı. Serin kurtarıldı.'); render(); },
+  unexcuse:k=>{ if(S.days[k]) S.days[k].excused=false; save(); render(); },
+  day:k=>openDay(k),
+  calm:d=>{ const [y,m]=(calM||dk().slice(0,7)).split('-').map(Number); const n=new Date(y,m-1+(+d),1); calM=dk(n).slice(0,7); render(); },
+  install:async()=>{ if(!deferredPrompt) return; deferredPrompt.prompt(); try{ await deferredPrompt.userChoice; }catch(e){} deferredPrompt=null; render(); },
+  ics:()=>{ const [hh,mm]=(($('rmt')||{}).value||'21:00').split(':'); const d=new Date(); const ymd=dk(d).replace(/-/g,'');
+    const stamp=new Date().toISOString().replace(/[-:]/g,'').slice(0,15)+'Z', url=location.href.split('#')[0];
+    const ics=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//SEFER//TR','CALSCALE:GREGORIAN','BEGIN:VEVENT','UID:sefer-gunluk@omerfarukcetin.github.io','DTSTAMP:'+stamp,
+      `DTSTART:${ymd}T${hh}${mm}00`,'DURATION:PT10M','RRULE:FREQ=DAILY','SUMMARY:SEFER: Günün görevleri','DESCRIPTION:Kandilini yakmayı unutma. '+url,'URL:'+url,
+      'BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:SEFER: Günün görevleri','TRIGGER:PT0M','END:VALARM','END:VEVENT','END:VCALENDAR'].join('\r\n');
+    try{ const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([ics],{type:'text/calendar'})); a.download='sefer-hatirlatici.ics'; document.body.appendChild(a); a.click(); a.remove();
+      toast('Hatırlatıcı dosyası indirildi. Açınca takvimine eklenir.'); }catch(e){ toast('Bu sayfada dosya indirilemiyor. GitHub adresinden dene.'); } },
+  locked:id=>toast(`${REG[id].name} seviye ${REG[id].unlock}'de açılır. Kaynakların şimdiden birikiyor.`),
+  region:id=>{
+    const R=REG[id], b=S.builds[id], have=S.res[R.res], rc=RES[R.res];
+    const rows=R.builds.map((B,i)=>{ const st=i<b?'built':i===b?'next':'lock';
+      return `<div class="brow ${st}">${bldSvg(B.k)}<div class="tx"><b>${B.n}</b><small style="color:${st==='built'?'var(--turq)':'var(--mist)'}">${st==='built'?ico('check')+' İnşa edildi':`${B.c} ${rc.name}`}</small></div>
+        ${st==='next'?`<button class="btn" data-act="build" data-id="${id}" ${have<B.c?'disabled':''}>İnşa et</button>`:''}</div>`; }).join('');
+    modal(`<h3>${R.name}</h3><p class="muted" style="margin-top:4px">${R.desc}</p>
+      <p style="margin-top:12px;display:flex;align-items:center;gap:6px;color:${rc.color};font-weight:700">${ico(R.res)} <span style="color:var(--white)">Elinde ${have} ${rc.name}</span></p>${rows}
+      ${b>=3?'<p class="muted" style="margin-top:12px">Bu bölgeyi tamamladın. Yeni yapılar sonraki sürümde geliyor.</p>':''}`);
+  },
+  build:(id,el)=>{ const R=REG[id], B=R.builds[S.builds[id]]; if(!B||S.res[R.res]<B.c) return;
+    S.res[R.res]-=B.c; S.builds[id]++; save(); burst(el,RES[R.res].color); toast(`${B.n} inşa edildi.`); render(); ACT.region(id); },
+  transfer:()=>{ const a=Math.round(+$('tamt').value||0), bal=balance();
+    if(a<=0) return toast('Aktardığın tutarı yaz.');
+    if(a>bal) return toast(`En fazla ${tl(bal)} aktarabilirsin.`);
+    S.transfers.push({d:dk(),a}); save(); toast(`${tl(a)} birikime aktarıldı. Bereketli olsun.`); render(); },
+  add:()=>{ S.tasks.push({id:'t'+Date.now(),name:'Yeni görev',hint:'',res:'ilim',amt:10,tl:10,dini:false,type:'check',goal:0}); save(); render(); },
+  del:id=>{ S.tasks=S.tasks.filter(t=>t.id!==id); save(); render(); },
+  copy:()=>{ const v=$('bk').value, sel=()=>{$('bk').select(); toast('Metni seçtim, kopyalayabilirsin.');};
+    try{ navigator.clipboard.writeText(v).then(()=>toast('Yedek kopyalandı.'),sel); }catch(e){ sel(); } },
+  import:()=>{ try{ const o=JSON.parse($('bk').value); if(!o||typeof o!=='object'||!o.days) throw 0; S=merge(o); save(); toast('Yedek yüklendi.'); render(); }
+    catch(e){ toast('Bu metin bir SEFER yedeği değil. Kopyaladığın metnin tamamını yapıştır.'); } },
+  reset:()=>{ if(!resetArm){ resetArm=true; $('rst').textContent='Emin misin? Tekrar bas'; setTimeout(()=>{resetArm=false; const b=$('rst'); if(b) b.textContent='Sıfırla';},3000); return; }
+    resetArm=false; S=defaults(); save(); toast('Yeni bir sefer başladı.'); go('bugun'); }
+};
+document.addEventListener('click',e=>{
+  if(e.target===$('modal')) return closeModal();
+  const b=e.target.closest('[data-act]'); if(!b) return;
+  const f=ACT[b.dataset.act]; if(f) f(b.dataset.id,b);
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape') closeModal();
+  if((e.key==='Enter'||e.key===' ') && e.target.matches && e.target.matches('g[data-act]')){ e.preventDefault(); e.target.dispatchEvent(new MouseEvent('click',{bubbles:true})); }
+});
+document.addEventListener('change',e=>{
+  const el=e.target, f=el.dataset&&el.dataset.f; if(!f) return;
+  if(f==='comp') S.comp=el.value.trim()||'Kandil';
+  else if(f==='goalName') S.goal.name=el.value.trim()||'Hedef';
+  else if(f==='goalAmt') S.goal.amt=Math.max(1,+el.value||1);
+  else{ const t=S.tasks.find(x=>x.id===el.dataset.id); if(!t) return;
+    if(f==='dini'){ t.dini=el.checked; if(t.dini) t.tl=0; save(); render(); return; }
+    if(f==='type'){ t.type=el.value; if(t.type==='count'&&!t.goal) t.goal=33; if(t.type==='timer'&&!t.goal) t.goal=10; save(); render(); return; }
+    t[f]=(f==='amt'||f==='tl'||f==='goal')?Math.max(0,+el.value||0):el.value; }
+  save(); $('hdr').innerHTML=vHeader();
+});
+window.addEventListener('hashchange',()=>{ readHash(); render(); });
+function isStandalone(){ try{ return matchMedia('(display-mode: standalone)').matches || navigator.standalone===true; }catch(e){ return false; } }
+function installHtml(){
+  if(isStandalone()) return `<p class="muted" style="font-size:14px">${ico('check')} SEFER bu cihazda uygulama olarak kurulu.</p>`;
+  if(deferredPrompt) return `<p class="muted" style="font-size:14px;line-height:1.45">Ana ekrana eklenir, internetsiz de açılır.</p><button class="btn turq" style="margin-top:10px" data-act="install">Uygulamayı kur</button>`;
+  if(/iphone|ipad|ipod/i.test(navigator.userAgent)) return `<p class="muted" style="font-size:14px;line-height:1.5">Safari'de alttaki <b>Paylaş</b> düğmesine dokun, sonra <b>Ana Ekrana Ekle</b>'yi seç.</p>`;
+  return `<p class="muted" style="font-size:14px;line-height:1.5">Chrome menüsünden (⋮) <b>Ana ekrana ekle</b> ya da <b>Uygulamayı yükle</b>'yi seç. Bilgisayarda adres çubuğundaki yükle simgesini kullanabilirsin.</p>`;
+}
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{ e.preventDefault(); deferredPrompt=e; if(tab==='ayarlar') render(); });
+window.addEventListener('appinstalled',()=>{ deferredPrompt=null; toast('SEFER ana ekrana eklendi.'); });
+if('serviceWorker' in navigator && location.protocol==='https:' && !/claude/.test(location.hostname)){
+  window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
+}
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'){ tick(); render(); } });
+readHash(); tmRestore(); render();
+</script>
+</body>
+</html>
