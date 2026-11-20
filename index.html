@@ -29,7 +29,7 @@ body{min-height:100vh;padding-bottom:92px;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='.045' stroke-width='1'%3E%3Crect x='18' y='18' width='20' height='20'/%3E%3Crect x='18' y='18' width='20' height='20' transform='rotate(45 28 28)'/%3E%3C/g%3E%3C/svg%3E")}
 .wrap{max-width:520px;margin:0 auto;padding:0 max(16px,env(safe-area-inset-right)) 0 max(16px,env(safe-area-inset-left))}
 h1,h2,h3,.serif{font-family:"Plus Jakarta Sans",system-ui,sans-serif}
-h1,h2,h3{letter-spacing:-.02em}
+h1,h2,h3{letter-spacing:-.01em}
 h2{font-size:28px;font-weight:800;line-height:1.15}
 h3{font-weight:800}
 b,strong{font-weight:800}
@@ -116,7 +116,7 @@ input:disabled{opacity:.4}
 
 /* ---------- sefer ---------- */
 .route svg{width:100%;height:auto;display:block}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0 6px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 0 6px}
 .stat{background:var(--lapis2);border:1px solid var(--lapis3);border-radius:var(--r-md);padding:12px 10px}
 .stat b{display:block;font-family:"Plus Jakarta Sans",sans-serif;font-size:26px;font-weight:800;color:var(--saffron);line-height:1}
 .stat small{color:var(--mist);font-size:13px}
@@ -234,7 +234,9 @@ nav button.on:before{content:"";position:absolute;top:0;width:28px;height:3px;bo
 .p{position:fixed;pointer-events:none;z-index:40;width:8px;height:8px;border-radius:2px;animation:fly .8s ease-out forwards}
 @keyframes fly{to{transform:translate(var(--dx),var(--dy)) rotate(200deg) scale(.4);opacity:0}}
 /* ---------- harita yan liste ---------- */
-.ptitle{margin-top:4px}
+.phead{margin:6px 0 18px;padding-bottom:16px;border-bottom:1px solid var(--lapis3)}
+.phead h1{font-size:25px;font-weight:800;line-height:1.2;letter-spacing:0}
+.phead p{margin-top:6px;color:var(--mist);font-size:14.5px;font-weight:600;line-height:1.45;max-width:46ch}
 .v-harita .reslist{margin-top:14px}
 .rlist{display:grid;gap:8px;margin-top:14px}
 .rrow{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--lapis2);border:1px solid var(--lapis3);border-radius:var(--r-md);padding:10px 12px}
@@ -285,7 +287,9 @@ nav button.on:before{content:"";position:absolute;top:0;width:28px;height:3px;bo
   .who strong{display:none}
   .who span{font-size:15px;color:var(--white);font-weight:700}
   h2{font-size:32px}
-  .ptitle{margin:4px 0 18px}
+  .phead{margin:4px 0 26px;padding-bottom:20px}
+  .phead h1{font-size:30px}
+  .phead p{font-size:15.5px}
   .cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:32px;align-items:start}
   .group.first,.panel.first{margin-top:0}
   .v-bugun{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr)}
@@ -773,7 +777,7 @@ function vHarita(){
     return `<button class="rrow" data-act="${lk?'locked':'region'}" data-id="${R.id}"><span class="medal" style="--c:${rc.color}">${ico(lk?'lock':R.res)}</span>
       <span class="tx"><b>${R.name}</b><small>${lk?`Seviye ${R.unlock}'de açılır`:`${S.builds[R.id]} / 3 yapı`}</small></span>
       <span class="rpips">${[0,1,2].map(i=>`<i class="${i<S.builds[R.id]?'on':''}"></i>`).join('')}</span></button>`; }).join('');
-  return `<h2 class="ptitle">Dünyan</h2><div class="cols v-harita"><div class="a-map"><div class="mapwrap">${mapSvg()}</div></div><div class="a-side">
+  return `<header class="phead"><h1>Dünyan</h1><p>Kazandığın kaynaklarla bölgelerine yapı inşa et.</p></header><div class="cols v-harita"><div class="a-map"><div class="mapwrap">${mapSvg()}</div></div><div class="a-side">
     <div class="reslist">${Object.entries(RES).map(([k,v])=>`<span class="res" style="--c:${v.color}">${ico(k)}<em>${S.res[k]}</em> ${v.name}</span>`).join('')}</div>
     <p class="maphint">Bir bölgeye dokunup kaynaklarınla yapı inşa et. Üç gün ilgilenmediğin bölge renk kaybeder ama yapıların hep yerinde kalır.</p>
     <div class="rlist">${list}</div></div></div>`;
@@ -819,8 +823,7 @@ function vSefer(){
     ['ilim','#8fa8ff','30 gün kitap',taskDays('kitap')>=30],['map','#e8b03c','İlk yapı',built>=1],
     ['tl','#e8b03c','İlk aktarım',S.transfers.length>0],['huzur','#2bb3b1','Vadi tamam',S.builds.gonul>=3]
   ];
-  return `<h2 class="ptitle">Sefer yolu</h2><div class="cols v-sefer"><div class="a-stats">
-    <p class="muted" style="margin-top:6px;line-height:1.5">En az ${MIN} görev yaptığın her gün kervan bir adım ilerler. Yedi adımda bir yeni konağa varırsın.</p>
+  return `<header class="phead"><h1>Sefer yolu</h1><p>En az ${MIN} görev yaptığın her gün kervanın bir adım ilerler, yedi adımda yeni bir konağa varırsın.</p></header><div class="cols v-sefer"><div class="a-stats">
     <div class="stats"><div class="stat"><b>${q}</b><small>gün yol</small></div><div class="stat"><b>${streak()}</b><small>günlük seri</small></div><div class="stat"><b>${bs}</b><small>en uzun seri</small></div></div></div>
     <div class="a-cal">${vCal()}</div>
     <div class="a-route route">${routeSvg(q)}</div>
@@ -829,7 +832,7 @@ function vSefer(){
 }
 function vHazine(){
   const T=transferred(), bal=balance(), g=S.goal, pct=Math.min(100,Math.round(T/(g.amt||1)*100)), m=mult();
-  return `<h2 class="ptitle">Hazine</h2><div class="cols v-hazine"><div class="a-left">
+  return `<header class="phead"><h1>Hazine</h1><p>Gelişim görevlerinden kazandığın birikim hakkı burada toplanır.</p></header><div class="cols v-hazine"><div class="a-left">
   <div class="vaultcard"><small style="color:#7a6a55;font-weight:700">Biriktirme hakkın</small><div class="amt">${tl(bal)}</div>
     <p>Gelişim görevlerinden kazandın. Bu parayı gerçekten altına, fona ya da kumbarana koyduğunda buraya kaydet.</p>
     <div class="row"><input id="tamt" type="number" inputmode="numeric" min="1" placeholder="Tutar" value="${bal||''}" aria-label="Aktarılan tutar">
@@ -895,7 +898,7 @@ function vAyarlar(){
       <div class="panel"><h3>Baştan başla</h3><p class="muted" style="font-size:14px;line-height:1.45">Tüm ilerlemen, görevlerin ve hazinen silinir. Önce yedek almanı öneririm.</p>
       <button class="btn red" style="margin-top:10px" data-act="reset" id="rst">Sıfırla</button></div>`;
   }
-  return `<h2 class="ptitle">Ayarlar</h2><div class="setwrap">${seg(setTab,[['gorevler','Görevler'],['gorunum','Görünüm'],['genel','Genel'],['yedek','Yedek']],'setTab')}<div class="setbody">${body}</div></div>`;
+  return `<header class="phead"><h1>Ayarlar</h1><p>Görevlerini, görünümü ve yedeğini buradan yönet.</p></header><div class="setwrap">${seg(setTab,[['gorevler','Görevler'],['gorunum','Görünüm'],['genel','Genel'],['yedek','Yedek']],'setTab')}<div class="setbody">${body}</div></div>`;
 }
 
 /* ---------- görünüm ---------- */
