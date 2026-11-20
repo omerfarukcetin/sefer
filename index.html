@@ -41,7 +41,7 @@ input:disabled{opacity:.4}
 .ico{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 
 /* ---------- header ---------- */
-#hdr{position:sticky;top:0;z-index:5;padding:calc(14px + env(safe-area-inset-top)) 0 12px;background:linear-gradient(var(--lapis) 75%,rgba(19,41,75,0))}
+#hdr{position:sticky;top:0;z-index:5;padding:calc(14px + env(safe-area-inset-top)) 0 12px;background:linear-gradient(var(--lapis) 75%,transparent)}
 .hrow{display:flex;align-items:center;gap:12px}
 .ring{position:relative;width:46px;height:46px;flex:none}
 .ring svg{position:absolute;inset:0;transform:rotate(-90deg)}
@@ -156,7 +156,7 @@ textarea{min-height:90px;font-size:12px}
 .g2{display:grid;grid-template-columns:1.4fr 1fr;gap:8px}
 .tick.tool{border-color:transparent;background:var(--lapis);color:var(--mist)}
 .tick.tool .ico{opacity:1;transform:none;stroke-width:1.9}
-.zikr{position:relative;display:block;width:min(260px,72vw);aspect-ratio:1;margin:18px auto;border-radius:50%;background:radial-gradient(circle,#1f3f72 0 60%,var(--lapis) 61%);user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.zikr{position:relative;display:block;width:min(260px,72vw);aspect-ratio:1;margin:18px auto;border-radius:50%;background:radial-gradient(circle,var(--zbg,#1f3f72) 0 60%,var(--lapis) 61%);user-select:none;-webkit-user-select:none;touch-action:manipulation}
 button.zikr:active{transform:scale(.97)}
 .zikr .zr{position:absolute;inset:0;width:100%;height:100%}
 .zikr #zring{transition:stroke-dasharray .2s}
@@ -175,8 +175,41 @@ button.zikr:active{transform:scale(.97)}
 .excuse-link button{display:block;margin:0 auto 4px;font-weight:700;color:var(--white);text-decoration:underline;text-underline-offset:3px;font-size:15px}
 .excuse-link button:disabled{opacity:.4}
 
+/* ---------- ayarlar ---------- */
+.setwrap{max-width:680px}
+.seg{display:flex;flex-wrap:wrap;gap:4px;background:var(--lapis2);border:1px solid var(--lapis3);border-radius:14px;padding:4px}
+.seg button{flex:1 1 auto;padding:9px 8px;border-radius:10px;font-weight:700;font-size:14px;color:var(--mist);white-space:nowrap}
+.seg button.on{background:var(--saffron);color:var(--ink)}
+.setbody{margin-top:16px}
+.setbody .panel.first{margin-top:0}
+.tlist{display:grid;gap:8px}
+.trow2{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--lapis2);border:1px solid var(--lapis3);border-radius:var(--r-md);padding:10px 12px}
+.medal.sm{width:34px;height:34px;border-radius:10px}.medal.sm .ico{width:17px;height:17px}
+.tag{display:inline-block;margin-left:8px;font-size:11px;font-weight:800;padding:2px 7px;border-radius:99px;background:color-mix(in srgb,var(--turq) 18%,transparent);color:var(--turq);vertical-align:2px}
+.chev{font-size:22px;color:var(--mist);padding:0 4px}
+.form{display:grid;gap:12px;margin-top:14px}
+.switch{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--lapis3)}
+.switch:last-child{border:0;padding-bottom:0}
+.switch b{display:block;font-size:15px}.switch small{color:var(--mist);font-size:13px;font-weight:600}
+.switch input{appearance:none;-webkit-appearance:none;width:46px;height:28px;flex:none;border-radius:99px;background:var(--lapis3);border:0;padding:0;position:relative;cursor:pointer;transition:background .2s}
+.switch input:after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:transform .2s}
+.switch input:checked{background:var(--turq)}.switch input:checked:after{transform:translateX(18px)}
+
+/* ---------- yazı boyutu ve efektler ---------- */
+#hdr,#view,.sheet{zoom:var(--zoom,1)}
+.nofx *{animation:none!important;transition:none!important}
+
+/* ---------- gündüz teması ---------- */
+:root[data-theme=light]{--lapis:#eef2f8;--lapis2:#ffffff;--lapis3:#dde4ef;--line:#c5d1e3;--white:#15264a;--mist:#5a6a86;
+  --turq:#128a88;--saffron:#d99a1e;--coral:#cf5236;--sky:#4a63c9;--leaf:#2f8a52;--navbg:rgba(255,255,255,.96);--sidebg:#ffffff;--zbg:#e4ebf6}
+:root[data-theme=light] body{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cg fill='none' stroke='%2315264a' stroke-opacity='.05' stroke-width='1'%3E%3Crect x='18' y='18' width='20' height='20'/%3E%3Crect x='18' y='18' width='20' height='20' transform='rotate(45 28 28)'/%3E%3C/g%3E%3C/svg%3E")}
+:root[data-theme=light] .task,:root[data-theme=light] .trow2,:root[data-theme=light] .rrow,:root[data-theme=light] .panel,:root[data-theme=light] .stat{box-shadow:0 1px 2px rgba(21,38,74,.06)}
+:root[data-theme=light] .mapwrap{box-shadow:0 10px 30px rgba(21,38,74,.15)}
+:root[data-theme=light] #modal{background:rgba(21,38,74,.35)}
+:root[data-theme=light] .mult{color:#a8740c}
+
 /* ---------- nav ---------- */
-nav#side{position:fixed;bottom:0;left:0;right:0;z-index:6;background:rgba(15,33,61,.96);backdrop-filter:blur(8px);border-top:1px solid var(--lapis3);padding-bottom:env(safe-area-inset-bottom)}
+nav#side{position:fixed;bottom:0;left:0;right:0;z-index:6;background:var(--navbg,rgba(15,33,61,.96));backdrop-filter:blur(8px);border-top:1px solid var(--lapis3);padding-bottom:env(safe-area-inset-bottom)}
 nav .in{display:flex;max-width:520px;margin:0 auto}
 .brand,.side-foot{display:none}
 nav button{flex:1;padding:10px 0 12px;font-size:12px;font-weight:700;color:var(--mist);display:flex;flex-direction:column;align-items:center;gap:4px;position:relative}
@@ -239,7 +272,7 @@ nav button.on:before{content:"";position:absolute;top:0;width:28px;height:3px;bo
 /* ---------- masaüstü ---------- */
 @media (min-width:1000px){
   body{padding-bottom:40px}
-  nav#side{top:0;right:auto;width:232px;border-top:0;border-right:1px solid var(--lapis3);background:#0f213d;display:flex;flex-direction:column;padding:26px 16px}
+  nav#side{top:0;right:auto;width:232px;border-top:0;border-right:1px solid var(--lapis3);background:var(--sidebg,#0f213d);display:flex;flex-direction:column;padding:26px 16px}
   .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:22px;letter-spacing:.06em;padding:0 10px 26px}
   .side-foot{display:block;margin-top:auto;padding:0 10px;color:var(--mist);font-size:13px;font-weight:600}
   nav .in{flex-direction:column;gap:4px;max-width:none;margin:0}
@@ -267,9 +300,6 @@ nav button.on:before{content:"";position:absolute;top:0;width:28px;height:3px;bo
   .v-sefer .a-stats p{margin-top:0!important}
   .badges{grid-template-columns:repeat(4,1fr)}
   .v-hazine .vaultcard{margin-top:0}
-  .v-ayarlar{grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);grid-template-areas:"prof tasks" "app tasks" "bk tasks";grid-template-rows:auto auto 1fr}
-  .v-ayarlar .a-app{grid-area:app;margin-top:0}
-  .v-ayarlar .a-prof{grid-area:prof}.v-ayarlar .a-tasks{grid-area:tasks;margin-top:0}.v-ayarlar .a-bk{grid-area:bk;margin-top:0!important}
   #modal{align-items:center}
   .sheet{border-radius:24px;border:1px solid var(--line);max-width:480px;padding-bottom:22px}
   .sheet:before{display:none}
@@ -375,9 +405,9 @@ const KEY = 'sefer-v1';
 function defaults(){
   return {xp:0, res:{huzur:0,ilim:0,guc:0,lisan:0}, tlEarned:0, transfers:[],
     goal:{name:'1 gram altın', amt:3500}, builds:{gonul:0,ilim:0,kuvvet:0,liman:0},
-    days:{}, tasks:JSON.parse(JSON.stringify(DEF_TASKS)), comp:'Kandil'};
+    days:{}, tasks:JSON.parse(JSON.stringify(DEF_TASKS)), comp:'Kandil', ui:{theme:'dark',font:1,vib:true,sound:true,fx:true}};
 }
-function merge(o){ const d=defaults(); return {...d, ...o, res:{...d.res,...(o.res||{})}, builds:{...d.builds,...(o.builds||{})}, goal:{...d.goal,...(o.goal||{})}}; }
+function merge(o){ const d=defaults(); return {...d, ...o, res:{...d.res,...(o.res||{})}, builds:{...d.builds,...(o.builds||{})}, goal:{...d.goal,...(o.goal||{})}, ui:{...d.ui,...(o.ui||{})}}; }
 function load(){ try{ const r=localStorage.getItem(KEY); if(r) return merge(JSON.parse(r)); }catch(e){} return defaults(); }
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
 let S = load();
@@ -524,12 +554,12 @@ function routeSvg(q){
   // ilerleme yolu: tamamlanan konaklar + şimdiki arada kısmi
   const nodes = KONAK.map((K2,i)=>{ const [x,y]=pts[i], ok=i<k, cur=i===k; const left = x>W/2;
     const tx = left? x-26 : x+26, anchor = left?'end':'start';
-    return `<g><circle cx="${x}" cy="${y}" r="${cur?17:14}" fill="${ok?'#e8b03c':cur?'#2bb3b1':'#1a3561'}" stroke="${ok?'#f1d48a':cur?'#bff0ee':'#2e5390'}" stroke-width="2"/>
-      <text x="${x}" y="${y+5}" text-anchor="middle" font-family="Plus Jakarta Sans,sans-serif" font-weight="800" font-size="14" fill="${ok||cur?'#13294b':'#a9b8d3'}">${i+1}</text>
-      <text x="${tx}" y="${y-2}" text-anchor="${anchor}" font-family="Plus Jakarta Sans,sans-serif" font-weight="800" font-size="17" fill="${ok||cur?'#f7f3ea':'#6f86ad'}">${K2.n}</text>
-      <text x="${tx}" y="${y+16}" text-anchor="${anchor}" font-family="Plus Jakarta Sans,sans-serif" font-size="12.5" fill="${ok?'#a9b8d3':cur?'#bff0ee':'#56709a'}">${ok?wrapShort(K2.p):cur?`${7-into} gün kaldı`:''}</text></g>`; }).join('');
+    return `<g><circle cx="${x}" cy="${y}" r="${cur?17:14}" fill="${ok?'#e8b03c':cur?'#2bb3b1':TC.node}" stroke="${ok?'#f1d48a':cur?'#bff0ee':TC.nodeS}" stroke-width="2"/>
+      <text x="${x}" y="${y+5}" text-anchor="middle" font-family="Plus Jakarta Sans,sans-serif" font-weight="800" font-size="14" fill="${ok||cur?'#13294b':TC.numDim}">${i+1}</text>
+      <text x="${tx}" y="${y-2}" text-anchor="${anchor}" font-family="Plus Jakarta Sans,sans-serif" font-weight="800" font-size="17" fill="${ok||cur?TC.name:TC.nameDim}">${K2.n}</text>
+      <text x="${tx}" y="${y+16}" text-anchor="${anchor}" font-family="Plus Jakarta Sans,sans-serif" font-size="12.5" fill="${ok?TC.sub:cur?TC.subCur:TC.subDim}">${ok?wrapShort(K2.p):cur?`${7-into} gün kaldı`:''}</text></g>`; }).join('');
   return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Sefer yolu">
-    <path d="${d}" fill="none" stroke="#27497d" stroke-width="5" stroke-linecap="round"/>
+    <path d="${d}" fill="none" stroke="${TC.track}" stroke-width="5" stroke-linecap="round"/>
     <path d="${d}" fill="none" stroke="#e8b03c" stroke-width="5" stroke-linecap="round" pathLength="${(KONAK.length-1)*7}" stroke-dasharray="${Math.min(q,(KONAK.length-1)*7)} 9999"/>
     ${nodes}</svg>`;
 }
@@ -537,22 +567,22 @@ function wrapShort(s){ return esc(s.length>30? s.slice(0,29)+'…' : s); }
 
 function badgeSvg(icon, color, ok){
   return `<svg viewBox="0 0 60 60"><g transform="translate(30 30)">
-    <rect x="-20" y="-20" width="40" height="40" fill="${ok?color:'#1a3561'}" stroke="${ok?'#f1d48a':'#2e5390'}" stroke-width="1.5"/>
-    <rect x="-20" y="-20" width="40" height="40" fill="${ok?color:'#1a3561'}" stroke="${ok?'#f1d48a':'#2e5390'}" stroke-width="1.5" transform="rotate(45)"/>
-    <circle r="15" fill="${ok?'#13294b':'#13294b'}"/>
-    <g transform="translate(-10 -10) scale(.84)" fill="none" stroke="${ok?color:'#56709a'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${IC[icon]}</g></g></svg>`;
+    <rect x="-20" y="-20" width="40" height="40" fill="${ok?color:TC.node}" stroke="${ok?'#f1d48a':TC.nodeS}" stroke-width="1.5"/>
+    <rect x="-20" y="-20" width="40" height="40" fill="${ok?color:TC.node}" stroke="${ok?'#f1d48a':TC.nodeS}" stroke-width="1.5" transform="rotate(45)"/>
+    <circle r="15" fill="${TC.badgeIn}"/>
+    <g transform="translate(-10 -10) scale(.84)" fill="none" stroke="${ok?color:TC.subDim}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${IC[icon]}</g></g></svg>`;
 }
 
 /* ================= EFEKTLER ================= */
 let toastT;
 function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2800); }
-function burst(el,color){
+function burst(el,color){ if(S.ui.fx===false) return;
   const b=el.getBoundingClientRect(), x=b.left+b.width-30, y=b.top+b.height/2;
   const cols=[color,'#e8b03c','#f1e6cc'];
   for(let i=0;i<12;i++){ const s=document.createElement('span'); s.className='p'; s.style.background=cols[i%3];
     s.style.left=x+'px'; s.style.top=y+'px'; s.style.setProperty('--dx',(Math.random()*140-70)+'px'); s.style.setProperty('--dy',(-30-Math.random()*90)+'px');
     document.body.appendChild(s); setTimeout(()=>s.remove(),850); }
-  try{ navigator.vibrate&&navigator.vibrate(12); }catch(e){}
+  vib(12);
 }
 function modal(h){ $('sheet').innerHTML=h+`<button class="btn ghost" style="width:100%;margin-top:16px" data-act="close">Kapat</button>`; $('modal').classList.add('open'); }
 function closeModal(){ $('modal').classList.remove('open'); }
@@ -604,7 +634,7 @@ function tapCounter(id,el){
   const goal=Math.max(1,+t.goal||33), n=Math.min(goal,(r.prog[id]||0)+1); r.prog[id]=n; save();
   const C=2*Math.PI*104; $('zn').textContent=n; $('zp').textContent=zikrPhase(t,n);
   $('zring').setAttribute('stroke-dasharray',`${C*n/goal} ${C}`);
-  try{ navigator.vibrate&&navigator.vibrate(n%33===0?[30,40,30]:8); }catch(e){}
+  vib(n%33===0?[30,40,30]:8);
   if(n%33===0 && n<goal) toast(zikrPhase(t,n-1)+' tamam.');
   if(n>=goal){ burst(el,'#2bb3b1'); setTimeout(()=>{ closeModal(); completeTask(id,null); toast(`${t.name} tamamlandı. Allah kabul etsin.`); },450); }
 }
@@ -639,10 +669,10 @@ function tick(){
   const v=$('tmv'); if(v){ v.textContent=mmss(left); const z=$('zring'); if(z) z.setAttribute('stroke-dasharray',`${C*(1-left/TM.total)} ${C}`); }
   const h=document.getElementById('tmh-'+TM.id); if(h) h.textContent=`${mmss(left)} kaldı`;
   if(left<=0){ const id=TM.id, name=(S.tasks.find(x=>x.id===id)||{}).name; TM=null; tmSave(); clearInterval(tmInt); beep();
-    try{ navigator.vibrate&&navigator.vibrate([200,100,200]); }catch(e){}
+    vib([200,100,200]);
     closeModal(); completeTask(id,null); toast(`Süre doldu. ${name} tamamlandı.`); }
 }
-function beep(){ try{ if(!actx) return; [0,.35,.7].forEach(d=>{ const o=actx.createOscillator(), g=actx.createGain(); o.frequency.value=880; o.connect(g); g.connect(actx.destination);
+function beep(){ try{ if(!actx||S.ui.sound===false) return; [0,.35,.7].forEach(d=>{ const o=actx.createOscillator(), g=actx.createGain(); o.frequency.value=880; o.connect(g); g.connect(actx.destination);
   g.gain.setValueAtTime(.0001,actx.currentTime+d); g.gain.exponentialRampToValueAtTime(.3,actx.currentTime+d+.02); g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+d+.3);
   o.start(actx.currentTime+d); o.stop(actx.currentTime+d+.32); }); }catch(e){} }
 
@@ -810,31 +840,79 @@ function vHazine(){
   <div class="panel first"><h3>Seri bonusu</h3><p class="muted" style="line-height:1.45">7 gün aralıksız devam edersen birikim hakların 1,5 katına, 30 günde 2 katına çıkar. Şu anki çarpanın: <b style="color:var(--saffron)">×${String(m).replace('.',',')}</b>. Dini görevler para kazandırmaz; karşılıkları Huzur, seri ve rozettir.</p></div>
   ${S.transfers.length?`<div class="panel"><h3>Aktarımlar</h3>${S.transfers.slice().reverse().slice(0,15).map(t=>`<div class="log"><span class="muted">${new Date(t.d).toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'})}</span><b>${tl(t.a)}</b></div>`).join('')}</div>`:''}</div></div>`;
 }
-function vAyarlar(){
-  const opt=r=>Object.entries(RES).map(([k,v])=>`<option value="${k}" ${r===k?'selected':''}>${v.name}</option>`).join('');
-  const rows=S.tasks.map(t=>`<div class="trow">
-    <input value="${esc(t.name)}" data-f="name" data-id="${esc(t.id)}" aria-label="Görev adı">
-    <input value="${esc(t.hint)}" data-f="hint" data-id="${esc(t.id)}" placeholder="Açıklama, örneğin 20 dakika" aria-label="Açıklama">
-    <div class="g3"><label><span class="lab">Kaynak</span><select data-f="res" data-id="${esc(t.id)}">${opt(t.res)}</select></label>
-      <label><span class="lab">Miktar</span><input type="number" value="${esc(t.amt)}" data-f="amt" data-id="${esc(t.id)}"></label>
-      <label><span class="lab">₺ hakkı</span><input type="number" value="${esc(t.tl)}" data-f="tl" data-id="${esc(t.id)}" ${t.dini?'disabled':''}></label></div>
-    <div class="g2"><label><span class="lab">Nasıl tamamlanır</span><select data-f="type" data-id="${esc(t.id)}">${[['check','Tek dokunuş'],['count','Sayaçla (zikirmatik)'],['timer','Zamanlayıcıyla'],['pages','Sayfa sayısıyla']].map(([v,l])=>`<option value="${v}" ${(t.type||'check')===v?'selected':''}>${l}</option>`).join('')}</select></label>
-      <label><span class="lab">${t.type==='timer'?'Süre (dakika)':t.type==='count'?'Hedef sayı':t.type==='pages'?'Günlük sayfa (0 = serbest)':'Hedef'}</span><input type="number" value="${esc(t.goal||'')}" data-f="goal" data-id="${esc(t.id)}" ${t.type==='check'||!t.type?'disabled':''}></label></div>
-    <div class="between"><label class="ck"><input type="checkbox" data-f="dini" data-id="${esc(t.id)}" ${t.dini?'checked':''}> Dini görev, para kazandırmaz</label>
-      <button class="btn ghost" data-act="del" data-id="${esc(t.id)}">Sil</button></div></div>`).join('');
-  return `<h2 class="ptitle">Ayarlar</h2><div class="cols v-ayarlar">
-  <div class="a-prof panel first"><label><span class="lab">Kandilinin adı</span><input value="${esc(S.comp)}" data-f="comp"></label>
-    <div style="margin-top:10px"><span class="lab">Birikim hedefi</span><div class="between"><input value="${esc(S.goal.name)}" data-f="goalName" aria-label="Hedef adı"><input type="number" style="max-width:120px" value="${esc(S.goal.amt)}" data-f="goalAmt" aria-label="Hedef tutarı"></div></div></div>
-  <div class="a-tasks group"><div class="ghead"><h3>Görevler</h3><small>${S.tasks.length} görev</small></div>${rows}
-    <button class="btn" style="width:100%" data-act="add">${ico('plus')} Görev ekle</button></div>
-  <div class="a-app panel"><h3>Telefona kur</h3>${installHtml()}
-    <h3 style="margin-top:16px">Günlük hatırlatıcı</h3><p class="muted" style="font-size:14px;line-height:1.45">Her gün seçtiğin saatte telefonunun takvimi sana SEFER'i hatırlatır.</p>
-    <div class="between" style="margin-top:10px"><input type="time" id="rmt" value="21:00" style="max-width:160px" aria-label="Hatırlatma saati"><button class="btn" data-act="ics">Takvime ekle</button></div></div>
-  <div class="a-bk panel" style="margin-top:22px"><h3>Yedek</h3><p class="muted" style="font-size:14px;line-height:1.45">Verilerin bu tarayıcıda saklanıyor. Ara ara yedeği kopyalayıp bir yere kaydet. Başka bir cihazda metni yapıştırıp “Yedeği yükle” ile devam edebilirsin.</p>
-    <textarea id="bk" style="margin-top:10px" aria-label="Yedek metni">${esc(JSON.stringify(S))}</textarea>
-    <div class="between" style="margin-top:10px"><div style="display:flex;gap:8px"><button class="btn ghost" data-act="copy">Kopyala</button><button class="btn ghost" data-act="import">Yedeği yükle</button></div>
-    <button class="btn red" data-act="reset" id="rst">Sıfırla</button></div></div></div>`;
+let setTab='gorevler';
+const TYPES=[['check','Tek dokunuş'],['count','Sayaçla (zikirmatik)'],['timer','Zamanlayıcıyla'],['pages','Sayfa sayısıyla']];
+function taskSummary(t){
+  const R=RES[t.res]||RES.huzur, g=+t.goal||0;
+  const how = t.type==='count' ? `Sayaçla, ${g} kez` : t.type==='timer' ? `Zamanlayıcıyla, ${g} dakika` : t.type==='pages' ? (g?`Günde ${g} sayfa`:'Sayfa sayısıyla') : 'Tek dokunuş';
+  const gain = t.type==='pages' ? `+${t.amt} ${R.name}/sayfa` : `+${t.amt} ${R.name}`;
+  return `${how}, ${gain}${!t.dini&&+t.tl?`, +${t.tl} ₺`:''}`;
 }
+function editTask(id){
+  const t=S.tasks.find(x=>x.id===id); if(!t) return; const i=S.tasks.indexOf(t);
+  const opt=Object.entries(RES).map(([k,v])=>`<option value="${k}" ${t.res===k?'selected':''}>${v.name}</option>`).join('');
+  modal(`<h3>Görevi düzenle</h3>
+    <div class="form">
+    <label><span class="lab">Görev adı</span><input value="${esc(t.name)}" data-f="name" data-id="${esc(t.id)}"></label>
+    <label><span class="lab">Açıklama</span><input value="${esc(t.hint)}" data-f="hint" data-id="${esc(t.id)}" placeholder="Örneğin 20 dakika"></label>
+    <div class="g2"><label><span class="lab">Nasıl tamamlanır</span><select data-f="type" data-id="${esc(t.id)}">${TYPES.map(([v,l])=>`<option value="${v}" ${(t.type||'check')===v?'selected':''}>${l}</option>`).join('')}</select></label>
+      <label><span class="lab">${t.type==='timer'?'Süre (dakika)':t.type==='count'?'Hedef sayı':t.type==='pages'?'Günlük sayfa (0 = serbest)':'Hedef'}</span><input type="number" value="${esc(t.goal||'')}" data-f="goal" data-id="${esc(t.id)}" ${t.type==='check'||!t.type?'disabled':''}></label></div>
+    <div class="g3"><label><span class="lab">Kaynak</span><select data-f="res" data-id="${esc(t.id)}">${opt}</select></label>
+      <label><span class="lab">${t.type==='pages'?'Sayfa başına':'Miktar'}</span><input type="number" value="${esc(t.amt)}" data-f="amt" data-id="${esc(t.id)}"></label>
+      <label><span class="lab">₺ hakkı</span><input type="number" value="${esc(t.tl)}" data-f="tl" data-id="${esc(t.id)}" ${t.dini?'disabled':''}></label></div>
+    <label class="ck"><input type="checkbox" data-f="dini" data-id="${esc(t.id)}" ${t.dini?'checked':''}> Dini görev, para kazandırmaz</label>
+    <div class="between"><div style="display:flex;gap:8px"><button class="btn ghost" data-act="mv" data-id="${esc(t.id)}:-1" ${i===0?'disabled':''} aria-label="Yukarı taşı">↑</button><button class="btn ghost" data-act="mv" data-id="${esc(t.id)}:1" ${i===S.tasks.length-1?'disabled':''} aria-label="Aşağı taşı">↓</button></div>
+      <button class="btn red" data-act="del" data-id="${esc(t.id)}" id="delb">Görevi sil</button></div></div>`);
+}
+function seg(cur,items,act){ return `<div class="seg" role="tablist">${items.map(([v,l])=>`<button role="tab" aria-selected="${cur===v}" class="${cur===v?'on':''}" data-act="${act}" data-id="${v}">${l}</button>`).join('')}</div>`; }
+function vAyarlar(){
+  let body='';
+  if(setTab==='gorevler'){
+    const row=t=>{ const R=RES[t.res]||RES.huzur; return `<button class="trow2" data-act="edit" data-id="${esc(t.id)}"><span class="medal sm" style="--c:${R.color}">${ico(t.res)}</span>
+      <span class="tx"><b>${esc(t.name)}${t.dini?'<span class="tag">Dini</span>':''}</b><small>${esc(taskSummary(t))}</small></span><span class="chev">›</span></button>`; };
+    body=`<div class="tlist">${S.tasks.map(row).join('')}</div>
+      <button class="btn" style="width:100%;margin-top:12px" data-act="add">${ico('plus')} Görev ekle</button>
+      <p class="muted" style="font-size:13px;margin-top:10px">Düzenlemek, sırasını değiştirmek ya da silmek için göreve dokun.</p>`;
+  } else if(setTab==='gorunum'){
+    const u=S.ui;
+    body=`<div class="panel first"><h3>Tema</h3>${seg(u.theme,[['dark','Gece'],['light','Gündüz'],['auto','Cihaza göre']],'uiTheme')}
+      <h3 style="margin-top:20px">Yazı boyutu</h3>${seg(String(u.font),[['0.9','Küçük'],['1','Normal'],['1.12','Büyük'],['1.25','Çok büyük']],'uiFont')}
+      <p class="muted" style="margin-top:10px;font-size:14px">Örnek: Bugün 3 görev tamamladığında kandilin tam yanar.</p></div>
+      <div class="panel"><h3>Ses ve titreşim</h3>
+      <label class="switch"><span><b>Titreşim</b><small>Görev tamamlarken ve zikir çekerken</small></span><input type="checkbox" data-f="uiVib" ${u.vib!==false?'checked':''}></label>
+      <label class="switch"><span><b>Zamanlayıcı sesi</b><small>Süre dolduğunda kısa bir zil</small></span><input type="checkbox" data-f="uiSound" ${u.sound!==false?'checked':''}></label>
+      <label class="switch"><span><b>Hareketli efektler</b><small>Kutlama parçacıkları ve geçişler</small></span><input type="checkbox" data-f="uiFx" ${u.fx!==false?'checked':''}></label></div>`;
+  } else if(setTab==='genel'){
+    body=`<div class="panel first"><label><span class="lab">Kandilinin adı</span><input value="${esc(S.comp)}" data-f="comp"></label>
+      <div style="margin-top:12px"><span class="lab">Birikim hedefi</span><div class="between"><input value="${esc(S.goal.name)}" data-f="goalName" aria-label="Hedef adı"><input type="number" style="max-width:130px" value="${esc(S.goal.amt)}" data-f="goalAmt" aria-label="Hedef tutarı"></div></div></div>
+      <div class="panel"><h3>Telefona kur</h3>${installHtml()}</div>
+      <div class="panel"><h3>Günlük hatırlatıcı</h3><p class="muted" style="font-size:14px;line-height:1.45">Her gün seçtiğin saatte telefonunun takvimi sana SEFER'i hatırlatır.</p>
+      <div class="between" style="margin-top:10px"><input type="time" id="rmt" value="21:00" style="max-width:160px" aria-label="Hatırlatma saati"><button class="btn" data-act="ics">Takvime ekle</button></div></div>`;
+  } else {
+    body=`<div class="panel first"><h3>Yedek</h3><p class="muted" style="font-size:14px;line-height:1.45">Verilerin bu tarayıcıda saklanıyor. Ara ara yedeği kopyalayıp bir yere kaydet. Başka bir cihazda metni yapıştırıp “Yedeği yükle” ile devam edebilirsin.</p>
+      <textarea id="bk" style="margin-top:10px" aria-label="Yedek metni">${esc(JSON.stringify(S))}</textarea>
+      <div style="display:flex;gap:8px;margin-top:10px"><button class="btn ghost" data-act="copy">Kopyala</button><button class="btn ghost" data-act="import">Yedeği yükle</button></div></div>
+      <div class="panel"><h3>Baştan başla</h3><p class="muted" style="font-size:14px;line-height:1.45">Tüm ilerlemen, görevlerin ve hazinen silinir. Önce yedek almanı öneririm.</p>
+      <button class="btn red" style="margin-top:10px" data-act="reset" id="rst">Sıfırla</button></div>`;
+  }
+  return `<h2 class="ptitle">Ayarlar</h2><div class="setwrap">${seg(setTab,[['gorevler','Görevler'],['gorunum','Görünüm'],['genel','Genel'],['yedek','Yedek']],'setTab')}<div class="setbody">${body}</div></div>`;
+}
+
+/* ---------- görünüm ---------- */
+const PAL={
+  dark:{res:{huzur:'#2bb3b1',ilim:'#8fa8ff',guc:'#e0674f',lisan:'#6cc28a'}, node:'#1a3561',nodeS:'#2e5390',numDim:'#a9b8d3',name:'#f7f3ea',nameDim:'#6f86ad',sub:'#a9b8d3',subCur:'#bff0ee',subDim:'#56709a',badgeIn:'#13294b',track:'#27497d',meta:'#13294b'},
+  light:{res:{huzur:'#128a88',ilim:'#4a5fc4',guc:'#cf5236',lisan:'#2f8a52'}, node:'#ffffff',nodeS:'#c5d1e3',numDim:'#5a6a86',name:'#15264a',nameDim:'#8a98b3',sub:'#5a6a86',subCur:'#128a88',subDim:'#9aa6bd',badgeIn:'#ffffff',track:'#dde4ef',meta:'#eef2f8'}
+};
+let TC=PAL.dark;
+function themeNow(){ const t=S.ui.theme; if(t==='auto'){ try{ return matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'; }catch(e){ return 'dark'; } } return t==='light'?'light':'dark'; }
+function applyUI(){
+  const th=themeNow(); TC=PAL[th]; Object.entries(TC.res).forEach(([k,c])=>RES[k].color=c);
+  const root=document.documentElement; root.dataset.theme=th; root.style.setProperty('--zoom',S.ui.font||1);
+  root.classList.toggle('nofx', S.ui.fx===false);
+  const m=document.querySelector('meta[name="theme-color"]'); if(m) m.content=TC.meta;
+}
+try{ matchMedia('(prefers-color-scheme: light)').addEventListener('change',()=>{ if(S.ui.theme==='auto'){ applyUI(); render(); } }); }catch(e){}
+function vib(p){ if(S.ui.vib===false) return; try{ navigator.vibrate&&navigator.vibrate(p); }catch(e){} }
 
 /* ================= YÖNLENDİRME ================= */
 const TABS=[['bugun','sun','Bugün',vBugun],['harita','map','Harita',vHarita],['sefer','route','Sefer',vSefer],['hazine','vault','Hazine',vHazine],['ayarlar','sliders','Ayarlar',vAyarlar]];
@@ -889,8 +967,15 @@ const ACT={
     if(a<=0) return toast('Aktardığın tutarı yaz.');
     if(a>bal) return toast(`En fazla ${tl(bal)} aktarabilirsin.`);
     S.transfers.push({d:dk(),a}); save(); toast(`${tl(a)} birikime aktarıldı. Bereketli olsun.`); render(); },
-  add:()=>{ S.tasks.push({id:'t'+Date.now(),name:'Yeni görev',hint:'',res:'ilim',amt:10,tl:10,dini:false,type:'check',goal:0}); save(); render(); },
-  del:id=>{ S.tasks=S.tasks.filter(t=>t.id!==id); save(); render(); },
+  add:()=>{ const id='t'+Date.now(); S.tasks.push({id,name:'Yeni görev',hint:'',res:'ilim',amt:10,tl:10,dini:false,type:'check',goal:0}); save(); render(); editTask(id); },
+  edit:id=>editTask(id),
+  mv:v=>{ const [id,d]=v.split(':'), i=S.tasks.findIndex(t=>t.id===id), j=i+(+d); if(i<0||j<0||j>=S.tasks.length) return;
+    [S.tasks[i],S.tasks[j]]=[S.tasks[j],S.tasks[i]]; save(); render(); editTask(id); },
+  setTab:v=>{ setTab=v; render(); },
+  uiTheme:v=>{ S.ui.theme=v; save(); applyUI(); render(); },
+  uiFont:v=>{ S.ui.font=+v; save(); applyUI(); render(); },
+  del:id=>{ const b=$('delb'); if(b && !b.dataset.arm){ b.dataset.arm=1; b.textContent='Emin misin? Tekrar bas'; return; }
+    S.tasks=S.tasks.filter(t=>t.id!==id); save(); closeModal(); render(); toast('Görev silindi.'); },
   copy:()=>{ const v=$('bk').value, sel=()=>{$('bk').select(); toast('Metni seçtim, kopyalayabilirsin.');};
     try{ navigator.clipboard.writeText(v).then(()=>toast('Yedek kopyalandı.'),sel); }catch(e){ sel(); } },
   import:()=>{ try{ const o=JSON.parse($('bk').value); if(!o||typeof o!=='object'||!o.days) throw 0; S=merge(o); save(); toast('Yedek yüklendi.'); render(); }
@@ -909,13 +994,14 @@ document.addEventListener('keydown',e=>{
 });
 document.addEventListener('change',e=>{
   const el=e.target, f=el.dataset&&el.dataset.f; if(!f) return;
+  if(f==='uiVib'||f==='uiSound'||f==='uiFx'){ S.ui[{uiVib:'vib',uiSound:'sound',uiFx:'fx'}[f]]=el.checked; save(); applyUI(); return; }
   if(f==='comp') S.comp=el.value.trim()||'Kandil';
   else if(f==='goalName') S.goal.name=el.value.trim()||'Hedef';
   else if(f==='goalAmt') S.goal.amt=Math.max(1,+el.value||1);
   else{ const t=S.tasks.find(x=>x.id===el.dataset.id); if(!t) return;
-    if(f==='dini'){ t.dini=el.checked; if(t.dini) t.tl=0; save(); render(); return; }
-    if(f==='type'){ t.type=el.value; if(t.type==='count'&&!t.goal) t.goal=33; if(t.type==='timer'&&!t.goal) t.goal=10; save(); render(); return; }
-    t[f]=(f==='amt'||f==='tl'||f==='goal')?Math.max(0,+el.value||0):el.value; }
+    if(f==='dini'){ t.dini=el.checked; if(t.dini) t.tl=0; save(); render(); editTask(t.id); return; }
+    if(f==='type'){ t.type=el.value; if(t.type==='count'&&!t.goal) t.goal=33; if(t.type==='timer'&&!t.goal) t.goal=10; save(); render(); editTask(t.id); return; }
+    t[f]=(f==='amt'||f==='tl'||f==='goal')?Math.max(0,+el.value||0):el.value; save(); render(); return; }
   save(); $('hdr').innerHTML=vHeader();
 });
 window.addEventListener('hashchange',()=>{ readHash(); render(); });
@@ -933,7 +1019,7 @@ if('serviceWorker' in navigator && location.protocol==='https:' && !/claude/.tes
   window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
 }
 document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'){ tick(); render(); } });
-readHash(); tmRestore(); render();
+readHash(); tmRestore(); applyUI(); render();
 </script>
 </body>
 </html>
