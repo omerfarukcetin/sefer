@@ -239,6 +239,7 @@ button.zikr:active{transform:scale(.97)}
 .cd.free{opacity:.45}
 .daypick{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
 .daypick button{padding:9px 0;border-radius:10px;font-size:13px;font-weight:800;background:var(--lapis);border:1px solid var(--line);color:var(--mist)}
+.daypick.n5{grid-template-columns:repeat(5,1fr)}
 .daypick button.on{background:var(--turq);border-color:var(--turq);color:var(--lapis)}
 .rlist2{margin-top:6px}
 @media (min-width:700px){ .sgrid{grid-template-columns:1fr 1fr} }
@@ -888,6 +889,27 @@ const PEP='sefer-push-ep', PSUB='sefer-push-sub';
 const pushSupported = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window && location.protocol==='https:' && !/claude/.test(location.hostname);
 const pushOn = () => { try{ return !!localStorage.getItem(PEP); }catch(e){ return false; } };
 const atOf = (k,hm) => { const [y,m,d]=k.split('-').map(Number), [h,mi]=hm.split(':').map(Number); return new Date(y,m-1,d,h,mi).getTime(); };
+/* ---------- namaz vakti bildirimleri ---------- */
+const NMZ_END={sabah:'gunes',ogle:'ikindi',ikindi:'aksam',aksam:'yatsi',yatsi:'imsak'};
+const nmz = () => Object.assign({on:false,list:NAMAZ.map(x=>x[0]),enter:true,before:10}, S.nmz||{});
+function nmzQueue(k,now){
+  const c=nmz(), out=[]; if(!c.on) return out; const v=vakitOf(k); if(!v) return out;
+  c.list.forEach(id=>{ const nm=(NAMAZ.find(x=>x[0]===id)||[])[1], st=v[id]; if(!st) return; const short=nm.replace(' namazı','');
+    if(c.enter){ const at=atOf(k,st); if(at>now) out.push({at:new Date(at).toISOString(), title:`${short} vakti`, body:`${nm} vakti girdi (${st}).`, tag:`n-${id}-${k}`}); }
+    if(+c.before>0){ const ek=id==='yatsi'?addDays(k,1):k, ev=vakitOf(ek), en=ev&&ev[NMZ_END[id]]; if(!en) return;
+      const at=atOf(ek,en)-c.before*60000; if(at>now) out.push({at:new Date(at).toISOString(), title:nm, body:`Vaktin çıkmasına ${c.before} dakika kaldı (${en}).`, tag:`nc-${id}-${k}`}); } });
+  return out;
+}
+function nmzHtml(){
+  const c=nmz();
+  return `<div class="panel"><h3>Namaz vakti bildirimleri</h3><p class="muted" style="font-size:14px;line-height:1.5">Seçtiğin namazların vakti girince ve vakit çıkmadan önce haber verir. Vakitler ${S.cityId?'seçtiğin şehre':'şehrine'} göre hesaplanır.</p>
+    <label class="switch"><span><b>Namaz vakti bildirimlerini kullan</b></span><input type="checkbox" data-f="nmzOn" ${c.on?'checked':''}></label>
+    ${c.on?`<div style="margin-top:10px"><span class="lab">Hangi namazlar</span><div class="daypick n5">${NAMAZ.map(([id,l])=>`<button class="${c.list.includes(id)?'on':''}" data-act="nmzv" data-id="${id}">${esc(l.replace(' namazı',''))}</button>`).join('')}</div></div>
+    <label class="switch"><span><b>Vakit girince</b><small>Örneğin "Öğle vakti girdi"</small></span><input type="checkbox" data-f="nmzIn" ${c.enter?'checked':''}></label>
+    <div style="margin-top:10px"><span class="lab">Vaktin çıkmasına kala</span>${seg(String(c.before),[['0','Kapalı'],['5','5 dk'],['10','10 dk'],['15','15 dk'],['30','30 dk']],'nmzb')}</div>
+    <p class="muted" style="font-size:13px;margin-top:8px">Vaktin çıkışı bir sonraki vakittir: sabah için güneş, ikindi için akşam, yatsı için imsak.</p>
+    ${S.cityId?'':'<p class="muted" style="font-size:13px">Önce aşağıdan şehrini seç.</p>'}`:''}</div>`;
+}
 function buildQueue(extra){
   const now=Date.now(), q=[], today=dk();
   for(let i=0;i<7;i++){
@@ -903,8 +925,9 @@ function buildQueue(extra){
       const n=sc.filter(t=>isDone(t,k)).length, need=chainNeed(sc.length);
       if(i>0 || n<need) q.push({at:new Date(at).toISOString(), title:'Zinciri kırma', body:i===0?`Zincir için ${need-n} görev daha gerekiyor.`:`Bugünkü zincir hedefine ulaştın mı? ${need} görev gerekiyor.`, tag:`z-${k}`}); } }
   }
+  for(let i=0;i<7;i++) q.push(...nmzQueue(addDays(today,i),now));
   if(extra) q.push(extra);
-  return q.sort((a,b)=>a.at<b.at?-1:1).slice(0,120);
+  return q.sort((a,b)=>a.at<b.at?-1:1).slice(0,240);
 }
 let pushT=null;
 function schedulePush(){ if(!pushOn()) return; clearTimeout(pushT); pushT=setTimeout(()=>pushSync(),2000); }
@@ -1234,7 +1257,7 @@ function vAyarlar(){
       <p class="muted" style="font-size:13px;margin-top:10px">Günlerini, hatırlatma saatini ya da sırasını değiştirmek için göreve dokun.</p>`;
   } else if(setTab==='hatirlatma'){
     const withTime=S.tasks.filter(t=>t.remind||(t.rv&&t.rv.v));
-    body=pushHtml()+`<div class="panel"><h3>Takvim hatırlatmaları</h3><p class="muted" style="font-size:14px;line-height:1.5">Bildirim kullanamıyorsan hatırlatmaları telefonunun takvimine de ekleyebilirsin. Görevlere saat vermek için Görevler sekmesinde göreve dokun.</p>
+    body=pushHtml()+nmzHtml()+`<div class="panel"><h3>Takvim hatırlatmaları</h3><p class="muted" style="font-size:14px;line-height:1.5">Bildirim kullanamıyorsan hatırlatmaları telefonunun takvimine de ekleyebilirsin. Görevlere saat vermek için Görevler sekmesinde göreve dokun.</p>
       <label class="switch"><span><b>Günlük özet hatırlatması</b><small>Her gün bu saatte tüm görevler için bir hatırlatma</small></span><input type="time" id="rmt" value="${esc(S.remindAll||'')}" data-f="remindAll" style="max-width:130px"></label>
       <div class="rlist2">${withTime.length?withTime.map(t=>`<div class="log"><span>${esc(t.name)} <span class="muted">(${esc(isWeekly(t)?'her gün':dayTxt(t))})</span></span><b>${esc(t.remind||rvTxt(t))}</b></div>`).join(''):'<p class="muted" style="font-size:14px">Henüz saat verilmiş görev yok.</p>'}</div>
       <button class="btn" style="margin-top:14px" data-act="ics">${ico('bell')} Takvimime ekle</button>
@@ -1300,6 +1323,8 @@ const ACT={
       const c=JSON.parse(JSON.stringify(t)); c.id='t'+Date.now()+v; c.vakit=v; c.since=dk(); if(c.rv&&c.rv.v) c.rv={...c.rv,v}; delete c.hist; S.tasks.splice(++i,0,c); n++; });
     save(); render(); editTask(id); toast(n?`${n} vakte daha eklendi.`:'Bu görev zaten bütün vakitlerde var.'); },
   cpct:v=>{ S.chainPct=+v; save(); render(); },
+  nmzv:v=>{ const c=nmz(), l=c.list.includes(v)?c.list.filter(x=>x!==v):[...c.list,v]; S.nmz={...c,list:NAMAZ.map(x=>x[0]).filter(x=>l.includes(x))}; save(); render(); },
+  nmzb:v=>{ S.nmz={...nmz(),before:+v}; save(); render(); },
   cpull:()=>{ setCloud('Eşitleniyor…'); pullCloud(); },
   cout:async()=>{ try{ await sb.auth.signOut(); }catch(e){} sbUser=null; setCloud(''); render(); toast('Çıkış yapıldı. Veriler bu cihazda duruyor.'); },
   amode:()=>{ authMode=authMode==='up'?'in':'up'; render(); },
@@ -1369,6 +1394,8 @@ document.addEventListener('change',e=>{
   if(f==='dex'){ const k=el.dataset.id; if(el.checked&&excuseLeft(k)<=0){ el.checked=false; return toast('Bu ayki mazeret hakların bitti.'); } rec(k).excused=el.checked; save(); render(); return openDay(k); }
   if(f==='riskTime'){ S.riskTime=el.value||'21:00'; save(); return; }
   if(f==='riskOn'){ S.riskOn=el.checked; save(); return; }
+  if(f==='nmzOn'){ S.nmz={...nmz(),on:el.checked}; save(); render(); if(el.checked&&!pushOn()) toast('Bildirimlerin gelmesi için yukarıdan bildirimleri de aç.'); return; }
+  if(f==='nmzIn'){ S.nmz={...nmz(),enter:el.checked}; save(); return; }
   if(f==='note'){ rec(el.dataset.id).note=el.value; save(); return; }
   const t=S.tasks.find(x=>x.id===el.dataset.id); if(!t) return;
   if(f==='dini'){ t.dini=el.checked; }
