@@ -899,7 +899,7 @@ const atOf = (k,hm) => { const [y,m,d]=k.split('-').map(Number), [h,mi]=hm.split
 /* ---------- namaz vakti bildirimleri ---------- */
 const NMZ_END={sabah:'gunes',ogle:'ikindi',ikindi:'aksam',aksam:'yatsi',yatsi:'imsak'};
 const prayed = (k,id) => !!(S.days[k]&&S.days[k].nmz&&S.days[k].nmz[id]);
-function markPrayed(id,k=dk(),val){ const r=S.days[k]=S.days[k]||{done:{}}; r.nmz=r.nmz||{}; r.nmz[id]= val==null ? !r.nmz[id] : val; save(); render(); const l=(NAMAZ.find(x=>x[0]===id)||[])[1]||''; toast(r.nmz[id]?`${l} kılındı olarak işaretlendi. Allah kabul etsin.`:`${l} işareti kaldırıldı.`); }
+function markPrayed(id,k=dk(),val){ const r=S.days[k]=S.days[k]||{done:{}}; r.nmz=r.nmz||{}; r.nmz[id]= val==null ? !r.nmz[id] : val; save(); render(); const l=(NAMAZ.find(x=>x[0]===id)||[])[1]||''; toast(r.nmz[id]?`${l} kılındı olarak işaretlendi.`:`${l} işareti kaldırıldı.`); }
 const nmz = () => Object.assign({on:false,list:NAMAZ.map(x=>x[0]),enter:true,before:10}, S.nmz||{});
 function nmzQueue(k,now){
   const c=nmz(), out=[]; if(!c.on) return out; const v=vakitOf(k); if(!v) return out;
@@ -1083,7 +1083,7 @@ function saveHatim(id){
   const after=hProg(t);
   if(after.left<=0){ (t.hist=t.hist||[]).push({name:t.proj||'',start:t.projStart||'',end:dk(),pages:after.total});
     const num=t.hist.length+1; t.start=0; t.projStart=addDays(dk(),1); t.due='';
-    if(t.quran){ t.proj=`${num}. hatim`; save(); closeModal(); render(); return toast(`Hatim tamamlandı. Allah kabul etsin. Yarın ${t.proj} başlıyor.`); }
+    if(t.quran){ t.proj=`${num}. hatim`; save(); closeModal(); render(); return toast(`Hatim tamamlandı. Yarın ${t.proj} başlıyor.`); }
     const fin=t.proj; t.proj=''; t.total=0; save(); render(); openBook(id); return toast(`${fin||'Kitap'} bitti. Sıradaki kitabını gir.`); }
   save(); closeModal(); render();
   toast(r.done[id] ? `${n} sayfa kaydedildi. Sayfa ${after.cur} / ${after.total}.` : `${n} sayfa eklendi. Bugünkü hedefe ${goal-total} sayfa kaldı.`);
