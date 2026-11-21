@@ -267,6 +267,8 @@ button.zikr:active{transform:scale(.97)}
 .ygrid i.y-ex{background:var(--turq);opacity:.5}.ygrid i.y-rest{opacity:.4}.ygrid i.y-fut{opacity:.25}.ygrid i.today{outline:1.5px solid var(--white)}
 .nprev{padding:8px 0;border-bottom:1px solid var(--lapis3)}.nprev b{font-size:13px;color:var(--mist);text-transform:capitalize}.nprev p{font-size:14px;line-height:1.45;margin-top:2px}
 .linkb{color:var(--turq);font-weight:700;text-decoration:underline;text-underline-offset:3px}
+.vtime{font-size:13px;font-weight:700;color:var(--mist);margin-left:6px}
+.vgroup.nowv .ghead h3{color:var(--saffron)}.vgroup.nowv .vtime{color:var(--saffron)}
 .hsec{margin-top:18px}.hsec h3{font-size:18px;margin:0 2px 10px}
 .hgrid{display:grid;gap:10px}
 .hcard{background:var(--lapis2);border:1px solid var(--lapis3);border-radius:var(--r-lg);padding:16px}
@@ -529,8 +531,10 @@ function dayState(k){ // full | part | none | ex | rest | fut
   if(k>dk()) return 'fut';
   const sc=S.tasks.filter(t=>scheduled(t,k)); if(!sc.length) return 'rest';
   const dn=sc.filter(t=>isDone(t,k)).length;
-  if(dn===sc.length) return 'full'; if(excused(k)) return 'ex'; return dn?'part':'none';
+  if(dn>=chainNeed(sc.length)) return 'full'; if(excused(k)) return 'ex'; return dn?'part':'none';
 }
+const chainPct = () => S.chainPct===undefined ? 75 : +S.chainPct;
+const chainNeed = n => Math.max(1, Math.ceil(n*chainPct()/100 - 1e-9));
 function chainFrom(k){ const min=firstKey(); let n=0,g=0; while(k>=min && g++<4000){ const st=dayState(k); if(st==='full'){ n++; } else if(st!=='ex'&&st!=='rest') break; k=addDays(k,-1); } return n; }
 function chainNow(){ const t=dk(); return dayState(t)==='full' ? chainFrom(t) : chainFrom(addDays(t,-1)); }
 function chainBest(){ let k=firstKey(), end=dk(), run=0, best=0, g=0; while(k<=end && g++<4000){ const st=dayState(k); if(st==='full'){ run++; best=Math.max(best,run); } else if(st==='ex'||st==='rest'){} else if(k!==end) run=0; k=addDays(k,1); } return best; }
@@ -788,7 +792,7 @@ function maybeWeekSummary(){
 }
 
 /* ================= NAMAZ VAKİTLERİ ================= */
-const VAKIT=[['imsak','İmsak','Fajr'],['gunes','Güneş','Sunrise'],['ogle','Öğle','Dhuhr'],['ikindi','İkindi','Asr'],['aksam','Akşam','Maghrib'],['yatsi','Yatsı','Isha']];
+const VAKIT=[['imsak','İmsak','Fajr'],['sabah','Sabah','Sabah'],['gunes','Güneş','Sunrise'],['ogle','Öğle','Dhuhr'],['ikindi','İkindi','Asr'],['aksam','Akşam','Maghrib'],['yatsi','Yatsı','Isha']];
 let VK={}; try{ VK=JSON.parse(localStorage.getItem('sefer-vakit'))||{}; }catch(e){ VK={}; }
 function saveVK(){ try{ localStorage.setItem('sefer-vakit',JSON.stringify(VK)); }catch(e){} }
 let CITIES=null;
@@ -810,15 +814,17 @@ async function loadVakit(force){
   else if(force) toast('Bu şehrin vakitleri henüz eklenmemiş. Şehir kodunu bana söyle ya da birkaç dakika sonra tekrar dene.');
 }
 const vakitOf = k => { if(!S.cityId||VK.id!==S.cityId||!VK.days) return null; const a=VK.days[k]; if(!a) return null;
-  return {imsak:a[0],gunes:a[2],ogle:a[5],ikindi:a[6],aksam:a[9],yatsi:a[11]}; };
+  return {imsak:a[0],sabah:a[1],gunes:a[2],ogle:a[5],ikindi:a[6],aksam:a[9],yatsi:a[11]}; };
+const NAMAZ=[['sabah','Sabah namazı'],['ogle','Öğle namazı'],['ikindi','İkindi namazı'],['aksam','Akşam namazı'],['yatsi','Yatsı namazı']];
+function currentVakit(){ const v=vakitOf(dk()); if(!v) return null; const n=new Date(), hm=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0'); let cur=null; NAMAZ.forEach(([id])=>{ if(v[id]&&v[id]<=hm) cur=id; }); if(v.gunes&&hm>=v.gunes&&hm<(v.ogle||'99')) cur=null; return cur; }
 function vakitStrip(){
   const v=vakitOf(dk()); if(!v) return '';
   const now=new Date(), hm=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
-  const nx=VAKIT.find(([id])=>v[id]>hm);
-  return `<div class="vakitler">${VAKIT.map(([id,l])=>`<span class="${nx&&nx[0]===id?'next':''}"><small>${l}</small><b>${v[id]}</b></span>`).join('')}</div>`;
+  const nx=VAKIT.filter(x=>x[0]!=='sabah').find(([id])=>v[id]>hm);
+  return `<div class="vakitler">${VAKIT.filter(x=>x[0]!=='sabah').map(([id,l])=>`<span class="${nx&&nx[0]===id?'next':''}"><small>${l}</small><b>${v[id]}</b></span>`).join('')}</div>`;
 }
 const addMin = (hm,m) => { const [h,mi]=hm.split(':').map(Number); const t=((h*60+mi+m)%1440+1440)%1440; return String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0'); };
-const VABL={imsak:'İmsaktan',gunes:'Güneşten',ogle:'Öğleden',ikindi:'İkindiden',aksam:'Akşamdan',yatsi:'Yatsıdan'};
+const VABL={imsak:'İmsaktan',sabah:'Sabahtan',gunes:'Güneşten',ogle:'Öğleden',ikindi:'İkindiden',aksam:'Akşamdan',yatsi:'Yatsıdan'};
 function rvTxt(t){ if(!t.rv||!t.rv.v) return ''; const l=(VAKIT.find(x=>x[0]===t.rv.v)||[])[1], o=+t.rv.off||0; return o===0?`${l} vaktinde`: o>0?`${VABL[t.rv.v]} ${o} dk sonra`:`${VABL[t.rv.v]} ${-o} dk önce`; }
 
 /* ================= HATİM / KİTAP TAKİBİ ================= */
@@ -913,18 +919,24 @@ function excuseBox(){
 function vBugun(){
   const T=todays(), k=dk(), n=T.filter(t=>isDone(t,k)).length, p=T.length?n/T.length:0, left=T.filter(t=>!isDone(t,k));
   const ev=new Date().getHours()>=17;
-  const ch=chainNow(), done=n===T.length&&T.length, prevCh=done?ch:ch;
-  const head = !T.length ? 'Bugün dinlenme günü' : done ? `Zincir ${ch} gün` : 'Zinciri kırma';
-  const sub = !T.length ? 'Bugün planlı görev yok, zincirin bozulmaz.' : done ? 'Bugünün halkası eklendi. Allah kabul etsin.' :
-    ev ? `${left.length} görev kaldı: ${esc(left.map(t=>t.name).join(', '))}. Gece yarısına kadar tamamlarsan zincir ${ch+1} gün olur.`
-       : `${left.length} görev kaldı. Hepsini tamamlarsan zincir ${ch+1} gün olur.`;
+  const ch=chainNow(), need=chainNeed(T.length), done=n===T.length&&T.length, linked=T.length&&n>=need, more=need-n, pct=chainPct();
+  const head = !T.length ? 'Bugün dinlenme günü' : linked ? `Zincir ${ch} gün` : 'Zinciri kırma';
+  const sub = !T.length ? 'Bugün planlı görev yok, zincirin bozulmaz.' : done ? 'Bugünkü görevlerin tamam. Allah kabul etsin.' :
+    linked ? `Bugünün halkası eklendi. ${left.length} görev daha var, onları da yapabilirsin.` :
+    ev ? `Zincir için ${more} görev daha gerekiyor. Kalanlar: ${esc(left.map(t=>t.name).join(', '))}.`
+       : `Zincir için bugün ${T.length} görevden en az ${need} tanesini yap. ${more} görev kaldı.`;
   const strip = `<div class="chainbox"><div class="between"><b>Son 14 gün</b><span class="muted">En uzun zincir: ${chainBest()} gün</span></div>${chainSvg(14)}</div>`;
-  const dini=T.filter(t=>t.dini), diger=T.filter(t=>!t.dini), off=S.tasks.filter(t=>!isWeekly(t)&&!scheduled(t,k)), W=weeklies();
+  const VT=T.filter(t=>t.vakit), rest=T.filter(t=>!t.vakit);
+  const dini=rest.filter(t=>t.dini), diger=rest.filter(t=>!t.dini), off=S.tasks.filter(t=>!isWeekly(t)&&!scheduled(t,k)), W=weeklies();
+  const vnow=currentVakit();
+  const vgroups=NAMAZ.map(([id,l])=>{ const L=VT.filter(t=>t.vakit===id); if(!L.length) return ''; const v=vakitOf(k);
+    return `<div class="group vgroup ${vnow===id?'nowv':''}"><div class="ghead"><h3>${l}${v?` <span class="vtime">${v[id]}</span>`:''}</h3><small>${L.filter(t=>isDone(t,k)).length} / ${L.length}</small></div>${L.map(t=>taskRow(t)).join('')}</div>`; }).join('');
   const ex=excuseBox(), left2=excuseLeft();
-  return `<div class="cols v-bugun"><div class="a-hero"><section class="hero ${ev&&left.length?'risk':''}">${lanternSvg(p)}<div class="txt"><h2>${head}</h2><p>${sub}</p></div></section>
+  return `<div class="cols v-bugun"><div class="a-hero"><section class="hero ${ev&&!linked&&T.length?'risk':''}">${lanternSvg(p)}<div class="txt"><h2>${head}</h2><p>${sub}</p></div></section>
     ${vakitStrip()}${strip}${ex.includes('warn')?ex:''}</div><div class="a-tasks">
-    ${dini.length?`<div class="group first"><div class="ghead"><h3>İbadet</h3><small>${dini.filter(t=>isDone(t,k)).length} / ${dini.length}</small></div>${dini.map(t=>taskRow(t)).join('')}</div>`:''}
-    ${diger.length?`<div class="group ${dini.length?'':'first'}"><div class="ghead"><h3>Gelişim</h3><small>${diger.filter(t=>isDone(t,k)).length} / ${diger.length}</small></div>${diger.map(t=>taskRow(t)).join('')}</div>`:''}
+    ${vgroups}
+    ${dini.length?`<div class="group ${vgroups?'':'first'}"><div class="ghead"><h3>${vgroups?'Diğer ibadetler':'İbadet'}</h3><small>${dini.filter(t=>isDone(t,k)).length} / ${dini.length}</small></div>${dini.map(t=>taskRow(t)).join('')}</div>`:''}
+    ${diger.length?`<div class="group ${dini.length||vgroups?'':'first'}"><div class="ghead"><h3>Gelişim</h3><small>${diger.filter(t=>isDone(t,k)).length} / ${diger.length}</small></div>${diger.map(t=>taskRow(t)).join('')}</div>`:''}
     ${W.length?`<div class="group"><div class="ghead"><h3>Bu hafta</h3><small>${W.filter(t=>weekMet(t,wkStart(k))).length} / ${W.length} hedef tamam</small></div>${W.map(t=>taskRow(t)).join('')}</div>`:''}
     ${off.length?`<p class="offday">Bugün planlı değil: ${esc(off.map(t=>t.name).join(', '))}</p>`:''}
     ${ex.includes('warn')?'':ex||`<div class="excuse-link"><button data-act="excuse" data-id="${k}" ${left2<=0?'disabled':''}>Bugün mazeretliyim</button><span>Hastalık, yolculuk gibi günlerde serilerin bozulmaz. Bu ay ${Math.max(0,left2)} hakkın kaldı.</span></div>`}
@@ -944,7 +956,7 @@ function vCal(){
   for(let d=1;d<=nd;d++){
     const k=`${m}-${String(d).padStart(2,'0')}`, fut=k>today, sc=T.filter(t=>scheduled(t,k)), dn=sc.filter(t=>isDone(t,k)).length;
     if(sc.length&&dn===sc.length&&!fut) full++; if(excused(k)) ex++;
-    const cls = fut?'fut' : excused(k)&&dn<sc.length?'ex' : !sc.length?'free' : dn===sc.length?'full' : dn?'part':'';
+    const dst=dayState(k), cls = fut?'fut' : dst==='full'?'full' : dst==='ex'?'ex' : dst==='rest'?'free' : dn?'part':'';
     const pst = dayState(addDays(k,-1)), link = !fut && ['full','ex'].includes(dayState(k)) && wd(k)!==0 && ['full','ex'].includes(pst);
     cells+=`<button class="cd ${cls} ${link?'link':''} ${k===today?'today':''}" ${fut?'disabled':`data-act="day" data-id="${k}"`} aria-label="${d}: ${dn}/${sc.length}">${noteOf(k)?'<em class="ndot2"></em>':''}${d}${sc.length>1&&!fut&&dn?`<i>${dn}/${sc.length}</i>`:''}</button>`;
   }
@@ -953,7 +965,7 @@ function vCal(){
       <h3 style="margin:0;text-transform:capitalize">${label}</h3>
       <button class="btn ghost cnav" data-act="calm" data-id="1" aria-label="Sonraki ay" ${m>=cur?'disabled':''}>›</button></div>
     <div class="cal">${WD.map(w=>`<b>${w}</b>`).join('')}${cells}</div>
-    <div class="calleg"><span><i class="full"></i>Zincir halkası (hepsi yapıldı)</span><span><i class="part"></i>Bir kısmı</span><span><i class="ex"></i>Mazeretli</span></div>
+    <div class="calleg"><span><i class="full"></i>Zincir halkası</span><span><i class="part"></i>Bir kısmı</span><span><i class="ex"></i>Mazeretli</span></div>
     <div class="calsum"><div><b>${full}</b><small>tam gün</small></div><div><b>${ex}</b><small>mazeret</small></div><div><b>${Math.max(0,excuseLeft())}</b><small>kalan hak</small></div></div></div>`;
 }
 let foldOpen=false;
@@ -965,9 +977,9 @@ function vTakip(){
       <div class="smeta">${wk?`<span>Bu hafta ${weekDone(t,wkStart(dk()))} / ${+t.perWeek||3}</span><span>En uzun ${b} hafta</span>`:`<span>En uzun ${b} gün</span><span>Son 30 gün %${r.p}</span>`}${extra}</div>
       <div class="d7">${dots7(t)}</div></div>`; }).join('');
   const ch=chainNow(), best=chainBest();
-  return `<header class="phead"><h1>Takip</h1><p>Zinciri kırma: planladığın görevlerin hepsini yaptığın her gün zincire bir halka ekler.</p></header>
+  return `<header class="phead"><h1>Takip</h1><p>Zinciri kırma: planladığın görevlerin ${chainPct()===100?'hepsini':'en az %'+chainPct()+({50:"'sini",75:"'ini",90:"'ını"}[chainPct()]||"'ini")} yaptığın her gün zincire bir halka eklenir.</p></header>
     <div class="tk-top"><div class="chainhero panel first"><div class="cstat"><b>${ch}</b><small>günlük zincir</small></div><div class="cstat"><b>${best}</b><small>en uzun zincir</small></div>${chainSvg(14)}
-      <p class="muted" style="grid-column:1/-1;font-size:13px;line-height:1.45">Altın halkalar tüm görevlerin yapıldığı günler. Kesik turkuaz halkalar mazeretli günler. Kırmızı kopukluk zincirin kırıldığı gün.</p></div>
+      <p class="muted" style="grid-column:1/-1;font-size:13px;line-height:1.45">Altın halkalar zincir hedefinin tutturulduğu günler. Kesik turkuaz halkalar mazeretli günler. Kırmızı kopukluk zincirin kırıldığı gün.</p></div>
     ${vCal()}</div>
  ${S.tasks.some(t=>t.type==='hatim')?`<div class="hsec"><h3>Hatim ve kitaplar</h3><div class="hgrid">${S.tasks.filter(t=>t.type==='hatim').map(t=>hatimCard(t)).join('')}</div></div>`:''}
     <button class="btn ghost wsbtn" data-act="wsum" data-id="${addDays(wkStart(dk()),-7)}">${ico('cal')} Geçen haftanın özeti</button>
@@ -987,9 +999,10 @@ let setTab='gorevler';
 const TYPES=[['check','Tek dokunuş'],['count','Sayaçla (zikirmatik)'],['timer','Zamanlayıcıyla'],['pages','Sayfa sayısıyla'],['hatim','Hatim / kitap takibi']];
 function seg(cur,items,act){ return `<div class="seg" role="tablist">${items.map(([v,l])=>`<button role="tab" aria-selected="${cur===v}" class="${cur===v?'on':''}" data-act="${act}" data-id="${esc(v)}">${esc(l)}</button>`).join('')}</div>`; }
 function dayTxt(t){ const d=t.days||ALL; if(d.length===7) return 'Her gün'; if(d.join()==='0,1,2,3,4') return 'Hafta içi'; if(d.join()==='5,6') return 'Hafta sonu'; return d.map(i=>WD[i]).join(', '); }
+const vLabel = t => t.vakit ? (NAMAZ.find(x=>x[0]===t.vakit)||[])[1] : '';
 function taskSummary(t){ const g=+t.goal||0;
   const how = t.type==='hatim'?`${t.proj||'Takip'}, sayfa ${hProg(t).cur} / ${+t.total||604}`: t.type==='count'?`Sayaçla, ${g} kez`: t.type==='timer'?`${g} dakika`: t.type==='pages'?(g?`Günde ${g} sayfa`:'Sayfa sayısıyla'):'Tek dokunuş';
-  return `${isWeekly(t)?`Haftada ${+t.perWeek||3} kez`:dayTxt(t)}, ${how}${t.remind?`, ${t.remind}`:''}${t.rv&&t.rv.v?`, ${rvTxt(t)}`:''}`; }
+  return `${t.vakit?vLabel(t)+', ':''}${isWeekly(t)?`Haftada ${+t.perWeek||3} kez`:dayTxt(t)}, ${how}${t.remind?`, ${t.remind}`:''}${t.rv&&t.rv.v?`, ${rvTxt(t)}`:''}`; }
 function editTask(id){
   const t=S.tasks.find(x=>x.id===id); if(!t) return; const i=S.tasks.indexOf(t), dd=t.days||ALL;
   modal(`<h3>Görevi düzenle</h3><div class="form">
@@ -1003,6 +1016,8 @@ function editTask(id){
       <label class="ck"><input type="checkbox" data-f="quran" data-id="${esc(t.id)}" ${t.quran?'checked':''}> Kur'an-ı Kerim (cüz göster, 604 sayfa)</label>
       ${(t.hist||[]).length?`<div><span class="lab">Tamamlananlar</span>${t.hist.map(x=>`<div class="log"><span>${esc(x.name)}</span><span class="muted">${x.end?fmtDate(x.end):''}</span></div>`).join('')}</div>`:''}
       <button class="btn ghost" data-act="hnew" data-id="${esc(t.id)}">${t.quran?'Yeni hatme baştan başla':'Yeni kitaba başla'}</button></div>`:''}
+    <div class="g2"><label><span class="lab">Namaz vakti</span><select data-f="vakit" data-id="${esc(t.id)}"><option value="">Yok</option>${NAMAZ.map(([v,l])=>`<option value="${v}" ${t.vakit===v?'selected':''}>${l}</option>`).join('')}</select></label>
+      ${t.vakit?`<button class="btn ghost" style="align-self:end" data-act="vcopy" data-id="${esc(t.id)}">Diğer vakitlere de ekle</button>`:'<span></span>'}</div>
     <div><span class="lab">Sıklık</span>${seg(isWeekly(t)?'week':'days',[['days','Belirli günler'],['week','Haftada X kez']],'tfreq:'+t.id)}</div>
     ${isWeekly(t)?`<label><span class="lab">Haftada kaç kez</span><input type="number" min="1" max="7" value="${esc(t.perWeek||3)}" data-f="perWeek" data-id="${esc(t.id)}"></label>`:`<div><span class="lab">Hangi günler</span><div class="daypick">${WD.map((w,j)=>`<button class="${dd.includes(j)?'on':''}" data-act="tday" data-id="${esc(t.id)}:${j}" aria-pressed="${dd.includes(j)}">${w}</button>`).join('')}</div></div>`}
     <div class="g2"><label><span class="lab">Simge</span><select data-f="icon" data-id="${esc(t.id)}">${ICONS.map(([v,l])=>`<option value="${v}" ${t.icon===v?'selected':''}>${l}</option>`).join('')}</select></label>
@@ -1024,7 +1039,9 @@ const isStandalone = () => { try{ return matchMedia('(display-mode: standalone)'
 function vAyarlar(){
   let body='';
   if(setTab==='gorevler'){
-    body=`<div class="tlist">${S.tasks.map(t=>`<button class="trow2" data-act="edit" data-id="${esc(t.id)}"><span class="medal sm" style="--c:${col(t)}">${ico(t.icon)}</span>
+    body=`<div class="panel first"><h3>Zincir kuralı</h3><p class="muted" style="font-size:14px;line-height:1.45">O gün planlı görevlerinin en az bu kadarını yaparsan zincire halka eklenir.</p>
+      <div style="margin-top:10px">${seg(String(chainPct()),[['50','%50'],['75','%75'],['90','%90'],['100','Hepsi']],'cpct')}</div></div>
+      <div class="tlist" style="margin-top:14px">${S.tasks.map(t=>`<button class="trow2" data-act="edit" data-id="${esc(t.id)}"><span class="medal sm" style="--c:${col(t)}">${ico(t.icon)}</span>
       <span class="tx"><b>${esc(t.name)}${t.dini?'<span class="tag">İbadet</span>':''}</b><small>${esc(taskSummary(t))}</small></span><span class="chev">›</span></button>`).join('')}</div>
       <button class="btn" style="width:100%;margin-top:12px" data-act="add">${ico('plus')} Görev ekle</button>
       <p class="muted" style="font-size:13px;margin-top:10px">Günlerini, hatırlatma saatini ya da sırasını değiştirmek için göreve dokun.</p>`;
@@ -1085,6 +1102,11 @@ const ACT={
   treset:()=>{ if(!TM) return; TM.left=TM.total; TM.running=false; clearInterval(tmInt); saveTM(); renderTimer(); render(); },
   pg:d=>{ const i=$('pgn'); i.value=Math.max(1,Math.round(+i.value||1)+(+d)); },
   hsave:id=>saveHatim(id),
+  vcopy:id=>{ const t=S.tasks.find(x=>x.id===id); if(!t) return; let n=0, i=S.tasks.indexOf(t);
+    NAMAZ.forEach(([v])=>{ if(v===t.vakit || S.tasks.some(x=>x.name===t.name&&x.vakit===v)) return;
+      const c=JSON.parse(JSON.stringify(t)); c.id='t'+Date.now()+v; c.vakit=v; c.since=dk(); if(c.rv&&c.rv.v) c.rv={...c.rv,v}; delete c.hist; S.tasks.splice(++i,0,c); n++; });
+    save(); render(); editTask(id); toast(n?`${n} vakte daha eklendi.`:'Bu görev zaten bütün vakitlerde var.'); },
+  cpct:v=>{ S.chainPct=+v; save(); render(); },
   cpull:()=>{ setCloud('Eşitleniyor…'); pullCloud(); },
   cout:async()=>{ try{ await sb.auth.signOut(); }catch(e){} sbUser=null; setCloud(''); render(); toast('Çıkış yapıldı. Veriler bu cihazda duruyor.'); },
   amode:()=>{ authMode=authMode==='up'?'in':'up'; render(); },
@@ -1155,6 +1177,7 @@ document.addEventListener('change',e=>{
   if(f==='dini'){ t.dini=el.checked; }
   else if(f==='type'){ t.type=el.value; if(t.type==='count'&&!t.goal) t.goal=33; if(t.type==='timer'&&!t.goal) t.goal=10; if(t.type==='hatim'){ t.total=t.total||604; t.start=t.start||0; t.proj=t.proj||'1. hatim'; t.projStart=t.projStart||dk(); t.hist=t.hist||[]; } save(); render(); return editTask(t.id); }
   else if(f==='goal'){ t.goal=Math.max(0,+el.value||0); }
+  else if(f==='vakit'){ t.vakit=el.value; if(t.vakit){ t.dini=true; if(!t.remind&&!(t.rv&&t.rv.v)) t.rv={v:t.vakit,off:10}; } save(); render(); return editTask(t.id); }
   else if(f==='perWeek'){ t.perWeek=Math.min(7,Math.max(1,Math.round(+el.value||3))); }
   else if(f==='rmode'){ if(el.value==='time'){ t.remind=t.remind||'21:00'; t.rv=null; } else if(el.value==='vakit'){ t.remind=''; t.rv={v:'aksam',off:15}; } else { t.remind=''; t.rv=null; } save(); render(); return editTask(t.id); }
   else if(f==='rvv'){ t.rv={...(t.rv||{}),v:el.value}; }
