@@ -986,6 +986,8 @@ function buildQueue(extra){
 }
 let pushT=null;
 function schedulePush(){ if(!pushOn()) return; clearTimeout(pushT); pushT=setTimeout(()=>pushSync(),2000); }
+function kickPush(){ try{ fetch(`${CFG.supabaseUrl}/functions/v1/sefer-push`,{method:'POST',mode:'no-cors'}).catch(()=>{}); }catch(e){} }
+async function testPush(item){ const ok=await pushSync({...item,at:new Date(Date.now()-1000).toISOString()}); if(ok) setTimeout(kickPush,400); return ok; }
 async function pushSync(extra){
   if(!pushOn()||!cloudOn()) return false;
   let sub=null; try{ sub=JSON.parse(localStorage.getItem(PSUB)); }catch(e){}
@@ -1383,7 +1385,7 @@ const ACT={
   bdel:id=>{ const t=S.tasks.find(x=>x.id===id); Object.assign(t,{proj:'',total:0,start:0,projStart:'',due:''}); save(); closeModal(); render(); toast('Kitap kaldırıldı. Günlük sayfa hedefin aynen duruyor.'); },
   bkmode:v=>{ const due=v==='due'; $('bk_due').hidden=!due; $('bk_day').hidden=due; document.querySelectorAll('#sheet [data-act="bkmode"]').forEach(b=>b.classList.toggle('on',b.dataset.id===v)); bookInfo(); },
   pon:()=>enablePush(), poff:()=>disablePush(),
-  ptest:async()=>{ const ok=await pushSync({at:new Date(Date.now()+60000).toISOString(),title:'SEFER',body:'Bildirimler çalışıyor. Allah kolaylık versin.',tag:'deneme'}); toast(ok?'Deneme bildirimi 1-2 dakika içinde gelecek.':'Gönderilemedi. Girişini ve kurulumu kontrol et.'); },
+  ptest:async()=>{ const ok=await testPush({title:'SEFER',body:'Bildirimler çalışıyor.',tag:'deneme'}); toast(ok?'Deneme bildirimi birkaç saniye içinde gelecek.':'Gönderilemedi. Girişini ve kurulumu kontrol et.'); },
   dtog:v=>{ const [k,id]=v.split('|'); dayToggle(k,id); },
   vcopy:id=>{ const t=S.tasks.find(x=>x.id===id); if(!t) return; let n=0, i=S.tasks.indexOf(t);
     NAMAZ.forEach(([v])=>{ if(v===t.vakit || S.tasks.some(x=>x.name===t.name&&x.vakit===v)) return;
@@ -1392,9 +1394,9 @@ const ACT={
   cpct:v=>{ S.chainPct=+v; save(); render(); },
   nmzv:v=>{ const c=nmz(), l=c.list.includes(v)?c.list.filter(x=>x!==v):[...c.list,v]; S.nmz={...c,list:NAMAZ.map(x=>x[0]).filter(x=>l.includes(x))}; save(); render(); },
   nmzpr:v=>markPrayed(v),
-  nmztest:async()=>{ if(!pushOn()) return toast('Önce yukarıdan bildirimleri aç.'); const c=nmz(), id=c.list[0]||'ogle', at=new Date(Date.now()+60000), hm=String(at.getHours()).padStart(2,'0')+':'+String(at.getMinutes()).padStart(2,'0'), nm=(NAMAZ.find(x=>x[0]===id)||[])[1];
-    const ok=await pushSync({at:at.toISOString(),title:`${nm.replace(' namazı','')} vakti`,body:`${dot(hm)} ${nm} vakti girdi. (Deneme)`,tag:`n-${id}-test`});
-    toast(ok?'Deneme bildirimi 1-2 dakika içinde gelecek. Kıldım düğmesini de deneyebilirsin.':'Gönderilemedi. Girişini ve kurulumu kontrol et.'); },
+  nmztest:async()=>{ if(!pushOn()) return toast('Önce yukarıdan bildirimleri aç.'); const c=nmz(), id=c.list[0]||'ogle', at=new Date(), hm=String(at.getHours()).padStart(2,'0')+':'+String(at.getMinutes()).padStart(2,'0'), nm=(NAMAZ.find(x=>x[0]===id)||[])[1];
+    const ok=await testPush({title:`${nm.replace(' namazı','')} vakti`,body:`${dot(hm)} ${nm} vakti girdi. (Deneme)`,tag:`n-${id}-test`});
+    toast(ok?'Deneme bildirimi birkaç saniye içinde gelecek. Kıldım düğmesini de deneyebilirsin.':'Gönderilemedi. Girişini ve kurulumu kontrol et.'); },
   cpull:()=>{ setCloud('Eşitleniyor…'); pullCloud(); },
   cout:async()=>{ try{ await sb.auth.signOut(); }catch(e){} sbUser=null; setCloud(''); render(); toast('Çıkış yapıldı. Veriler bu cihazda duruyor.'); },
   amode:()=>{ authMode=authMode==='up'?'in':'up'; render(); },
