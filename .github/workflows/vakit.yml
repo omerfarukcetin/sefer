@@ -1,0 +1,23 @@
+name: Namaz vakitlerini güncelle
+on:
+  workflow_dispatch:
+  push:
+    paths: ["vakit/sehirler.txt", "scripts/vakit.py"]
+  schedule:
+    - cron: "17 3 1 * *"   # her ayın 1'i
+permissions:
+  contents: write
+jobs:
+  vakit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: python scripts/vakit.py
+      - name: Değişiklikleri kaydet
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add vakit
+          git diff --cached --quiet || (git commit -m "Namaz vakitleri güncellendi" && git push)

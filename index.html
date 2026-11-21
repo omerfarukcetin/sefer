@@ -720,22 +720,26 @@ function maybeWeekSummary(){
 const VAKIT=[['imsak','İmsak','Fajr'],['gunes','Güneş','Sunrise'],['ogle','Öğle','Dhuhr'],['ikindi','İkindi','Asr'],['aksam','Akşam','Maghrib'],['yatsi','Yatsı','Isha']];
 let VK={}; try{ VK=JSON.parse(localStorage.getItem('sefer-vakit'))||{}; }catch(e){ VK={}; }
 function saveVK(){ try{ localStorage.setItem('sefer-vakit',JSON.stringify(VK)); }catch(e){} }
-async function fetchMonth(y,m){
-  const city=(S.city||'').trim(); if(!city) return false; const key=`${city.toLowerCase()}|${y}-${String(m).padStart(2,'0')}`;
-  if(VK.months&&VK.months[key]) return true;
-  const r=await fetch(`https://api.aladhan.com/v1/calendarByCity/${y}/${m}?city=${encodeURIComponent(city)}&country=Turkey&method=13`);
-  if(!r.ok) throw new Error(r.status); const j=await r.json(); if(!j.data||!j.data.length) throw new Error('bos');
-  VK.days=VK.days||{}; VK.months=VK.months||{}; VK.city=city;
-  j.data.forEach(d=>{ const [dd,mm,yy]=d.date.gregorian.date.split('-'); const k=`${yy}-${mm}-${dd}`, o={};
-    VAKIT.forEach(([id,,api])=>o[id]=String(d.timings[api]||'').slice(0,5)); VK.days[`${city.toLowerCase()}|${k}`]=o; });
-  VK.months[key]=1; saveVK(); return true;
+let CITIES=null;
+async function loadCities(){ try{ const r=await fetch('vakit/sehirler.json',{cache:'no-cache'}); if(r.ok){ CITIES=await r.json(); if(tab==='ayarlar') render(); } }catch(e){} }
+function parseNvXml(txt){ // namazvakti.com yıllık XML
+  const doc=new DOMParser().parseFromString(txt,'text/xml'), m=txt.match(/<!--\s*(\d{4})\s*-->/), year=m?+m[1]:new Date().getFullYear(), days={};
+  doc.querySelectorAll('prayertimes').forEach(p=>{ const doy=+p.getAttribute('dayofyear'), d=+p.getAttribute('day'), mo=+p.getAttribute('month');
+    const y = doy===0 ? year-1 : (mo===1&&doy>300 ? year+1 : year);
+    days[`${y}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`]=(p.textContent||'').trim().split(/\s+/).slice(0,14).map(v=>/^\d{1,2}:\d{2}$/.test(v)?v.padStart(5,'0'):''); });
+  const ci=doc.querySelector('cityinfo'); return {name:ci?(ci.getAttribute('cityNameTR')||'').trim():'', days};
 }
 async function loadVakit(force){
-  if(!S.city) return; const n=new Date(), n2=new Date(n.getFullYear(),n.getMonth()+1,1);
-  try{ await fetchMonth(n.getFullYear(),n.getMonth()+1); await fetchMonth(n2.getFullYear(),n2.getMonth()+1); if(force) toast(`${S.city} için vakitler alındı.`); render(); }
-  catch(e){ if(force) toast('Vakitler alınamadı. Şehir adını kontrol et ve internete bağlı olduğundan emin ol.'); }
+  const id=S.cityId; if(!id) return;
+  if(!force && VK.id===id && VK.days && VK.days[addDays(dk(),30)]) return;
+  let ok=false;
+  try{ const r=await fetch(`vakit/${encodeURIComponent(id)}.json`,{cache:'no-cache'}); if(r.ok){ const j=await r.json(); VK={id,name:j.name,days:j.days}; ok=true; } }catch(e){}
+  if(!ok){ try{ const r=await fetch(`https://namazvakti.com/XML.php?cityID=${encodeURIComponent(id)}`); if(r.ok){ const j=parseNvXml(await r.text()); if(Object.keys(j.days).length){ VK={id,...j}; ok=true; } } }catch(e){} }
+  if(ok){ saveVK(); if(force) toast(`${VK.name||'Şehir'} için vakitler alındı.`); render(); }
+  else if(force) toast('Bu şehrin vakitleri henüz eklenmemiş. Şehir kodunu bana söyle ya da birkaç dakika sonra tekrar dene.');
 }
-const vakitOf = k => S.city && VK.days ? VK.days[`${S.city.trim().toLowerCase()}|${k}`] : null;
+const vakitOf = k => { if(!S.cityId||VK.id!==S.cityId||!VK.days) return null; const a=VK.days[k]; if(!a) return null;
+  return {imsak:a[0],gunes:a[2],ogle:a[5],ikindi:a[6],aksam:a[9],yatsi:a[11]}; };
 function vakitStrip(){
   const v=vakitOf(dk()); if(!v) return '';
   const now=new Date(), hm=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
@@ -934,7 +938,7 @@ function editTask(id){
       <label><span class="lab">Hatırlatma</span><select data-f="rmode" data-id="${esc(t.id)}"><option value="none" ${!t.remind&&!(t.rv&&t.rv.v)?'selected':''}>Yok</option><option value="time" ${t.remind?'selected':''}>Belirli saatte</option><option value="vakit" ${t.rv&&t.rv.v?'selected':''}>Vakte göre</option></select></label></div>
     ${t.remind?`<label><span class="lab">Saat</span><input type="time" value="${esc(t.remind)}" data-f="remind" data-id="${esc(t.id)}"></label>`:''}
     ${t.rv&&t.rv.v?`<div class="g2"><label><span class="lab">Vakit</span><select data-f="rvv" data-id="${esc(t.id)}">${VAKIT.map(([v,l])=>`<option value="${v}" ${t.rv.v===v?'selected':''}>${l}</option>`).join('')}</select></label>
-      <label><span class="lab">Dakika (önce: eksi)</span><input type="number" value="${esc(t.rv.off||0)}" data-f="rvoff" data-id="${esc(t.id)}"></label></div>${S.city?'':'<p class="muted" style="font-size:13px">Önce Ayarlar → Hatırlatma\'dan şehrini seç.</p>'}`:''}
+      <label><span class="lab">Dakika (önce: eksi)</span><input type="number" value="${esc(t.rv.off||0)}" data-f="rvoff" data-id="${esc(t.id)}"></label></div>${S.cityId?'':'<p class="muted" style="font-size:13px">Önce Ayarlar → Hatırlatma\'dan şehrini seç.</p>'}`:''}
     <label class="ck"><input type="checkbox" data-f="dini" data-id="${esc(t.id)}" ${t.dini?'checked':''}> İbadet grubunda göster</label>
     <div class="between"><div style="display:flex;gap:8px"><button class="btn ghost" data-act="mv" data-id="${esc(t.id)}:-1" ${i===0?'disabled':''} aria-label="Yukarı taşı">↑</button><button class="btn ghost" data-act="mv" data-id="${esc(t.id)}:1" ${i===S.tasks.length-1?'disabled':''} aria-label="Aşağı taşı">↓</button></div>
       <button class="btn red" data-act="del" data-id="${esc(t.id)}" id="delb">Görevi sil</button></div></div>`);
@@ -960,8 +964,10 @@ function vAyarlar(){
       <div class="rlist2">${withTime.length?withTime.map(t=>`<div class="log"><span>${esc(t.name)} <span class="muted">(${esc(isWeekly(t)?'her gün':dayTxt(t))})</span></span><b>${esc(t.remind||rvTxt(t))}</b></div>`).join(''):'<p class="muted" style="font-size:14px">Henüz saat verilmiş görev yok.</p>'}</div>
       <button class="btn" style="margin-top:14px" data-act="ics">${ico('bell')} Takvimime ekle</button>
       <p class="muted" style="font-size:13px;margin-top:10px;line-height:1.45">Saatleri değiştirirsen dosyayı yeniden ekle. Eski hatırlatmalar aynı kayıtla güncellenir.</p></div>
-      <div class="panel"><h3>Namaz vakitleri</h3><p class="muted" style="font-size:14px;line-height:1.5">Şehrini yaz; vakitler Diyanet hesabına göre alınır. Bugün ekranında görünür ve görevlere "vakitten sonra" hatırlatma verebilirsin.</p>
-        <div class="between" style="margin-top:10px"><input id="city" value="${esc(S.city||'')}" placeholder="Örneğin Istanbul" aria-label="Şehir"><button class="btn" data-act="vkload">Vakitleri al</button></div>
+      <div class="panel"><h3>Namaz vakitleri</h3><p class="muted" style="font-size:14px;line-height:1.5">Vakitler namazvakti.com'dan (Türkiye Takvimi) alınır. Bugün ekranında görünür ve görevlere "vakitten sonra" hatırlatma verebilirsin.</p>
+        <label style="display:block;margin-top:10px"><span class="lab">Şehir</span><select data-f="cityId">${[['','Seç'],...(CITIES||[]).map(c=>[c.id,c.name]),...(S.cityId&&!(CITIES||[]).some(c=>c.id===S.cityId)?[[S.cityId,`Şehir kodu ${S.cityId}`]]:[])].map(([v,l])=>`<option value="${esc(v)}" ${S.cityId===v?'selected':''}>${esc(l)}</option>`).join('')}</select></label>
+        <div class="between" style="margin-top:10px"><input id="cityid" inputmode="numeric" placeholder="Listede yoksa şehir kodu" aria-label="Şehir kodu"><button class="btn ghost" data-act="cityset">Kullan</button></div>
+        <p class="muted" style="font-size:12.5px;margin-top:6px;line-height:1.45">Şehir kodu: namazvakti.com'da şehrini açınca adres çubuğundaki <b>cityID=</b> sayısı.</p>
         ${vakitOf(dk())?`<div style="margin-top:12px">${vakitStrip()}</div>`:''}
         <p class="muted" style="font-size:13px;margin-top:10px;line-height:1.45">Vakitler her gün değiştiği için vakte bağlı hatırlatmalar önümüzdeki 30 gün için eklenir. Ayda bir "Takvimime ekle"ye yeniden bas.</p></div>
       <div class="panel"><h3>Telefona kur</h3>${installHtml()}</div>`;
@@ -1011,7 +1017,7 @@ const ACT={
   tfreq:v=>{ const [id,fq]=v.split(':'), t=S.tasks.find(x=>x.id===id); if(!t) return; t.freq=fq==='week'?'week':'days'; if(t.freq==='week'&&!t.perWeek) t.perWeek=3; save(); render(); editTask(id); },
   wsum:ws=>modal(weekSummary(ws)),
   yr:d=>{ yearV=(yearV||+dk().slice(0,4))+(+d); yfoldOpen=true; render(); },
-  vkload:()=>{ S.city=($('city').value||'').trim(); save(); if(!S.city) return toast('Önce şehrini yaz.'); VK={}; saveVK(); loadVakit(true); },
+  cityset:()=>{ const v=($('cityid').value||'').replace(/\D/g,''); if(!v) return toast('Şehir kodunu yaz.'); S.cityId=v; save(); loadVakit(true); },
   hundo:id=>{ const r=rec(); if(r.done) delete r.done[id]; if(r.prog) delete r.prog[id]; save(); closeModal(); render(); toast('Bugünkü kayıt silindi.'); },
   pgMode:v=>{ pgMode=v; const id=$('pgn')&&$('pgn').dataset.task; if(id) openHatim(id); },
   hnew:id=>{ const t=S.tasks.find(x=>x.id===id); if(!t) return; const b=document.querySelector('[data-act="hnew"]'); if(b&&!b.dataset.arm){ b.dataset.arm=1; b.textContent='Emin misin? Tekrar bas'; return; }
@@ -1045,7 +1051,7 @@ const ACT={
     let missing=false;
     S.tasks.filter(t=>t.rv&&t.rv.v).forEach(t=>{ for(let i=0;i<30;i++){ const k=addDays(dk(),i); if(!isWeekly(t)&&!scheduled(t,k)&&!(t.since&&k<t.since&&(t.days||ALL).includes(wd(k)))) continue; const v=vakitOf(k); if(!v){ missing=true; continue; }
       lines=lines.concat(one(`sefer-${t.id}-${k}`,k,addMin(v[t.rv.v],+t.rv.off||0),'SEFER: '+t.name.replace(/[,;\\]/g,' '))); } });
-    if(missing && S.tasks.some(t=>t.rv&&t.rv.v)) toast('Bazı günlerin vakitleri yok. Önce "Vakitleri al"a bas.');
+    if(missing && S.tasks.some(t=>t.rv&&t.rv.v)) toast('Bazı günlerin vakitleri yok. Önce Ayarlar → Hatırlatma\'dan şehrini seç.');
     if(lines.length===4) return toast('Önce bir hatırlatma saati seç.');
     const ics=lines.concat(['END:VCALENDAR']).join('\r\n');
     try{ const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([ics],{type:'text/calendar'})); a.download='sefer-hatirlatmalar.ics'; document.body.appendChild(a); a.click(); a.remove();
@@ -1068,6 +1074,7 @@ document.addEventListener('change',e=>{
   const el=e.target, f=el.dataset&&el.dataset.f; if(!f) return;
   if(f==='uiVib'||f==='uiSound'){ S.ui[f==='uiVib'?'vib':'sound']=el.checked; save(); return; }
   if(f==='remindAll'){ S.remindAll=el.value; save(); render(); return; }
+  if(f==='cityId'){ S.cityId=el.value; save(); if(S.cityId) loadVakit(true); else render(); return; }
   if(f==='note'){ rec(el.dataset.id).note=el.value; save(); return; }
   const t=S.tasks.find(x=>x.id===el.dataset.id); if(!t) return;
   if(f==='dini'){ t.dini=el.checked; }
@@ -1093,7 +1100,9 @@ window.addEventListener('hashchange',()=>{ readHash(); render(); });
 document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'){ tick(); if(!(document.activeElement&&document.activeElement.tagName==='TEXTAREA')) render(); } });
 function addHatim(){ if(!S.tasks.some(t=>t.type==='hatim') && !S.hatimAdded){ S.hatimAdded=true; const i=S.tasks.findIndex(t=>t.id==='kuran');
   S.tasks.splice(i>=0?i+1:0,0,{id:'hatim',name:'Hatim',hint:'',icon:'huzur',type:'hatim',goal:0,dini:true,days:[...ALL],remind:'',since:dk(),total:604,start:0,proj:'1. hatim',projStart:dk(),hist:[],quran:true}); } }
-addHatim(); readHash(); tmRestore(); applyUI(); save(); render(); maybeWeekSummary(); loadVakit();
+if(S.city&&!S.cityId){ const m={istanbul:'16741','i̇stanbul':'16741',ankara:'16709',izmir:'16742','i̇zmir':'16742',bursa:'16724',kayseri:'16748'}[S.city.trim().toLocaleLowerCase('tr')]; if(m) S.cityId=m; }
+if(!S.cityId && !S.cityAuto){ S.cityId='62737'; S.cityAuto=true; }
+addHatim(); readHash(); tmRestore(); applyUI(); save(); render(); maybeWeekSummary(); loadCities(); loadVakit();
 try{ localStorage.removeItem('sefer-abh'); }catch(e){}
 </script>
 </body>

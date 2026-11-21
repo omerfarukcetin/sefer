@@ -1,0 +1,10 @@
+# namazvakti.com şehir kodları (cityID) ve adları.
+# Yeni şehir eklemek için namazvakti.com'da şehrini aç, adres çubuğundaki cityID sayısını buraya ekle.
+62737 İstanbul, Beylikdüzü
+16741 İstanbul
+68163 İstanbul, Esenyurt
+60185 İstanbul, Büyükçekmece
+16709 Ankara
+16742 İzmir
+16724 Bursa
+16748 Kayseri
