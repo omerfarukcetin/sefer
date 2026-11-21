@@ -1,6 +1,6 @@
 // SEFER service worker: uygulamayı internetsiz de açar.
 // Yeni sürüm yayınlarken CACHE adındaki numarayı artır.
-const CACHE = 'sefer-v32';
+const CACHE = 'sefer-v33';
 const SHELL = ['./', './index.html', './manifest.webmanifest',
   './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png', './icons/apple-touch-icon.png', './js/config.js', './js/vendor/supabase.js', './js/vendor/591.supabase.js'];
 
@@ -31,7 +31,7 @@ self.addEventListener('fetch', e => {
 // Bildirimler
 self.addEventListener('push', e => {
   let d = {}; try { d = e.data ? e.data.json() : {}; } catch (_) { d = { body: e.data && e.data.text() }; }
-  const m = /^nc?-([a-z]+)-(\d{4}-\d\d-\d\d)$/.exec(d.tag || '');
+  const m = /^nc?-([a-z]+)-(\d{4}-\d\d-\d\d|test)$/.exec(d.tag || '');
   const opt = { body: d.body || '', tag: d.tag || undefined, icon: 'icons/icon-192.png', badge: 'icons/icon-192.png', data: { url: d.url || './', kildim: m ? { id: m[1], k: m[2] } : null } };
   if (m) opt.actions = [{ action: 'kildim', title: 'Kıldım' }];
   e.waitUntil(self.registration.showNotification(d.title || 'SEFER', opt));
