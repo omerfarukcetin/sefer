@@ -13,6 +13,8 @@
 <meta name="apple-mobile-web-app-title" content="SEFER">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>SEFER — Günlük takip</title>
+<script src="js/config.js"></script>
+<script src="js/vendor/supabase.js" defer></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
@@ -264,6 +266,7 @@ button.zikr:active{transform:scale(.97)}
 .ygrid i.pad{visibility:hidden}.ygrid i.y-full{background:var(--saffron);border-color:var(--saffron)}.ygrid i.y-part{background:color-mix(in srgb,var(--turq) 45%,var(--lapis))}
 .ygrid i.y-ex{background:var(--turq);opacity:.5}.ygrid i.y-rest{opacity:.4}.ygrid i.y-fut{opacity:.25}.ygrid i.today{outline:1.5px solid var(--white)}
 .nprev{padding:8px 0;border-bottom:1px solid var(--lapis3)}.nprev b{font-size:13px;color:var(--mist);text-transform:capitalize}.nprev p{font-size:14px;line-height:1.45;margin-top:2px}
+.linkb{color:var(--turq);font-weight:700;text-decoration:underline;text-underline-offset:3px}
 .hsec{margin-top:18px}.hsec h3{font-size:18px;margin:0 2px 10px}
 .hgrid{display:grid;gap:10px}
 .hcard{background:var(--lapis2);border:1px solid var(--lapis3);border-radius:var(--r-lg);padding:16px}
@@ -485,9 +488,10 @@ const EXCUSES = 2;
 const KEY='sefer-v1';
 function defaults(){ return {v:2, tasks:JSON.parse(JSON.stringify(DEF_TASKS)).map(t=>({...t,days:[...ALL],remind:''})), days:{}, remindAll:'21:00',
   ui:{theme:'dark',font:1,vib:true,sound:true}}; }
-function merge(o){ const d=defaults(); return {...o, v:2, hatimAdded:o.hatimAdded, tasks:o.tasks||d.tasks, days:o.days||{}, remindAll:o.remindAll||d.remindAll, ui:{...d.ui,...(o.ui||{})}}; }
+function merge(o){ const d=defaults(); return {...o, v:2, hatimAdded:o.hatimAdded, updatedAt:+o.updatedAt||0, tasks:o.tasks||d.tasks, days:o.days||{}, remindAll:o.remindAll||d.remindAll, ui:{...d.ui,...(o.ui||{})}}; }
 function load(){ try{ const r=localStorage.getItem(KEY); if(r) return merge(JSON.parse(r)); }catch(e){} return defaults(); }
-function save(){ try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} }
+function persist(){ try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} }
+function save(touch=true){ if(touch) S.updatedAt=Date.now(); persist(); if(touch&&typeof scheduleSave==='function') scheduleSave(); }
 let S=load();
 // eski sürümden geçiş
 S.tasks.forEach(t=>{ if(!t.icon) t.icon=t.res||'star'; if(!Array.isArray(t.days)) t.days=[...ALL]; if(t.remind==null) t.remind='';
@@ -662,6 +666,73 @@ function savePages(id,n){
   closeModal(); completeTask(id,total); toast(goal?`${total} sayfa, günlük hedef tamam.`:`${total} sayfa kaydedildi.`);
 }
 
+/* ================= BULUT EŞİTLEME (Supabase, Emanet ile aynı hesap) ================= */
+const CFG=window.SEFER_CONFIG||{};
+let sb=null, sbUser=null, cloudMsg='', saveT=null, saving=false, pendingSave=false, lastPull=0, authMode='in';
+const cloudOn = () => !!(sb&&sbUser);
+function mergeDays(older,newer){
+  const out={...(older||{})};
+  for(const [k,v] of Object.entries(newer||{})){ const x=out[k]; if(!x){ out[k]=v; continue; }
+    const done={...(x.done||{})}; for(const [id,e] of Object.entries(v.done||{})){ const c=done[id]; done[id]=!c?e:((e.n||0)>=(c.n||0)?e:c); }
+    const prog={...(x.prog||{})}; for(const [id,n] of Object.entries(v.prog||{})) prog[id]=Math.max(prog[id]||0,n||0);
+    out[k]={...x,...v,done,prog,excused:!!(x.excused||v.excused),note:v.note||x.note||''};
+  }
+  return out;
+}
+function mergeState(local,remote){
+  const lAt=+local.updatedAt||0, rAt=+remote.updatedAt||0, newer=rAt>=lAt?remote:local, older=newer===remote?local:remote;
+  return merge({...newer, days:mergeDays(older.days,newer.days), updatedAt:Math.max(lAt,rAt)});
+}
+function setCloud(m){ cloudMsg=m; if(tab==='ayarlar'&&setTab==='hesap'){ const el=$('cloudmsg'); if(el) el.textContent=m; } }
+function scheduleSave(){ if(!cloudOn()) return; clearTimeout(saveT); saveT=setTimeout(pushCloud,1200); }
+async function pushCloud(){
+  if(!cloudOn()) return; if(saving){ pendingSave=true; return; }
+  saving=true; setCloud('Kaydediliyor…'); let err=null;
+  try{ const r=await sb.from('sefer_state').upsert({user_id:sbUser.id,data:S,updated_at:+S.updatedAt||Date.now()}); err=r.error; }catch(e){ err=e; }
+  saving=false; setCloud(err ? cloudErr(err) : 'Eşitlendi');
+  if(pendingSave){ pendingSave=false; pushCloud(); }
+}
+function cloudErr(e){ const m=(e&&e.message)||String(e||''); if(/sefer_state|relation|schema cache|not find/i.test(m)) return 'Supabase\'de SEFER tablosu yok. Kurulum adımını uygula.'; if(/fetch|network|Failed/i.test(m)) return 'Buluta ulaşılamadı. Veriler bu cihazda duruyor.'; return 'Eşitlenemedi: '+m; }
+async function pullCloud(){
+  if(!cloudOn()||saving) return; lastPull=Date.now(); let data=null, error=null;
+  try{ const r=await sb.from('sefer_state').select('data,updated_at').eq('user_id',sbUser.id).maybeSingle(); data=r.data; error=r.error; }catch(e){ error=e; }
+  if(error){ setCloud(cloudErr(error)); if(tab==='ayarlar') render(); return; }
+  if(S.owner && S.owner!==sbUser.id){ S = data&&data.data ? merge(data.data) : defaults(); }
+  else if(data&&data.data){ const before=JSON.stringify(data.data); S=mergeState(S,{...data.data,updatedAt:+data.updated_at||+data.data.updatedAt||0}); if(JSON.stringify(S)!==before) scheduleSave(); }
+  else scheduleSave();
+  S.owner=sbUser.id; persist(); applyUI(); setCloud('Eşitlendi');
+  if(!(document.activeElement&&document.activeElement.tagName==='TEXTAREA')) render();
+}
+async function initCloud(){
+  if(!window.supabase||!CFG.supabaseUrl) return;
+  try{ sb=window.supabase.createClient(CFG.supabaseUrl,CFG.supabaseKey); }catch(e){ sb=null; return; }
+  sb.auth.onAuthStateChange((ev,ses)=>{ const u=ses&&ses.user||null;
+    if(u && (!sbUser||sbUser.id!==u.id)){ sbUser=u; pullCloud(); }
+    else if(!u && sbUser){ sbUser=null; setCloud(''); render(); } });
+  try{ const {data}=await sb.auth.getSession(); if(data&&data.session&&!sbUser){ sbUser=data.session.user; pullCloud(); } }catch(e){}
+  if(tab==='ayarlar') render();
+}
+function accountHtml(){
+  if(!sb) return `<div class="panel first"><h3>Eşitleme</h3><p class="muted" style="font-size:14px;line-height:1.5">Eşitleme bu sayfada kullanılamıyor. GitHub adresindeki SEFER'de Emanet hesabınla giriş yapabilirsin.</p></div>`;
+  if(sbUser) return `<div class="panel first"><h3>Eşitleme</h3><p style="font-size:15px;margin-top:4px">Giriş yapıldı: <b>${esc(sbUser.email||'')}</b></p>
+      <p class="muted" style="font-size:14px;margin-top:6px" id="cloudmsg">${esc(cloudMsg||'Eşitleniyor…')}</p>
+      <p class="muted" style="font-size:13px;margin-top:8px;line-height:1.45">Bu hesapla giriş yaptığın her cihazda görevlerin, geçmişin ve notların aynı olur. İnternet yokken de çalışır, bağlantı gelince eşitlenir.</p>
+      <div style="display:flex;gap:8px;margin-top:12px"><button class="btn" data-act="cpull">Şimdi eşitle</button><button class="btn ghost" data-act="cout">Çıkış yap</button></div></div>`;
+  return `<div class="panel first"><h3>Eşitleme</h3><p class="muted" style="font-size:14px;line-height:1.5">Emanet'teki hesabınla giriş yap; verilerin tüm cihazlarında aynı olsun.</p>
+    <form class="form" id="authf" autocomplete="on"><label><span class="lab">E-posta</span><input id="aem" type="email" autocomplete="email" required></label>
+      <label><span class="lab">Şifre</span><input id="apw" type="password" autocomplete="${authMode==='up'?'new-password':'current-password'}" required minlength="6"></label>
+      <button class="btn" type="submit">${authMode==='up'?'Hesap oluştur':'Giriş yap'}</button></form>
+    <p class="muted" id="amsg" style="font-size:13px;margin-top:8px"></p>
+    <div style="display:flex;gap:14px;margin-top:8px;font-size:13px"><button class="linkb" data-act="amode">${authMode==='up'?'Hesabım var, giriş yap':'Hesabın yok mu? Oluştur'}</button><button class="linkb" data-act="areset">Şifremi unuttum</button></div></div>`;
+}
+document.addEventListener('submit',async e=>{ if(e.target.id!=='authf') return; e.preventDefault(); if(!sb) return;
+  const em=$('aem').value.trim(), pw=$('apw').value, msg=$('amsg'), b=e.target.querySelector('button'); b.disabled=true; msg.textContent='Bekle…';
+  try{ const r = authMode==='up' ? await sb.auth.signUp({email:em,password:pw,options:{emailRedirectTo:location.href.split('#')[0]}}) : await sb.auth.signInWithPassword({email:em,password:pw});
+    if(r.error) throw r.error;
+    if(authMode==='up' && !r.data.session){ msg.textContent='Hesap oluşturuldu. E-postana gelen bağlantıyla onaylayıp giriş yap.'; b.disabled=false; return; }
+    toast('Giriş yapıldı. Veriler eşitleniyor.'); }
+  catch(err){ b.disabled=false; msg.textContent=/Invalid login/i.test(err.message||'')?'E-posta ya da şifre yanlış.':/confirm/i.test(err.message||'')?'Önce e-postana gelen bağlantıyla hesabını onayla.':'Olmadı: '+(err.message||err); } });
+
 /* ================= HAFTADA X KEZ ================= */
 const isWeekly = t => t.freq==='week';
 const wkStart = k => addDays(k,-wd(k));
@@ -712,8 +783,8 @@ function weekSummary(ws){
 }
 function maybeWeekSummary(){
   const cur=wkStart(dk()), prev=addDays(cur,-7);
-  if(S.sumSeen===cur) return; if(firstKey()>addDays(prev,6)){ S.sumSeen=cur; save(); return; }
-  S.sumSeen=cur; save(); setTimeout(()=>modal(weekSummary(prev)),400);
+  if(S.sumSeen===cur) return; if(firstKey()>addDays(prev,6)){ S.sumSeen=cur; save(false); return; }
+  S.sumSeen=cur; save(false); setTimeout(()=>modal(weekSummary(prev)),400);
 }
 
 /* ================= NAMAZ VAKİTLERİ ================= */
@@ -979,14 +1050,14 @@ function vAyarlar(){
       <label class="switch"><span><b>Titreşim</b><small>Görev tamamlarken ve zikir çekerken</small></span><input type="checkbox" data-f="uiVib" ${u.vib!==false?'checked':''}></label>
       <label class="switch"><span><b>Zamanlayıcı sesi</b><small>Süre dolduğunda kısa bir zil</small></span><input type="checkbox" data-f="uiSound" ${u.sound!==false?'checked':''}></label></div>`;
   } else {
-    body=`<div class="panel first"><h3>Yedek</h3><p class="muted" style="font-size:14px;line-height:1.45">Verilerin bu tarayıcıda saklanıyor. Ara ara yedeği kopyalayıp bir yere kaydet. Başka bir cihazda metni yapıştırıp “Yedeği yükle” ile devam edebilirsin.</p>
+    body=accountHtml()+`<div class="panel"><h3>Yedek</h3><p class="muted" style="font-size:14px;line-height:1.45">Verilerin bu tarayıcıda saklanıyor. Ara ara yedeği kopyalayıp bir yere kaydet. Başka bir cihazda metni yapıştırıp “Yedeği yükle” ile devam edebilirsin.</p>
       <textarea id="bk" style="margin-top:10px" aria-label="Yedek metni">${esc(JSON.stringify(S))}</textarea>
       <div style="display:flex;gap:8px;margin-top:10px"><button class="btn ghost" data-act="copy">Kopyala</button><button class="btn ghost" data-act="import">Yedeği yükle</button></div></div>
       <div class="panel"><h3>Baştan başla</h3><p class="muted" style="font-size:14px;line-height:1.45">Tüm geçmişin ve görevlerin silinir. Önce yedek almanı öneririm.</p>
       <button class="btn red" style="margin-top:10px" data-act="reset" id="rst">Sıfırla</button></div>`;
   }
-  return `<header class="phead"><h1>Ayarlar</h1><p>Görevlerini, hatırlatmaları, görünümü ve yedeğini buradan yönet.</p></header>
-    <div class="setwrap">${seg(setTab,[['gorevler','Görevler'],['hatirlatma','Hatırlatma'],['gorunum','Görünüm'],['yedek','Yedek']],'setTab')}<div class="setbody">${body}</div></div>`;
+  return `<header class="phead"><h1>Ayarlar</h1><p>Görevlerini, hatırlatmaları, görünümü ve hesabını buradan yönet.</p></header>
+    <div class="setwrap">${seg(setTab,[['gorevler','Görevler'],['hatirlatma','Hatırlatma'],['gorunum','Görünüm'],['hesap','Hesap']],'setTab')}<div class="setbody">${body}</div></div>`;
 }
 
 /* ================= YÖNLENDİRME ================= */
@@ -1014,6 +1085,10 @@ const ACT={
   treset:()=>{ if(!TM) return; TM.left=TM.total; TM.running=false; clearInterval(tmInt); saveTM(); renderTimer(); render(); },
   pg:d=>{ const i=$('pgn'); i.value=Math.max(1,Math.round(+i.value||1)+(+d)); },
   hsave:id=>saveHatim(id),
+  cpull:()=>{ setCloud('Eşitleniyor…'); pullCloud(); },
+  cout:async()=>{ try{ await sb.auth.signOut(); }catch(e){} sbUser=null; setCloud(''); render(); toast('Çıkış yapıldı. Veriler bu cihazda duruyor.'); },
+  amode:()=>{ authMode=authMode==='up'?'in':'up'; render(); },
+  areset:async()=>{ const em=($('aem')||{}).value; if(!em) return toast('Önce e-posta adresini yaz.'); const {error}=await sb.auth.resetPasswordForEmail(em.trim(),{redirectTo:location.href.split('#')[0]}); toast(error?'Gönderilemedi: '+error.message:'Şifre yenileme bağlantısı e-postana gönderildi.'); },
   tfreq:v=>{ const [id,fq]=v.split(':'), t=S.tasks.find(x=>x.id===id); if(!t) return; t.freq=fq==='week'?'week':'days'; if(t.freq==='week'&&!t.perWeek) t.perWeek=3; save(); render(); editTask(id); },
   wsum:ws=>modal(weekSummary(ws)),
   yr:d=>{ yearV=(yearV||+dk().slice(0,4))+(+d); yfoldOpen=true; render(); },
@@ -1060,7 +1135,7 @@ const ACT={
   import:()=>{ try{ const o=JSON.parse($('bk').value); if(!o||typeof o!=='object'||!o.days) throw 0; S=merge(o); S.tasks.forEach(t=>{ if(!t.icon) t.icon=t.res||'star'; if(!Array.isArray(t.days)) t.days=[...ALL]; if(t.remind==null) t.remind=''; }); save(); toast('Yedek yüklendi.'); render(); }
     catch(e){ toast('Bu metin bir SEFER yedeği değil. Kopyaladığın metnin tamamını yapıştır.'); } },
   reset:()=>{ if(!resetArm){ resetArm=true; $('rst').textContent='Emin misin? Tekrar bas'; setTimeout(()=>{ resetArm=false; const b=$('rst'); if(b) b.textContent='Sıfırla'; },3000); return; }
-    resetArm=false; S=defaults(); addHatim(); save(); toast('Her şey sıfırlandı.'); go('bugun'); }
+    resetArm=false; S=defaults(); if(sbUser) S.owner=sbUser.id; addHatim(); save(); toast('Her şey sıfırlandı.'); go('bugun'); }
 };
 document.addEventListener('click',e=>{
   if(e.target===$('modal')) return closeModal();
@@ -1097,12 +1172,13 @@ if('serviceWorker' in navigator && location.protocol==='https:' && !/claude/.tes
   window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
 }
 window.addEventListener('hashchange',()=>{ readHash(); render(); });
-document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'){ tick(); if(!(document.activeElement&&document.activeElement.tagName==='TEXTAREA')) render(); } });
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'){ tick(); if(cloudOn()&&Date.now()-lastPull>20000) pullCloud(); if(!(document.activeElement&&document.activeElement.tagName==='TEXTAREA')) render(); } });
 function addHatim(){ if(!S.tasks.some(t=>t.type==='hatim') && !S.hatimAdded){ S.hatimAdded=true; const i=S.tasks.findIndex(t=>t.id==='kuran');
   S.tasks.splice(i>=0?i+1:0,0,{id:'hatim',name:'Hatim',hint:'',icon:'huzur',type:'hatim',goal:0,dini:true,days:[...ALL],remind:'',since:dk(),total:604,start:0,proj:'1. hatim',projStart:dk(),hist:[],quran:true}); } }
 if(S.city&&!S.cityId){ const m={istanbul:'16741','i̇stanbul':'16741',ankara:'16709',izmir:'16742','i̇zmir':'16742',bursa:'16724',kayseri:'16748'}[S.city.trim().toLocaleLowerCase('tr')]; if(m) S.cityId=m; }
 if(!S.cityId && !S.cityAuto){ S.cityId='62737'; S.cityAuto=true; }
-addHatim(); readHash(); tmRestore(); applyUI(); save(); render(); maybeWeekSummary(); loadCities(); loadVakit();
+addHatim(); readHash(); tmRestore(); applyUI(); save(false); render(); maybeWeekSummary(); loadCities(); loadVakit();
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',initCloud); else initCloud();
 try{ localStorage.removeItem('sefer-abh'); }catch(e){}
 </script>
 </body>
