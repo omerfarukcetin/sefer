@@ -3,7 +3,7 @@
 Sütunlar (Türkiye Takvimi sırası): İmsak, Sabah, Güneş, İşrak, Kerahet, Öğle, İkindi,
 Asr-ı sani, İsfirar, Akşam, İştibak, Yatsı, İşa-i sani, Kıble saati.
 """
-import json, re, sys, urllib.request, xml.etree.ElementTree as ET
+import datetime, json, re, sys, urllib.request, xml.etree.ElementTree as ET
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent / "vakit"
@@ -16,7 +16,8 @@ def fetch(city_id):
 
 def parse(xml_text):
     m = re.search(r"<!--\s*(\d{4})\s*-->", xml_text)
-    year = int(m.group(1)) if m else None
+    # Bazı şehirlerin dosyasında yıl yorumu yok; o zaman içinde bulunduğumuz yılı kullan
+    year = int(m.group(1)) if m else datetime.date.today().year
     root = ET.fromstring(xml_text[xml_text.index("<cityinfo"):])
     days = {}
     for p in root.iter("prayertimes"):
