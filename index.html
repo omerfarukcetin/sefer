@@ -23,7 +23,9 @@
   --lapis:#13294b; --lapis2:#1a3561; --lapis3:#27497d; --line:#2e5390;
   --turq:#2bb3b1; --coral:#e0674f; --saffron:#e8b03c; --leaf:#6cc28a; --sky:#8fa8ff;
   --parch:#f1e6cc; --parch2:#e4d3ac; --ink:#22202b; --mist:#a9b8d3; --white:#f7f3ea;
-  --r-lg:22px; --r-md:14px;
+  --r-lg:18px; --r-md:14px;
+  --t-page:24px; --t-num:26px; --t-sec:17px; --t-item:15px; --t-body:14px; --t-meta:13px; --t-tiny:12px;
+  --pad:14px; --gap:10px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{background:var(--lapis);color:var(--white);font-family:"Plus Jakarta Sans",system-ui,sans-serif;font-weight:500;font-size:16px;-webkit-tap-highlight-color:transparent}
@@ -32,7 +34,7 @@ body{min-height:100vh;padding-bottom:92px;
 .wrap{max-width:520px;margin:0 auto;padding:0 max(16px,env(safe-area-inset-right)) 0 max(16px,env(safe-area-inset-left))}
 h1,h2,h3,.serif{font-family:"Plus Jakarta Sans",system-ui,sans-serif}
 h1,h2,h3{letter-spacing:-.01em}
-h2{font-size:28px;font-weight:800;line-height:1.15}
+h2{font-size:var(--t-page);font-weight:800;line-height:1.15}
 h3{font-weight:800}
 b,strong{font-weight:800}
 button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
@@ -47,33 +49,33 @@ input:disabled{opacity:.4}
 .hrow{display:flex;align-items:center;gap:12px}
 .ring{position:relative;width:46px;height:46px;flex:none}
 .ring svg{position:absolute;inset:0;transform:rotate(-90deg)}
-.ring b{position:absolute;inset:0;display:grid;place-items:center;font-family:"Plus Jakarta Sans",sans-serif;font-size:18px;font-weight:800;color:var(--saffron)}
+.ring b{position:absolute;inset:0;display:grid;place-items:center;font-family:"Plus Jakarta Sans",sans-serif;font-size:var(--t-sec);font-weight:800;color:var(--saffron)}
 .who{line-height:1.15}
-.who strong{font-family:"Plus Jakarta Sans",sans-serif;font-size:19px;font-weight:800;letter-spacing:.5px}
-.who span{display:block;font-size:13px;color:var(--mist)}
+.who strong{font-family:"Plus Jakarta Sans",sans-serif;font-size:var(--t-sec);font-weight:800;letter-spacing:.5px}
+.who span{display:block;font-size:var(--t-meta);color:var(--mist)}
 .pills{margin-left:auto;display:flex;gap:6px}
-.pill{display:flex;align-items:center;gap:5px;background:var(--lapis2);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-weight:700;font-size:14px;white-space:nowrap}
+.pill{display:flex;align-items:center;gap:5px;background:var(--lapis2);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-weight:700;font-size:var(--t-body);white-space:nowrap}
 .pill .ico{width:16px;height:16px}
 
 /* ---------- today ---------- */
 .hero{display:flex;align-items:center;gap:16px;padding:6px 0 4px}
 .lantern{width:128px;flex:none}
-.hero .txt h2{font-size:26px}
+.hero .txt h2{font-size:var(--t-page)}
 .hero .txt p{color:var(--mist);margin-top:6px;line-height:1.4}
-.mult{display:inline-flex;align-items:center;gap:6px;margin-top:10px;font-size:14px;font-weight:700;color:var(--saffron);background:rgba(232,176,60,.12);border:1px solid rgba(232,176,60,.35);border-radius:999px;padding:4px 10px}
+.mult{display:inline-flex;align-items:center;gap:6px;margin-top:10px;font-size:var(--t-body);font-weight:700;color:var(--saffron);background:rgba(232,176,60,.12);border:1px solid rgba(232,176,60,.35);border-radius:999px;padding:4px 10px}
 
 .group{margin-top:22px}
 .ghead{display:flex;align-items:baseline;justify-content:space-between;margin:0 2px 8px}
-.ghead h3{font-size:19px;font-weight:700}
-.ghead small{color:var(--mist);font-size:13px}
+.ghead h3{font-size:var(--t-sec);font-weight:700}
+.ghead small{color:var(--mist);font-size:var(--t-meta)}
 
 .task{width:100%;display:flex;align-items:center;gap:12px;background:var(--lapis2);border:1px solid var(--lapis3);border-radius:var(--r-md);padding:11px 12px;margin-bottom:8px;text-align:left;transition:background .25s,border-color .25s,transform .12s}
 .task:active{transform:scale(.985)}
 .medal{width:40px;height:40px;flex:none;border-radius:12px;display:grid;place-items:center;color:var(--c);background:color-mix(in srgb,var(--c) 16%,transparent);border:1px solid color-mix(in srgb,var(--c) 40%,transparent)}
 .tx{flex:1;min-width:0}
-.tx b{display:block;font-size:16px;font-weight:800;letter-spacing:-.01em}
-.tx small{color:var(--mist);font-size:13px;font-weight:600}
-.gain{display:flex;flex-direction:column;align-items:flex-end;gap:2px;font-size:13px;font-weight:800}
+.tx b{display:block;font-size:var(--t-item);font-weight:800;letter-spacing:-.01em}
+.tx small{color:var(--mist);font-size:var(--t-meta);font-weight:600}
+.gain{display:flex;flex-direction:column;align-items:flex-end;gap:2px;font-size:var(--t-meta);font-weight:800}
 .gain span{display:flex;align-items:center;gap:3px}
 .gain .ico{width:14px;height:14px}
 .tick{width:28px;height:28px;flex:none;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;transition:.25s}
@@ -87,14 +89,14 @@ input:disabled{opacity:.4}
 .tile-card{position:relative;margin-top:18px;border-radius:var(--r-lg);overflow:hidden;background:var(--parch);color:var(--ink);box-shadow:inset 0 0 0 3px #1d4f8a,inset 0 0 0 7px var(--parch),inset 0 0 0 8.5px #2bb3b1}
 .tile-card .border{position:absolute;inset:0;pointer-events:none}
 .tile-card .in{position:relative;padding:22px 20px 18px}
-.tile-card h3{font-size:14px;font-weight:700;color:#8a3a2a}
-.tile-card p{font-family:"Plus Jakarta Sans",sans-serif;font-size:21px;font-weight:700;line-height:1.25;margin:4px 0 14px}
+.tile-card h3{font-size:var(--t-body);font-weight:700;color:#8a3a2a}
+.tile-card p{font-family:"Plus Jakarta Sans",sans-serif;font-size:var(--t-sec);font-weight:700;line-height:1.25;margin:4px 0 14px}
 .tile-card .row{display:flex;align-items:center;gap:10px}
 .tile-card .gain{flex-direction:row;gap:10px;color:#5a4a2c}
 .tile-card.new{animation:turn .6s cubic-bezier(.2,.8,.2,1)}
 @keyframes turn{from{transform:perspective(600px) rotateY(80deg);opacity:.2}}
 .draw{width:100%;margin-top:18px;border-radius:var(--r-lg);border:1.5px dashed var(--saffron);padding:20px;display:flex;align-items:center;gap:14px;text-align:left;background:rgba(232,176,60,.06)}
-.draw b{display:block;font-family:"Plus Jakarta Sans",sans-serif;font-size:19px}
+.draw b{display:block;font-family:"Plus Jakarta Sans",sans-serif;font-size:var(--t-sec)}
 .draw small{color:var(--mist)}
 
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;background:var(--saffron);color:var(--ink);font-weight:800;border-radius:12px;padding:10px 16px;white-space:nowrap}
@@ -106,7 +108,7 @@ input:disabled{opacity:.4}
 
 /* ---------- map ---------- */
 .reslist{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0}
-.res{display:flex;align-items:center;gap:5px;font-weight:700;font-size:14px;padding:5px 10px;border-radius:999px;background:var(--lapis2);border:1px solid var(--lapis3);color:var(--c)}
+.res{display:flex;align-items:center;gap:5px;font-weight:700;font-size:var(--t-body);padding:5px 10px;border-radius:999px;background:var(--lapis2);border:1px solid var(--lapis3);color:var(--c)}
 .res em{font-style:normal;color:var(--white)}
 .res .ico{width:16px;height:16px}
 .mapwrap{border-radius:var(--r-lg);overflow:hidden;box-shadow:0 14px 40px rgba(0,0,0,.35)}
@@ -114,45 +116,45 @@ input:disabled{opacity:.4}
 .rg{cursor:pointer}
 .rg.faded{filter:saturate(.15) brightness(.92)}
 .rg:focus{outline:none}
-.maphint{font-size:14px;color:var(--mist);margin-top:12px;line-height:1.45}
+.maphint{font-size:var(--t-body);color:var(--mist);margin-top:12px;line-height:1.45}
 
 /* ---------- sefer ---------- */
 .route svg{width:100%;height:auto;display:block}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 0 6px}
 .stat{background:var(--lapis2);border:1px solid var(--lapis3);border-radius:var(--r-md);padding:12px 10px}
-.stat b{display:block;font-family:"Plus Jakarta Sans",sans-serif;font-size:26px;font-weight:800;color:var(--saffron);line-height:1}
-.stat small{color:var(--mist);font-size:13px}
+.stat b{display:block;font-family:"Plus Jakarta Sans",sans-serif;font-size:var(--t-num);font-weight:800;color:var(--saffron);line-height:1}
+.stat small{color:var(--mist);font-size:var(--t-meta)}
 .badges{display:grid;grid-template-columns:repeat(4,1fr);gap:12px 6px;margin-top:10px}
-.badge{text-align:center;font-size:12px;font-weight:700;line-height:1.2}
+.badge{text-align:center;font-size:var(--t-tiny);font-weight:700;line-height:1.2}
 .badge svg{width:58px;height:58px;display:block;margin:0 auto 4px}
 .badge.no{opacity:.35}
 
 /* ---------- hazine ---------- */
 .vaultcard{background:var(--parch);color:var(--ink);border-radius:var(--r-lg);padding:20px;margin-top:12px;position:relative;overflow:hidden}
 .vaultcard .amt{font-family:"Plus Jakarta Sans",sans-serif;font-size:44px;font-weight:800;line-height:1;margin:6px 0 4px;color:#6b4a12}
-.vaultcard p{color:#5d5446;font-size:15px;line-height:1.4}
+.vaultcard p{color:#5d5446;font-size:var(--t-item);line-height:1.4}
 .vaultcard .row{display:flex;gap:8px;margin-top:14px}
 .vaultcard input{background:#fff;color:var(--ink);border-color:var(--parch2)}
 .panel{background:var(--lapis2);border:1px solid var(--lapis3);border-radius:var(--r-lg);padding:16px;margin-top:12px}
-.panel h3{font-size:18px;font-weight:700;margin-bottom:8px}
+.panel h3{font-size:var(--t-sec);font-weight:700;margin-bottom:8px}
 .bar{height:12px;background:var(--lapis);border-radius:99px;overflow:hidden;border:1px solid var(--line)}
 .bar i{display:block;height:100%;background:linear-gradient(90deg,#c98a1c,var(--saffron));border-radius:99px;transition:width .6s}
-.tiers{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px;text-align:center;font-size:13px}
+.tiers{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px;text-align:center;font-size:var(--t-meta)}
 .tiers div{padding:10px 4px;border-radius:12px;border:1px solid var(--line)}
 .tiers div.ok{border-color:var(--saffron);background:rgba(232,176,60,.1)}
 .tiers svg{width:60px;height:50px;display:block;margin:0 auto 4px}
 .tiers div:not(.ok) svg{opacity:.35}
-.log{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--lapis3);font-size:15px}
+.log{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--lapis3);font-size:var(--t-item)}
 .log:last-child{border:0}
 
 /* ---------- settings ---------- */
 .trow{border:1px solid var(--lapis3);background:var(--lapis2);border-radius:var(--r-md);padding:12px;margin-bottom:10px;display:grid;gap:8px}
 .g3{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:8px}
-.lab{display:block;font-size:13px;color:var(--mist);margin-bottom:3px}
-.ck{display:flex;gap:8px;align-items:center;font-size:14px}
+.lab{display:block;font-size:var(--t-meta);color:var(--mist);margin-bottom:3px}
+.ck{display:flex;gap:8px;align-items:center;font-size:var(--t-body)}
 .ck input{width:18px;height:18px;accent-color:var(--turq)}
 .between{display:flex;justify-content:space-between;align-items:center;gap:8px}
-textarea{min-height:90px;font-size:12px}
+textarea{min-height:90px;font-size:var(--t-tiny)}
 
 /* ---------- araçlar ---------- */
 .g2{display:grid;grid-template-columns:1.4fr 1fr;gap:8px}
@@ -164,35 +166,35 @@ button.zikr:active{transform:scale(.97)}
 .zikr #zring{transition:stroke-dasharray .2s}
 .zc{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
 .zc b{font-family:"Plus Jakarta Sans",sans-serif;font-size:62px;font-weight:800;line-height:1}
-.zc small{color:var(--mist);font-size:15px}
-.zc em{font-style:normal;font-family:"Plus Jakarta Sans",sans-serif;font-size:19px;color:var(--turq);margin-top:6px;min-height:24px}
+.zc small{color:var(--mist);font-size:var(--t-item)}
+.zc em{font-style:normal;font-family:"Plus Jakarta Sans",sans-serif;font-size:var(--t-sec);color:var(--turq);margin-top:6px;min-height:24px}
 .stepper{display:flex;gap:10px;align-items:center;justify-content:center;margin:20px 0 8px}
 .stepper .btn{width:52px;height:52px;font-size:24px;padding:0;border-radius:50%}
 .stepper input{width:110px;text-align:center;font-family:"Plus Jakarta Sans",sans-serif;font-size:34px;font-weight:800;padding:6px}
 .excuse{display:flex;flex-direction:column;align-items:flex-start;gap:12px;margin-top:22px}
-.excuse p{flex:1;font-size:14px;line-height:1.4;color:var(--mist)}
+.excuse p{flex:1;font-size:var(--t-body);line-height:1.4;color:var(--mist)}
 .excuse.warn{border-color:color-mix(in srgb,var(--coral) 60%,transparent);background:color-mix(in srgb,var(--coral) 10%,var(--lapis2))}
 .excuse.warn p{color:var(--white)}
-.excuse-link{margin-top:22px;text-align:center;font-size:13px;color:var(--mist)}
-.excuse-link button{display:block;margin:0 auto 4px;font-weight:700;color:var(--white);text-decoration:underline;text-underline-offset:3px;font-size:15px}
+.excuse-link{margin-top:22px;text-align:center;font-size:var(--t-meta);color:var(--mist)}
+.excuse-link button{display:block;margin:0 auto 4px;font-weight:700;color:var(--white);text-decoration:underline;text-underline-offset:3px;font-size:var(--t-item)}
 .excuse-link button:disabled{opacity:.4}
 
 /* ---------- hedefler ve kutlama ---------- */
 .goals{margin-top:18px}
-.goals h3{font-size:17px;margin-bottom:4px}
+.goals h3{font-size:var(--t-sec);margin-bottom:4px}
 .grow{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:10px 0;border-bottom:1px solid var(--lapis3)}
 .grow:last-child{border:0;padding-bottom:0}
-.grow .tx b{font-size:15px}
+.grow .tx b{font-size:var(--t-item)}
 .mbar{display:block;height:6px;border-radius:9px;background:var(--lapis3);overflow:hidden;margin-top:6px}
 .mbar i{display:block;height:100%;border-radius:9px;transition:width .5s}
 .mbar.big{height:10px}
-.why{display:inline-block;margin-left:8px;font-size:12px;font-weight:700;color:#7a5a34;background:rgba(232,176,60,.25);padding:2px 8px;border-radius:99px}
-.bprog{display:block;margin:4px 6px 0;font-size:11px;color:var(--mist)}
+.why{display:inline-block;margin-left:8px;font-size:var(--t-tiny);font-weight:700;color:#7a5a34;background:rgba(232,176,60,.25);padding:2px 8px;border-radius:99px}
+.bprog{display:block;margin:4px 6px 0;font-size:var(--t-tiny);color:var(--mist)}
 .bprog .mbar{height:4px;margin:0 0 3px}
 .badge.no{opacity:1}.badge.no svg{opacity:.4}
 .weekbar{margin-top:12px;background:var(--lapis2);border:1px solid var(--lapis3);border-radius:var(--r-md);padding:12px}
 .wdots{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:10px}
-.wdots i{font-style:normal;text-align:center;font-size:12px;font-weight:700;padding:7px 0;border-radius:9px;background:var(--lapis);color:var(--mist)}
+.wdots i{font-style:normal;text-align:center;font-size:var(--t-tiny);font-weight:700;padding:7px 0;border-radius:9px;background:var(--lapis);color:var(--mist)}
 .wdots i.on{background:var(--turq);color:var(--lapis)}
 .wdots i.ex{background:repeating-linear-gradient(45deg,var(--lapis),var(--lapis) 4px,var(--lapis3) 4px,var(--lapis3) 8px)}
 .wdots i.today{outline:2px solid var(--saffron);outline-offset:-2px}
@@ -204,32 +206,32 @@ button.zikr:active{transform:scale(.97)}
 .celebrate{text-align:center;padding:6px 0 0}
 .celebrate h3{font-size:24px;margin-top:6px}
 .celebrate>p{color:var(--mist);margin:8px auto 0;max-width:36ch;line-height:1.45}
-.celebrate blockquote{margin:12px auto 0;max-width:40ch;font-size:16px;line-height:1.55;font-weight:600;padding:14px 16px;border-radius:14px;background:var(--parch);color:var(--ink)}
+.celebrate blockquote{margin:12px auto 0;max-width:40ch;font-size:var(--t-item);line-height:1.55;font-weight:600;padding:14px 16px;border-radius:14px;background:var(--parch);color:var(--ink)}
 .celebrate .reslist{margin:14px 0 4px}
 .cel-lantern{width:150px;margin:0 auto}
 .cel-lantern .lantern{width:150px}
 .cel-lv,.cel-konak{width:110px;height:110px;margin:4px auto 0;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle,rgba(232,176,60,.35),transparent 70%)}
 .cel-lv b{width:84px;height:84px;border-radius:50%;display:grid;place-items:center;font-size:40px;font-weight:800;color:var(--ink);background:var(--saffron);box-shadow:0 0 0 6px rgba(232,176,60,.3)}
 .cel-konak{position:relative}.cel-konak span{position:absolute;inset:16px;background:var(--saffron);transform:rotate(45deg);border-radius:14px}.cel-konak b{position:relative;font-size:36px;font-weight:800;color:var(--ink)}
-.cel-note{display:inline-flex;align-items:center;gap:6px;margin-top:10px;font-size:14px;font-weight:700;color:var(--saffron)}
+.cel-note{display:inline-flex;align-items:center;gap:6px;margin-top:10px;font-size:var(--t-body);font-weight:700;color:var(--saffron)}
 .cel-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:16px 0 10px}
 .cel-stats div{background:var(--lapis);border:1px solid var(--lapis3);border-radius:12px;padding:10px 6px}
-.cel-stats b{display:block;font-size:22px;color:var(--saffron)}
-.cel-stats small{font-size:12px;color:var(--mist);font-weight:600}
+.cel-stats b{display:block;font-size:var(--t-num);color:var(--saffron)}
+.cel-stats small{font-size:var(--t-tiny);color:var(--mist);font-weight:600}
 .celebrate .cel-lv,.celebrate .cel-konak,.celebrate .cel-lantern{animation:pop .6s cubic-bezier(.2,1.4,.4,1)}
 @keyframes pop{from{transform:scale(.4);opacity:0}}
 
-.streak{display:flex;align-items:center;gap:3px;font-size:14px;font-weight:800;color:var(--coral);padding:4px 8px;border-radius:99px;background:color-mix(in srgb,var(--coral) 12%,transparent)}
+.streak{display:flex;align-items:center;gap:3px;font-size:var(--t-body);font-weight:800;color:var(--coral);padding:4px 8px;border-radius:99px;background:color-mix(in srgb,var(--coral) 12%,transparent)}
 .streak .ico{width:15px;height:15px}
 .brandm{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;color:var(--saffron);background:var(--lapis2);border:1px solid var(--lapis3)}
-.offday{font-size:13px;color:var(--mist);margin:14px 2px 0;font-weight:600}
+.offday{font-size:var(--t-meta);color:var(--mist);margin:14px 2px 0;font-weight:600}
 .sgrid{display:grid;gap:10px}
 .scard2{display:block;width:100%;text-align:left;background:var(--lapis2);border:1px solid var(--lapis3);border-radius:var(--r-md);padding:14px}
-.scard2 .sh{display:flex;align-items:center;gap:10px}.scard2 .sh b{font-size:16px}
-.snum{display:flex;align-items:baseline;gap:6px;margin-top:10px}.snum b{font-size:30px;font-weight:800;color:var(--coral);line-height:1}.snum small{color:var(--mist);font-weight:700}
-.smeta{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:6px;font-size:13px;color:var(--mist);font-weight:600}
+.scard2 .sh{display:flex;align-items:center;gap:10px}.scard2 .sh b{font-size:var(--t-item)}
+.snum{display:flex;align-items:baseline;gap:6px;margin-top:10px}.snum b{font-size:var(--t-num);font-weight:800;color:var(--coral);line-height:1}.snum small{color:var(--mist);font-weight:700}
+.smeta{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:6px;font-size:var(--t-meta);color:var(--mist);font-weight:600}
 .d7{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-top:12px}
-.d7 i{font-style:normal;text-align:center;font-size:11px;font-weight:800;padding:6px 0;border-radius:8px;background:var(--lapis);color:var(--mist);border:1px solid var(--lapis3)}
+.d7 i{font-style:normal;text-align:center;font-size:var(--t-tiny);font-weight:800;padding:6px 0;border-radius:8px;background:var(--lapis);color:var(--mist);border:1px solid var(--lapis3)}
 .d7 i.on{background:var(--turq);border-color:var(--turq);color:var(--lapis)}
 .d7 i.off{opacity:.35;border-style:dashed}
 .d7 i.ex{background:repeating-linear-gradient(135deg,rgba(232,176,60,.25) 0 4px,transparent 4px 8px)}
@@ -238,89 +240,90 @@ button.zikr:active{transform:scale(.97)}
 .calfilter .seg button{flex:0 0 auto}
 .cd.free{opacity:.45}
 .daypick{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
-.daypick button{padding:9px 0;border-radius:10px;font-size:13px;font-weight:800;background:var(--lapis);border:1px solid var(--line);color:var(--mist)}
+.daypick button{padding:9px 0;border-radius:10px;font-size:var(--t-meta);font-weight:800;background:var(--lapis);border:1px solid var(--line);color:var(--mist)}
 .daypick.n5{grid-template-columns:repeat(5,1fr)}
 .daypick button.on{background:var(--turq);border-color:var(--turq);color:var(--lapis)}
 .rlist2{margin-top:6px}
 @media (min-width:700px){ .sgrid{grid-template-columns:1fr 1fr} }
 .chain{display:block;width:100%;height:auto;margin-top:10px}
 .chainbox{margin-top:16px;background:var(--lapis2);border:1px solid var(--lapis3);border-radius:var(--r-md);padding:12px 14px}
-.chainbox b{font-size:14px}.chainbox .muted{font-size:13px;font-weight:600}
+.chainbox b{font-size:var(--t-body)}.chainbox .muted{font-size:var(--t-meta);font-weight:600}
 .chainhero{display:grid;grid-template-columns:auto auto 1fr;align-items:center;gap:8px 22px}
 .chainhero .chain{grid-column:1/-1;margin-top:4px}
-.cstat b{display:block;font-size:34px;font-weight:800;line-height:1;color:var(--saffron)}.cstat small{color:var(--mist);font-weight:700;font-size:13px}
+.cstat b{display:block;font-size:var(--t-num);font-weight:800;line-height:1;color:var(--saffron)}.cstat small{color:var(--mist);font-weight:700;font-size:var(--t-meta)}
 .cd.link:before{content:"";position:absolute;left:-8px;top:50%;width:10px;height:4px;margin-top:-2px;background:var(--saffron);border-radius:2px}
 .cal .cd.full{background:var(--saffron);border-color:var(--saffron);color:var(--ink)}
 .calleg i.full{background:var(--saffron)!important}
-.notep{margin-top:22px}.notep h3{font-size:16px;margin-bottom:8px}.notep textarea,.sheet textarea{min-height:72px;font-size:15px;line-height:1.45}
+.notep{margin-top:22px}.notep h3{font-size:var(--t-item);margin-bottom:8px}.notep textarea,.sheet textarea{min-height:72px;font-size:var(--t-item);line-height:1.45}
 .cd .ndot2{position:absolute;top:4px;right:5px;width:6px;height:6px;border-radius:50%;background:var(--sky)}
 .vakitler{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin-top:14px}
 .vakitler button{font:inherit;color:inherit;text-align:center;padding:7px 2px;border-radius:10px;background:var(--lapis2);border:1px dashed var(--mist);cursor:pointer}
 .vakitler button.kil{border:1px solid var(--turq);background:color-mix(in srgb,var(--turq) 22%,var(--lapis2))}.vakitler button.kil b{color:var(--turq)}
-.vhint{font-size:12px;color:var(--mist);margin-top:5px;text-align:center}
+.vhint{font-size:var(--t-tiny);color:var(--mist);margin-top:5px;text-align:center}
 .vakitler span{text-align:center;padding:7px 2px;border-radius:10px;background:var(--lapis2);border:1px solid var(--lapis3)}
-.vakitler small{display:block;font-size:11px;color:var(--mist);font-weight:700}.vakitler b{font-size:14px}
+.vakitler small{display:block;font-size:var(--t-tiny);color:var(--mist);font-weight:700}.vakitler b{font-size:var(--t-body)}
 .vakitler button.next:not(.kil){border-style:solid}
 .vakitler .next{border-color:var(--saffron);background:color-mix(in srgb,var(--saffron) 14%,var(--lapis2))}
 .wsbtn{width:100%;margin-top:16px;justify-content:center}
 .ybox{padding:0 14px 14px}
 .yscroll{overflow-x:auto;margin-top:12px;padding-bottom:4px}
-.ymonths{display:grid;grid-template-columns:repeat(12,minmax(40px,1fr));font-size:11px;color:var(--mist);font-weight:700;min-width:640px;margin-bottom:4px}
+.ymonths{display:grid;grid-template-columns:repeat(12,minmax(40px,1fr));font-size:var(--t-tiny);color:var(--mist);font-weight:700;min-width:640px;margin-bottom:4px}
 .ygrid{display:grid;grid-template-rows:repeat(7,10px);grid-auto-flow:column;grid-auto-columns:10px;gap:3px;min-width:640px}
 .ygrid i{width:10px;height:10px;border-radius:2px;background:var(--lapis);border:1px solid var(--lapis3)}
 .ygrid i.pad{visibility:hidden}.ygrid i.y-full{background:var(--saffron);border-color:var(--saffron)}.ygrid i.y-part{background:color-mix(in srgb,var(--turq) 45%,var(--lapis))}
 .ygrid i.y-ex{background:var(--turq);opacity:.5}.ygrid i.y-rest{opacity:.4}.ygrid i.y-fut{opacity:.25}.ygrid i.today{outline:1.5px solid var(--white)}
-.nprev{padding:8px 0;border-bottom:1px solid var(--lapis3)}.nprev b{font-size:13px;color:var(--mist);text-transform:capitalize}.nprev p{font-size:14px;line-height:1.45;margin-top:2px}
+.nprev{padding:8px 0;border-bottom:1px solid var(--lapis3)}.nprev b{font-size:var(--t-meta);color:var(--mist);text-transform:capitalize}.nprev p{font-size:var(--t-body);line-height:1.45;margin-top:2px}
 .linkb{color:var(--turq);font-weight:700;text-decoration:underline;text-underline-offset:3px}
-.vtime{font-size:13px;font-weight:700;color:var(--mist);margin-left:6px}
+.vtime{font-size:var(--t-meta);font-weight:700;color:var(--mist);margin-left:6px}
 .vgroup.nowv .ghead h3{color:var(--saffron)}.vgroup.nowv .vtime{color:var(--saffron)}
 .drow{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--lapis3)}
-.drow .tx b{font-size:15px}.drow .tx small{color:var(--mist);font-size:12px}
+.drow .tx b{font-size:var(--t-item)}.drow .tx small{color:var(--mist);font-size:var(--t-tiny)}
 .dtick{width:30px;height:30px;flex:none;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;color:var(--lapis)}
 .drow.on .dtick{background:var(--turq);border-color:var(--turq)}.dtick .ico{width:16px;height:16px;stroke-width:2.6}
 .dpg{width:84px;padding:6px 8px;text-align:center}
 .insp{margin-top:16px}.insp h3{margin-bottom:6px}
-.ins{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--lapis3);font-size:14.5px;line-height:1.45}.ins:last-child{border:0}
+.ins{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--lapis3);font-size:var(--t-body);line-height:1.45}.ins:last-child{border:0}
 .ins i{width:8px;height:8px;border-radius:50%;margin-top:7px;flex:none;background:var(--sky)}.ins.up i{background:var(--turq)}.ins.down i{background:var(--coral)}
 .ins b{color:var(--white)}
-.hempty{display:block;width:100%;text-align:left;border-style:dashed}.hempty b{display:block;font-size:16px}.hempty span{color:var(--mist);font-size:14px}
-.hsec{margin-top:18px}.hsec h3{font-size:18px;margin:0 2px 10px}
+.hempty{display:block;width:100%;text-align:left;border-style:dashed}.hempty b{display:block;font-size:var(--t-item)}.hempty span{color:var(--mist);font-size:var(--t-body)}
+.hsec{margin-top:18px}.hsec h3{font-size:var(--t-sec);margin:0 2px 10px}
 .hgrid{display:grid;gap:10px}
 .hcard{background:var(--lapis2);border:1px solid var(--lapis3);border-radius:var(--r-lg);padding:16px}
 .sheet .hcard{margin-top:12px;background:var(--lapis)}
-.hname{display:flex;align-items:center;gap:10px}.hname b{display:block;font-size:16px}.hname small{display:block;color:var(--mist);font-size:13px;font-weight:600}
-.hpct{font-size:26px;font-weight:800;color:var(--saffron)}
-.hmeta{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:10px;font-size:14px;color:var(--mist);font-weight:600}.hmeta b{color:var(--white)}
-.heta{margin-top:8px;font-size:14px;line-height:1.45}.heta b{color:var(--saffron)}
+.hname{display:flex;align-items:center;gap:10px}.hname b{display:block;font-size:var(--t-item)}.hname small{display:block;color:var(--mist);font-size:var(--t-meta);font-weight:600}
+.hpct{font-size:var(--t-num);font-weight:800;color:var(--saffron)}
+.hmeta{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:10px;font-size:var(--t-body);color:var(--mist);font-weight:600}.hmeta b{color:var(--white)}
+.heta{margin-top:8px;font-size:var(--t-body);line-height:1.45}.heta b{color:var(--saffron)}
 .hedit{display:grid;gap:12px;padding:12px;border-radius:var(--r-md);background:var(--lapis);border:1px solid var(--lapis3)}
 .task .tx .mbar{margin-top:6px;max-width:220px}
 @media (min-width:700px){ .hgrid{grid-template-columns:1fr 1fr} }
 .fold{margin-top:16px;background:var(--lapis2);border:1px solid var(--lapis3);border-radius:var(--r-lg)}
-.fold summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:16px;font-weight:800;font-size:16px}
+.fold summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:16px;font-weight:800;font-size:var(--t-item)}
 .fold summary::-webkit-details-marker{display:none}
 .fold summary:after{content:"›";font-size:22px;color:var(--mist);transform:rotate(90deg);transition:transform .2s;margin-left:10px}
 .fold[open] summary:after{transform:rotate(-90deg)}
-.fold summary small{margin-left:auto;color:var(--mist);font-weight:600;font-size:13px}
+.fold summary small{margin-left:auto;color:var(--mist);font-weight:600;font-size:var(--t-meta)}
 .fold .sgrid{padding:0 12px 12px}
 .fold .scard2{background:var(--lapis)}
+@media (min-width:1000px){ :root{--t-page:28px; --t-num:28px; --t-sec:18px; --t-item:16px; --t-body:15px; --t-meta:13.5px} }
 @media (min-width:1000px){ .fold .sgrid{grid-template-columns:1fr 1fr 1fr} .tk-top{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:16px;align-items:start} .tk-top .calbox{margin-top:0} .tk-top .cd{aspect-ratio:auto;height:52px} }
 
 /* ---------- ayarlar ---------- */
 .setwrap{max-width:680px}
 .seg{display:flex;flex-wrap:wrap;gap:4px;background:var(--lapis2);border:1px solid var(--lapis3);border-radius:14px;padding:4px}
-.seg button{flex:1 1 auto;padding:9px 8px;border-radius:10px;font-weight:700;font-size:14px;color:var(--mist);white-space:nowrap}
+.seg button{flex:1 1 auto;padding:9px 8px;border-radius:10px;font-weight:700;font-size:var(--t-body);color:var(--mist);white-space:nowrap}
 .seg button.on{background:var(--saffron);color:var(--ink)}
 .setbody{margin-top:16px}
 .setbody .panel.first{margin-top:0}
 .tlist{display:grid;gap:8px}
 .trow2{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--lapis2);border:1px solid var(--lapis3);border-radius:var(--r-md);padding:10px 12px}
 .medal.sm{width:34px;height:34px;border-radius:10px}.medal.sm .ico{width:17px;height:17px}
-.tag{display:inline-block;margin-left:8px;font-size:11px;font-weight:800;padding:2px 7px;border-radius:99px;background:color-mix(in srgb,var(--turq) 18%,transparent);color:var(--turq);vertical-align:2px}
+.tag{display:inline-block;margin-left:8px;font-size:var(--t-tiny);font-weight:800;padding:2px 7px;border-radius:99px;background:color-mix(in srgb,var(--turq) 18%,transparent);color:var(--turq);vertical-align:2px}
 .chev{font-size:22px;color:var(--mist);padding:0 4px}
 .form{display:grid;gap:12px;margin-top:14px}
 .switch{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--lapis3)}
 .switch:last-child{border:0;padding-bottom:0}
-.switch b{display:block;font-size:15px}.switch small{color:var(--mist);font-size:13px;font-weight:600}
+.switch b{display:block;font-size:var(--t-item)}.switch small{color:var(--mist);font-size:var(--t-meta);font-weight:600}
 .switch input{appearance:none;-webkit-appearance:none;width:46px;height:28px;flex:none;border-radius:99px;background:var(--lapis3);border:0;padding:0;position:relative;cursor:pointer;transition:background .2s}
 .switch input:after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:transform .2s}
 .switch input:checked{background:var(--turq)}
@@ -344,7 +347,7 @@ button.zikr:active{transform:scale(.97)}
 nav#side{position:fixed;bottom:0;left:0;right:0;z-index:6;background:var(--navbg,rgba(15,33,61,.96));backdrop-filter:blur(8px);border-top:1px solid var(--lapis3);padding-bottom:env(safe-area-inset-bottom)}
 nav .in{display:flex;max-width:520px;margin:0 auto}
 .brand,.side-foot{display:none}
-nav button{flex:1;padding:10px 0 12px;font-size:12px;font-weight:700;color:var(--mist);display:flex;flex-direction:column;align-items:center;gap:4px;position:relative}
+nav button{flex:1;padding:10px 0 12px;font-size:var(--t-tiny);font-weight:700;color:var(--mist);display:flex;flex-direction:column;align-items:center;gap:4px;position:relative}
 nav button .ico{width:23px;height:23px}
 nav button.on{color:var(--saffron)}
 nav button.on:before{content:"";position:absolute;top:0;width:28px;height:3px;border-radius:0 0 4px 4px;background:var(--saffron)}
@@ -355,20 +358,20 @@ nav button.on:before{content:"";position:absolute;top:0;width:28px;height:3px;bo
 .sheet{background:var(--lapis2);border-top:1px solid var(--line);width:100%;max-width:520px;border-radius:24px 24px 0 0;padding:10px 18px calc(18px + env(safe-area-inset-bottom));max-height:86vh;overflow:auto;animation:up .28s cubic-bezier(.2,.8,.2,1)}
 .sheet:before{content:"";display:block;width:40px;height:4px;border-radius:9px;background:var(--line);margin:0 auto 14px}
 @keyframes up{from{transform:translateY(60px);opacity:0}}
-.sheet h3{font-size:24px;font-weight:800}
+.sheet h3{font-size:var(--t-page);font-weight:800}
 .brow{display:flex;align-items:center;gap:12px;padding:10px;border-radius:var(--r-md);margin-top:10px;border:1px solid var(--lapis3);background:var(--lapis)}
 .brow svg.bld{width:64px;height:52px;flex:none;background:var(--parch);border-radius:10px}
 .brow .tx small{display:flex;align-items:center;gap:4px}
 .brow.built{border-color:color-mix(in srgb,var(--turq) 50%,transparent)}
 .brow.lock{opacity:.45}
-#toast{position:fixed;left:50%;top:14px;transform:translate(-50%,-220%);visibility:hidden;background:var(--parch);color:var(--ink);padding:12px 18px;border-radius:14px;font-weight:700;font-size:15px;z-index:30;transition:transform .4s cubic-bezier(.2,.8,.2,1);max-width:92vw;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+#toast{position:fixed;left:50%;top:14px;transform:translate(-50%,-220%);visibility:hidden;background:var(--parch);color:var(--ink);padding:12px 18px;border-radius:14px;font-weight:700;font-size:var(--t-item);z-index:30;transition:transform .4s cubic-bezier(.2,.8,.2,1);max-width:92vw;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.35)}
 #toast.show{transform:translate(-50%,0);visibility:visible}
 .p{position:fixed;pointer-events:none;z-index:40;width:8px;height:8px;border-radius:2px;animation:fly .8s ease-out forwards}
 @keyframes fly{to{transform:translate(var(--dx),var(--dy)) rotate(200deg) scale(.4);opacity:0}}
 /* ---------- harita yan liste ---------- */
 .phead{margin:6px 0 18px;padding-bottom:16px;border-bottom:1px solid var(--lapis3)}
-.phead h1{font-size:25px;font-weight:800;line-height:1.2;letter-spacing:0}
-.phead p{margin-top:6px;color:var(--mist);font-size:14.5px;font-weight:600;line-height:1.45;max-width:46ch}
+.phead h1{font-size:var(--t-page);font-weight:800;line-height:1.2;letter-spacing:0}
+.phead p{margin-top:6px;color:var(--mist);font-size:var(--t-body);font-weight:600;line-height:1.45;max-width:46ch}
 .v-harita .reslist{margin-top:14px}
 .rlist{display:grid;gap:8px;margin-top:14px}
 .rrow{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--lapis2);border:1px solid var(--lapis3);border-radius:var(--r-md);padding:10px 12px}
@@ -379,20 +382,20 @@ nav button.on:before{content:"";position:absolute;top:0;width:28px;height:3px;bo
 .calbox{margin-top:16px}
 .cnav{width:40px;height:40px;padding:0;font-size:22px;border-radius:12px}
 .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-top:12px}
-.cal>b{font-size:12px;color:var(--mist);text-align:center;padding-bottom:4px;font-weight:700}
-.cd{position:relative;aspect-ratio:1;border-radius:10px;background:var(--lapis);border:1px solid var(--lapis3);font-weight:700;font-size:14px;display:grid;place-items:center}
-.cd i{position:absolute;right:4px;bottom:2px;font-style:normal;font-size:9px;opacity:.75}
+.cal>b{font-size:var(--t-tiny);color:var(--mist);text-align:center;padding-bottom:4px;font-weight:700}
+.cd{position:relative;aspect-ratio:1;border-radius:10px;background:var(--lapis);border:1px solid var(--lapis3);font-weight:700;font-size:var(--t-body);display:grid;place-items:center}
+.cd i{position:absolute;right:4px;bottom:2px;font-style:normal;font-size:var(--t-tiny);opacity:.75}
 .cd.part{background:color-mix(in srgb,var(--turq) 22%,var(--lapis));border-color:color-mix(in srgb,var(--turq) 40%,transparent)}
 .cd.full{background:var(--turq);border-color:var(--turq);color:var(--lapis)}
 .cd.ex{background:repeating-linear-gradient(135deg,rgba(232,176,60,.22) 0 5px,transparent 5px 10px);border-color:rgba(232,176,60,.6)}
 .cd.today{box-shadow:0 0 0 2px var(--saffron)}
 .cd.fut{opacity:.3}
-.calleg{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;font-size:12px;color:var(--mist);font-weight:600}
+.calleg{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;font-size:var(--t-tiny);color:var(--mist);font-weight:600}
 .calleg span{display:flex;align-items:center;gap:6px}
 .calleg i{width:12px;height:12px;border-radius:4px;display:inline-block}
 .calleg i.full{background:var(--turq)}.calleg i.part{background:color-mix(in srgb,var(--turq) 30%,var(--lapis))}.calleg i.ex{border:1px solid var(--saffron);background:rgba(232,176,60,.25)}
 .calsum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px;text-align:center}
-.calsum b{display:block;font-size:22px;color:var(--saffron)}.calsum small{color:var(--mist);font-size:12px;font-weight:600}
+.calsum b{display:block;font-size:var(--t-num);color:var(--saffron)}.calsum small{color:var(--mist);font-size:var(--t-tiny);font-weight:600}
 .a-app{margin-top:22px}
 .a-app .ico{width:16px;height:16px;vertical-align:-3px;color:var(--turq)}
 
@@ -408,27 +411,23 @@ nav button.on:before{content:"";position:absolute;top:0;width:28px;height:3px;bo
   body{padding-bottom:40px}
   nav#side{top:0;right:auto;width:232px;border-top:0;border-right:1px solid var(--lapis3);background:var(--sidebg,#0f213d);display:flex;flex-direction:column;padding:26px 16px}
   .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:22px;letter-spacing:.06em;padding:0 10px 26px}
-  .side-foot{display:block;margin-top:auto;padding:0 10px;color:var(--mist);font-size:13px;font-weight:600}
+  .side-foot{display:block;margin-top:auto;padding:0 10px;color:var(--mist);font-size:var(--t-meta);font-weight:600}
   nav .in{flex-direction:column;gap:4px;max-width:none;margin:0}
-  nav button{flex:none;flex-direction:row;justify-content:flex-start;gap:12px;padding:12px 14px;border-radius:12px;font-size:15px}
+  nav button{flex:none;flex-direction:row;justify-content:flex-start;gap:12px;padding:12px 14px;border-radius:12px;font-size:var(--t-item)}
   nav button:hover{background:var(--lapis2);color:var(--white)}
   nav button.on{background:var(--lapis2)}
   nav button.on:before{top:12px;bottom:12px;left:0;width:3px;height:auto;border-radius:0 4px 4px 0}
   .wrap{max-width:1180px;margin-left:232px;padding:0 44px}
   #hdr{padding:26px 0 18px}
   .who strong{display:none}
-  .who span{font-size:15px;color:var(--white);font-weight:700}
-  h2{font-size:32px}
+  .who span{font-size:var(--t-item);color:var(--white);font-weight:700}
   .phead{margin:4px 0 26px;padding-bottom:20px}
-  .phead h1{font-size:30px}
-  .phead p{font-size:15.5px}
   .cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:32px;align-items:start}
   .group.first,.panel.first{margin-top:0}
   .v-bugun{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr)}
   .v-bugun{grid-template-areas:"hero tasks" "goals tasks";grid-template-rows:auto 1fr}
   .v-bugun .a-hero{grid-area:hero}.v-bugun .a-tasks{grid-area:tasks}.v-bugun .a-goals{grid-area:goals}
   .v-bugun .a-goals .goals{margin-top:0}
-  .hero .txt h2{font-size:30px}
   .v-harita{grid-template-columns:min(600px,calc((100vh - 170px)*.818)) minmax(0,1fr)}
   .v-harita .a-map,.v-harita .reslist{margin-top:0}
   .v-harita .rlist{grid-template-columns:1fr}
@@ -448,20 +447,37 @@ nav button.on:before{content:"";position:absolute;top:0;width:28px;height:3px;bo
 /* kompakt liste */
 .dense .hero{gap:12px;padding:0}
 .dense .lantern{width:84px}
-.dense .hero .txt h2{font-size:22px}
-.dense .hero .txt p{font-size:14px;margin-top:3px}
 .dense .vakitler{margin-top:10px}.dense .vakitler span,.dense .vakitler button{padding:5px 2px}
 .dense .vhint{margin-top:3px}
 .dense .chainbox{padding:9px 14px;margin-top:10px}.dense .chainbox .chain{margin-top:4px}
 .dense .group{margin-top:14px}
-.dense .ghead{margin-bottom:6px}.dense .ghead h3{font-size:16.5px}
+.dense .ghead{margin-bottom:6px}
 .dense .task{gap:10px;padding:7px 10px;margin-bottom:5px;border-radius:12px}
 .dense .task .medal{width:32px;height:32px;border-radius:9px}.dense .task .medal .ico{width:16px;height:16px}
-.dense .task .tx b{font-size:15px}
-.dense .task .tx small{display:block;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dense .task .tx small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dense .task .tx .mbar{margin-top:4px}
 .dense .task .tick{width:26px;height:26px}
 @media (min-width:900px){ .dense .lantern{width:110px} }
+
+/* ---- tutarlılık: tek kutu ve yazı ölçüsü ---- */
+.panel,.hcard,.fold,.chainbox,.weekbar,.scard2,.stat,.hedit,.trow{border-radius:var(--r-lg);padding:var(--pad)}
+.fold{padding:0}.fold summary{padding:var(--pad)}.fold .sgrid,.ybox{padding:0 var(--pad) var(--pad)}
+.task,.trow2,.rrow{border-radius:var(--r-md);padding:10px 12px;gap:12px}
+.panel,.chainbox,.weekbar,.hsec,.fold{margin-top:var(--gap)}
+.group{margin-top:18px}
+.medal,.medal.sm,.brandm{width:36px;height:36px;border-radius:10px}.medal .ico,.medal.sm .ico{width:18px;height:18px}
+.panel h3,.ghead h3,.hsec h3,.notep h3,.goals h3,.fold summary{font-size:var(--t-sec);font-weight:800;letter-spacing:-.01em}
+.panel h3,.hsec h3,.notep h3{margin-bottom:10px}
+.tx b,.hname b,.switch b,.scard2 .sh b,.drow .tx b,.grow .tx b,.hempty b,.chainbox b,.trow2 .tx b{font-size:var(--t-item);font-weight:800}
+.tx small,.switch small,.hname small,.ghead small,.lab,.smeta,.hmeta,.chainbox .muted,.fold summary small,.vtime,.drow .tx small,.stat small,.cstat small,.snum small,.calsum small{font-size:var(--t-meta)}
+p,.muted,.heta,.ins,.excuse p,.hero .txt p,.phead p,.log,.ck,input,select,textarea,.seg button,.btn{font-size:var(--t-body)}
+.phead h1,.hero .txt h2,.sheet h3{font-size:var(--t-page);font-weight:800;line-height:1.2}
+.sheet h3{font-size:calc(var(--t-page) - 2px)}
+.hero .txt p{margin-top:4px;line-height:1.45}
+.phead{margin:6px 0 16px;padding-bottom:14px}
+.dense .task,.dense .trow2,.dense .rrow{padding:8px 12px}
+.dense .group{margin-top:14px}
+.dense .task .medal{width:32px;height:32px;border-radius:9px}
 </style>
 </head>
 <body>
@@ -692,7 +708,7 @@ function beep(){ try{ if(!actx||S.ui.sound===false) return; [0,.35,.7].forEach(d
 /* ---------- sayfa girişi ---------- */
 function openPages(id){
   const t=S.tasks.find(x=>x.id===id), r=rec(), goal=effGoal(t), have=(r.prog&&r.prog[id])||0, def=goal?Math.max(1,goal-have):1, bk=hasBook(t);
-  modal(`<h3>${esc(t.name)}</h3>${bk?hatimCard(t,true):''}${bookable(t)?`<button class="linkb" style="margin:6px 0 4px;font-size:13px" data-act="bedit" data-id="${esc(id)}">${bk?'Kitabı ya da hedefi değiştir':'Kitap ekle (isteğe bağlı)'}</button>`:''}<p class="muted" style="margin-top:2px;line-height:1.45">${goal?`Günlük hedefin ${goal} sayfa. ${have?`Bugün ${have} sayfa okudun, ${Math.max(0,goal-have)} sayfa kaldı.`:'Gün içinde parça parça da girebilirsin.'}`:'Bugün kaç sayfa okudun?'}</p>
+  modal(`<h3>${esc(t.name)}</h3>${bk?hatimCard(t,true):''}${bookable(t)?`<button class="linkb" style="margin:6px 0 4px;font-size:var(--t-meta)" data-act="bedit" data-id="${esc(id)}">${bk?'Kitabı ya da hedefi değiştir':'Kitap ekle (isteğe bağlı)'}</button>`:''}<p class="muted" style="margin-top:2px;line-height:1.45">${goal?`Günlük hedefin ${goal} sayfa. ${have?`Bugün ${have} sayfa okudun, ${Math.max(0,goal-have)} sayfa kaldı.`:'Gün içinde parça parça da girebilirsin.'}`:'Bugün kaç sayfa okudun?'}</p>
     ${goal?`<div class="bar" style="margin-top:14px"><i style="width:${Math.min(100,have/goal*100)}%"></i></div>`:''}
     <div class="stepper"><button class="btn ghost" data-act="pg" data-id="-1" aria-label="Azalt">−</button>
       <input id="pgn" type="number" inputmode="numeric" min="1" value="${def}" aria-label="Sayfa sayısı"><button class="btn ghost" data-act="pg" data-id="1" aria-label="Artır">+</button></div>
@@ -753,17 +769,17 @@ async function initCloud(){
   if(tab==='ayarlar') render();
 }
 function accountHtml(){
-  if(!sb) return `<div class="panel first"><h3>Eşitleme</h3><p class="muted" style="font-size:14px;line-height:1.5">Eşitleme bu sayfada kullanılamıyor. GitHub adresindeki SEFER'de Emanet hesabınla giriş yapabilirsin.</p></div>`;
-  if(sbUser) return `<div class="panel first"><h3>Eşitleme</h3><p style="font-size:15px;margin-top:4px">Giriş yapıldı: <b>${esc(sbUser.email||'')}</b></p>
-      <p class="muted" style="font-size:14px;margin-top:6px" id="cloudmsg">${esc(cloudMsg||'Eşitleniyor…')}</p>
-      <p class="muted" style="font-size:13px;margin-top:8px;line-height:1.45">Bu hesapla giriş yaptığın her cihazda görevlerin, geçmişin ve notların aynı olur. İnternet yokken de çalışır, bağlantı gelince eşitlenir.</p>
+  if(!sb) return `<div class="panel first"><h3>Eşitleme</h3><p class="muted" style="font-size:var(--t-body);line-height:1.5">Eşitleme bu sayfada kullanılamıyor. GitHub adresindeki SEFER'de Emanet hesabınla giriş yapabilirsin.</p></div>`;
+  if(sbUser) return `<div class="panel first"><h3>Eşitleme</h3><p style="font-size:var(--t-item);margin-top:4px">Giriş yapıldı: <b>${esc(sbUser.email||'')}</b></p>
+      <p class="muted" style="font-size:var(--t-body);margin-top:6px" id="cloudmsg">${esc(cloudMsg||'Eşitleniyor…')}</p>
+      <p class="muted" style="font-size:var(--t-meta);margin-top:8px;line-height:1.45">Bu hesapla giriş yaptığın her cihazda görevlerin, geçmişin ve notların aynı olur. İnternet yokken de çalışır, bağlantı gelince eşitlenir.</p>
       <div style="display:flex;gap:8px;margin-top:12px"><button class="btn" data-act="cpull">Şimdi eşitle</button><button class="btn ghost" data-act="cout">Çıkış yap</button></div></div>`;
-  return `<div class="panel first"><h3>Eşitleme</h3><p class="muted" style="font-size:14px;line-height:1.5">Emanet'teki hesabınla giriş yap; verilerin tüm cihazlarında aynı olsun.</p>
+  return `<div class="panel first"><h3>Eşitleme</h3><p class="muted" style="font-size:var(--t-body);line-height:1.5">Emanet'teki hesabınla giriş yap; verilerin tüm cihazlarında aynı olsun.</p>
     <form class="form" id="authf" autocomplete="on"><label><span class="lab">E-posta</span><input id="aem" type="email" autocomplete="email" required></label>
       <label><span class="lab">Şifre</span><input id="apw" type="password" autocomplete="${authMode==='up'?'new-password':'current-password'}" required minlength="6"></label>
       <button class="btn" type="submit">${authMode==='up'?'Hesap oluştur':'Giriş yap'}</button></form>
-    <p class="muted" id="amsg" style="font-size:13px;margin-top:8px"></p>
-    <div style="display:flex;gap:14px;margin-top:8px;font-size:13px"><button class="linkb" data-act="amode">${authMode==='up'?'Hesabım var, giriş yap':'Hesabın yok mu? Oluştur'}</button><button class="linkb" data-act="areset">Şifremi unuttum</button></div></div>`;
+    <p class="muted" id="amsg" style="font-size:var(--t-meta);margin-top:8px"></p>
+    <div style="display:flex;gap:14px;margin-top:8px;font-size:var(--t-meta)"><button class="linkb" data-act="amode">${authMode==='up'?'Hesabım var, giriş yap':'Hesabın yok mu? Oluştur'}</button><button class="linkb" data-act="areset">Şifremi unuttum</button></div></div>`;
 }
 document.addEventListener('submit',async e=>{ if(e.target.id!=='authf') return; e.preventDefault(); if(!sb) return;
   const em=$('aem').value.trim(), pw=$('apw').value, msg=$('amsg'), b=e.target.querySelector('button'); b.disabled=true; msg.textContent='Bekle…';
@@ -903,8 +919,8 @@ function insights(){
 function daysBetween0(a,b){ return Math.round((kDate(b)-kDate(a))/864e5); }
 function insightsHtml(){
   const L=insights();
-  const body = !L ? '<p class="muted" style="font-size:14px">İçgörüler için birkaç gün daha kayıt gerekiyor. Bir hafta sonra burada düzenine dair tespitler göreceksin.</p>'
-    : !L.length ? '<p class="muted" style="font-size:14px">Şimdilik dikkat çeken bir değişiklik yok. Düzenin istikrarlı görünüyor.</p>'
+  const body = !L ? '<p class="muted" style="font-size:var(--t-body)">İçgörüler için birkaç gün daha kayıt gerekiyor. Bir hafta sonra burada düzenine dair tespitler göreceksin.</p>'
+    : !L.length ? '<p class="muted" style="font-size:var(--t-body)">Şimdilik dikkat çeken bir değişiklik yok. Düzenin istikrarlı görünüyor.</p>'
     : L.map(([k,h])=>`<div class="ins ${k}"><i></i><p>${h}</p></div>`).join('');
   return `<div class="panel insp"><h3>İçgörüler</h3>${body}</div>`;
 }
@@ -931,13 +947,13 @@ function nmzQueue(k,now){
 }
 function nmzHtml(){
   const c=nmz();
-  return `<div class="panel"><h3>Namaz vakti bildirimleri</h3><p class="muted" style="font-size:14px;line-height:1.5">Seçtiğin namazların vakti girince ve vakit çıkmadan önce haber verir. Vakitler ${S.cityId?'seçtiğin şehre':'şehrine'} göre hesaplanır.</p>
+  return `<div class="panel"><h3>Namaz vakti bildirimleri</h3><p class="muted" style="font-size:var(--t-body);line-height:1.5">Seçtiğin namazların vakti girince ve vakit çıkmadan önce haber verir. Vakitler ${S.cityId?'seçtiğin şehre':'şehrine'} göre hesaplanır.</p>
     <label class="switch"><span><b>Namaz vakti bildirimlerini kullan</b></span><input type="checkbox" data-f="nmzOn" ${c.on?'checked':''}></label>
     ${c.on?`<div style="margin-top:10px"><span class="lab">Hangi namazlar</span><div class="daypick n5">${NAMAZ.map(([id,l])=>`<button class="${c.list.includes(id)?'on':''}" data-act="nmzv" data-id="${id}">${esc(l.replace(' namazı',''))}</button>`).join('')}</div></div>
     <label class="switch"><span><b>Vakit girince</b><small>Örneğin "Öğle vakti girdi"</small></span><input type="checkbox" data-f="nmzIn" ${c.enter?'checked':''}></label>
     <label class="switch"><span><b>Kılmadıysam hatırlat</b><small>Kıldım demediysen vaktin çıkmasına bu kadar kala</small></span><select data-f="nmzB" style="max-width:130px">${[[0,'Kapalı'],[5,'5 dk'],[10,'10 dk'],[15,'15 dk'],[30,'30 dk'],[45,'45 dk'],[60,'1 saat']].map(([v,l])=>`<option value="${v}" ${+c.before===v?'selected':''}>${l}</option>`).join('')}</select></label>
-    <p class="muted" style="font-size:13px;margin-top:8px;line-height:1.5">Namazı kılınca Bugün sayfasındaki vakit kutusuna ya da bildirimdeki <b>Kıldım</b> düğmesine dokun; o vaktin uyarısı gelmez. Vaktin çıkışı bir sonraki vakittir: sabah için güneş, ikindi için akşam, yatsı için imsak.</p>
-    ${S.cityId?'':'<p class="muted" style="font-size:13px">Önce aşağıdan şehrini seç.</p>'}`:''}</div>`;
+    <p class="muted" style="font-size:var(--t-meta);margin-top:8px;line-height:1.5">Namazı kılınca Bugün sayfasındaki vakit kutusuna ya da bildirimdeki <b>Kıldım</b> düğmesine dokun; o vaktin uyarısı gelmez. Vaktin çıkışı bir sonraki vakittir: sabah için güneş, ikindi için akşam, yatsı için imsak.</p>
+    ${S.cityId?'':'<p class="muted" style="font-size:var(--t-meta)">Önce aşağıdan şehrini seç.</p>'}`:''}</div>`;
 }
 function buildQueue(extra){
   const now=Date.now(), q=[], today=dk();
@@ -987,13 +1003,13 @@ async function disablePush(){
 }
 function pushHtml(){
   let state;
-  if(!pushSupported()) state=/iphone|ipad|ipod/i.test(navigator.userAgent)?'<p class="muted" style="font-size:14px;line-height:1.5">iPhone\'da bildirim için önce SEFER\'i ana ekrana ekle (Paylaş → Ana Ekrana Ekle), sonra ana ekrandaki simgeden açıp buraya gel.</p>':'<p class="muted" style="font-size:14px">Bildirimler bu sayfada kullanılamıyor. GitHub adresindeki SEFER\'den açabilirsin.</p>';
-  else if(!cloudOn()) state='<p class="muted" style="font-size:14px;line-height:1.5">Bildirimler hesabın üzerinden gönderilir. Önce <b>Hesap</b> sekmesinden giriş yap.</p>';
-  else if(Notification.permission==='denied') state='<p class="muted" style="font-size:14px;line-height:1.5">Bu tarayıcıda bildirim izni kapalı. Tarayıcı ya da telefon ayarlarından SEFER için bildirimlere izin ver.</p>';
-  else if(pushOn()) state=`<p style="font-size:14px;margin-top:4px">${ico('check')} Bu cihazda bildirimler açık.</p>
+  if(!pushSupported()) state=/iphone|ipad|ipod/i.test(navigator.userAgent)?'<p class="muted" style="font-size:var(--t-body);line-height:1.5">iPhone\'da bildirim için önce SEFER\'i ana ekrana ekle (Paylaş → Ana Ekrana Ekle), sonra ana ekrandaki simgeden açıp buraya gel.</p>':'<p class="muted" style="font-size:var(--t-body)">Bildirimler bu sayfada kullanılamıyor. GitHub adresindeki SEFER\'den açabilirsin.</p>';
+  else if(!cloudOn()) state='<p class="muted" style="font-size:var(--t-body);line-height:1.5">Bildirimler hesabın üzerinden gönderilir. Önce <b>Hesap</b> sekmesinden giriş yap.</p>';
+  else if(Notification.permission==='denied') state='<p class="muted" style="font-size:var(--t-body);line-height:1.5">Bu tarayıcıda bildirim izni kapalı. Tarayıcı ya da telefon ayarlarından SEFER için bildirimlere izin ver.</p>';
+  else if(pushOn()) state=`<p style="font-size:var(--t-body);margin-top:4px">${ico('check')} Bu cihazda bildirimler açık.</p>
     <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn" data-act="ptest">Deneme bildirimi</button><button class="btn ghost" data-act="poff">Kapat</button></div>`;
   else state='<button class="btn turq" style="margin-top:8px" data-act="pon">Bildirimleri aç</button>';
-  return `<div class="panel first"><h3>Bildirimler</h3><p class="muted" style="font-size:14px;line-height:1.5">Görevlerine verdiğin saatlerde ve vakitlerde telefonuna bildirim gelir. Uygulamayı açman gerekmez.</p>${state}
+  return `<div class="panel first"><h3>Bildirimler</h3><p class="muted" style="font-size:var(--t-body);line-height:1.5">Görevlerine verdiğin saatlerde ve vakitlerde telefonuna bildirim gelir. Uygulamayı açman gerekmez.</p>${state}
     <label class="switch"><span><b>Zincir uyarısı</b><small>Bu saatte hedefin tamamlanmadıysa haber ver</small></span><input type="time" value="${esc(S.riskTime||'21:00')}" data-f="riskTime"></label>
     <label class="switch"><span><b>Zincir uyarısını kullan</b><small>Kapatırsan yalnızca görev hatırlatmaları gelir</small></span><input type="checkbox" data-f="riskOn" ${S.riskOn!==false?'checked':''}></label></div>`;
 }
@@ -1023,8 +1039,8 @@ function hatimCard(t,compact){
   return `<div class="hcard"><div class="between"><span class="hname"><span class="medal sm" style="--c:${col(t)}">${ico(t.icon)}</span><span><b>${esc(t.name)}</b><small>${esc(t.proj||'')}</small></span></span><span class="hpct">%${h.pct}</span></div>
     <div class="bar big" style="margin-top:12px"><i style="width:${h.pct}%"></i></div>
     <div class="hmeta"><span>Sayfa <b>${h.cur}</b> / ${h.total}</span>${h.juz?`<span><b>${h.juz}.</b> cüz</span>`:''}<span>Kalan <b>${h.left}</b> sayfa</span></div>
-    <p class="heta">${planText(t)||etaText(h)}</p>${planText(t)&&h.pace?`<p class="muted" style="font-size:13px;margin-top:4px">${etaText(h).replace(/<\/?b>/g,'')}</p>`:''}
-    ${compact?'':`<p class="muted" style="font-size:13px;margin-top:6px">${h.left>0&&!planOf(t)?`30 günde bitirmek için günde ${Math.ceil(h.left/30)} sayfa okuman yeterli.`:''}${n?` Tamamlanan: ${n} ${t.quran?'hatim':'kitap'}.`:''}</p>`}</div>`;
+    <p class="heta">${planText(t)||etaText(h)}</p>${planText(t)&&h.pace?`<p class="muted" style="font-size:var(--t-meta);margin-top:4px">${etaText(h).replace(/<\/?b>/g,'')}</p>`:''}
+    ${compact?'':`<p class="muted" style="font-size:var(--t-meta);margin-top:6px">${h.left>0&&!planOf(t)?`30 günde bitirmek için günde ${Math.ceil(h.left/30)} sayfa okuman yeterli.`:''}${n?` Tamamlanan: ${n} ${t.quran?'hatim':'kitap'}.`:''}</p>`}</div>`;
 }
 /* ---------- kitap hedefi: bitiş tarihi ve günlük sayfa birbirine bağlı ---------- */
 const hasBook = t => +t.total>0;
@@ -1045,7 +1061,7 @@ function planText(t){
 }
 function openBook(id){
   const t=S.tasks.find(x=>x.id===id); if(!t) return; const h=hasBook(t)?hProg(t):null; window._bkT=t;
-  modal(`<h3>${t.quran?'Hatim':'Kitabını gir'}</h3><p class="muted" style="margin-top:2px;font-size:14px">Sayfa sayısını ve hedefini yaz; günlük okuman gereken sayfa kendiliğinden hesaplanır.</p>
+  modal(`<h3>${t.quran?'Hatim':'Kitabını gir'}</h3><p class="muted" style="margin-top:2px;font-size:var(--t-body)">Sayfa sayısını ve hedefini yaz; günlük okuman gereken sayfa kendiliğinden hesaplanır.</p>
     <div class="form">
       ${t.quran?'':`<label><span class="lab">Kitabın adı</span><input id="bk_n" value="${esc(t.proj||'')}" placeholder="Örneğin Saadet-i Ebediyye"></label>`}
       <div class="g2"><label><span class="lab">Toplam sayfa</span><input id="bk_t" type="number" inputmode="numeric" min="1" value="${t.quran?604:(+t.total||'')}" ${t.quran?'disabled':''}></label>
@@ -1080,12 +1096,12 @@ function saveBook(id){
 let pgMode='count';
 function openHatim(id){
   const t=S.tasks.find(x=>x.id===id); if(!t.quran&&!hasBook(t)) return openBook(id); const h=hProg(t), r=rec(), goal=effGoal(t), have=(r.prog&&r.prog[id])||0, def=goal?Math.max(1,goal-have):1;
-  modal(`<h3>${esc(t.name)}</h3>${hatimCard(t,true)}<button class="linkb" style="margin-top:8px;font-size:13px" data-act="bedit" data-id="${esc(id)}">${t.quran?'Hedefi değiştir':'Kitabı ya da hedefi değiştir'}</button>
-    ${goal?`<p class="muted" style="margin-top:10px;font-size:14px">Bugünkü hedef ${goal} sayfa. ${have?`${have} sayfa okudun.`:''}</p>`:''}
+  modal(`<h3>${esc(t.name)}</h3>${hatimCard(t,true)}<button class="linkb" style="margin-top:8px;font-size:var(--t-meta)" data-act="bedit" data-id="${esc(id)}">${t.quran?'Hedefi değiştir':'Kitabı ya da hedefi değiştir'}</button>
+    ${goal?`<p class="muted" style="margin-top:10px;font-size:var(--t-body)">Bugünkü hedef ${goal} sayfa. ${have?`${have} sayfa okudun.`:''}</p>`:''}
     <div style="margin-top:14px">${seg(pgMode,[['count','Okuduğum sayfa sayısı'],['page','Kaldığım sayfa']],'pgMode')}</div>
     <div class="stepper">${pgMode==='count'?`<button class="btn ghost" data-act="pg" data-id="-1" aria-label="Azalt">−</button>`:''}
       <input id="pgn" type="number" inputmode="numeric" min="1" value="${pgMode==='count'?def:Math.min(h.total,h.cur+def)}" aria-label="${pgMode==='count'?'Sayfa sayısı':'Kaldığın sayfa'}">${pgMode==='count'?`<button class="btn ghost" data-act="pg" data-id="1" aria-label="Artır">+</button>`:''}</div>
-    <p class="muted" style="text-align:center;font-size:13px">${pgMode==='count'?'Bugün okuduğun sayfa sayısını yaz.':`Şu an ${h.cur}. sayfadasın. Okumayı bıraktığın sayfanın numarasını yaz.`}</p>
+    <p class="muted" style="text-align:center;font-size:var(--t-meta)">${pgMode==='count'?'Bugün okuduğun sayfa sayısını yaz.':`Şu an ${h.cur}. sayfadasın. Okumayı bıraktığın sayfanın numarasını yaz.`}</p>
     <button class="btn turq" style="width:100%;margin-top:12px" data-act="hsave" data-id="${esc(id)}">Kaydet</button>
     ${(r.done[id]||have)?`<button class="btn ghost" style="width:100%;margin-top:8px" data-act="hundo" data-id="${esc(id)}">Bugünkü kaydı sil (${r.done[id]?r.done[id].n:have} sayfa)</button>`:''}`);
   $('pgn').dataset.task=id;
@@ -1202,7 +1218,7 @@ function vTakip(){
   const ch=chainNow(), best=chainBest();
   return `<header class="phead"><h1>Takip</h1><p>Zinciri kırma: planladığın görevlerin ${chainPct()===100?'hepsini':'en az %'+chainPct()+({50:"'sini",75:"'ini",90:"'ını"}[chainPct()]||"'ini")} yaptığın her gün zincire bir halka eklenir.</p></header>
     <div class="tk-top"><div class="chainhero panel first"><div class="cstat"><b>${ch}</b><small>günlük zincir</small></div><div class="cstat"><b>${best}</b><small>en uzun zincir</small></div>${chainSvg(14)}
-      <p class="muted" style="grid-column:1/-1;font-size:13px;line-height:1.45">Altın halkalar zincir hedefinin tutturulduğu günler. Kesik turkuaz halkalar mazeretli günler. Kırmızı kopukluk zincirin kırıldığı gün.</p></div>
+      <p class="muted" style="grid-column:1/-1;font-size:var(--t-meta);line-height:1.45">Altın halkalar zincir hedefinin tutturulduğu günler. Kesik turkuaz halkalar mazeretli günler. Kırmızı kopukluk zincirin kırıldığı gün.</p></div>
     ${vCal()}</div>
  ${S.tasks.some(t=>t.type==='hatim'||(t.type==='pages'&&hasBook(t)))?`<div class="hsec"><h3>Hatim ve kitaplar</h3><div class="hgrid">${S.tasks.filter(t=>t.type==='hatim'||(t.type==='pages'&&hasBook(t))).map(t=>t.quran||hasBook(t)?hatimCard(t):`<button class="hcard hempty" data-act="bedit" data-id="${esc(t.id)}"><b>${esc(t.name)}</b><span>Okuduğun kitabı, sayfa sayısını ve bitirme hedefini gir.</span></button>`).join('')}</div></div>`:''}
     ${insightsHtml()}
@@ -1219,7 +1235,7 @@ function openDay(k){
   const st=dayState(k);
   modal(`<h3>${kDate(k).toLocaleDateString('tr-TR',{weekday:'long',day:'numeric',month:'long'})}</h3>
     <p class="muted" style="margin:4px 0 6px">${st==='full'?'Zincir halkası tamam.':excused(k)?'Mazeretli gün: seriler korundu.':`${T.filter(t=>!isWeekly(t)&&isDone(t,k)).length} / ${T.filter(t=>!isWeekly(t)).length} görev yapıldı.`}</p>
-    ${past?'<p class="muted" style="font-size:13px;margin-bottom:6px">Unuttuğun bir görevi işaretleyebilir ya da yanlış işaretlediğini kaldırabilirsin.</p>':''}
+    ${past?'<p class="muted" style="font-size:var(--t-meta);margin-bottom:6px">Unuttuğun bir görevi işaretleyebilir ya da yanlış işaretlediğini kaldırabilirsin.</p>':''}
     ${T.map(row).join('')||'<p class="muted">Bu gün planlı görev yoktu.</p>'}
     ${past?`<label class="ck" style="margin-top:12px"><input type="checkbox" data-f="dex" data-id="${k}" ${excused(k)?'checked':''}> Bu günü mazeretli say <span class="muted">(bu ay ${Math.max(0,excuseLeft(k))} hak)</span></label>`:''}
     <h4 class="sub">Not</h4><textarea data-f="note" data-id="${k}" rows="3" placeholder="Bu gün için bir not yaz">${esc(noteOf(k))}</textarea>`);
@@ -1262,40 +1278,40 @@ function editTask(id){
       <label><span class="lab">Hatırlatma</span><select data-f="rmode" data-id="${esc(t.id)}"><option value="none" ${!t.remind&&!(t.rv&&t.rv.v)?'selected':''}>Yok</option><option value="time" ${t.remind?'selected':''}>Belirli saatte</option><option value="vakit" ${t.rv&&t.rv.v?'selected':''}>Vakte göre</option></select></label></div>
     ${t.remind?`<label><span class="lab">Saat</span><input type="time" value="${esc(t.remind)}" data-f="remind" data-id="${esc(t.id)}"></label>`:''}
     ${t.rv&&t.rv.v?`<div class="g2"><label><span class="lab">Vakit</span><select data-f="rvv" data-id="${esc(t.id)}">${VAKIT.map(([v,l])=>`<option value="${v}" ${t.rv.v===v?'selected':''}>${l}</option>`).join('')}</select></label>
-      <label><span class="lab">Dakika (önce: eksi)</span><input type="number" value="${esc(t.rv.off||0)}" data-f="rvoff" data-id="${esc(t.id)}"></label></div>${S.cityId?'':'<p class="muted" style="font-size:13px">Önce Ayarlar → Hatırlatma\'dan şehrini seç.</p>'}`:''}
+      <label><span class="lab">Dakika (önce: eksi)</span><input type="number" value="${esc(t.rv.off||0)}" data-f="rvoff" data-id="${esc(t.id)}"></label></div>${S.cityId?'':'<p class="muted" style="font-size:var(--t-meta)">Önce Ayarlar → Hatırlatma\'dan şehrini seç.</p>'}`:''}
     <label class="ck"><input type="checkbox" data-f="dini" data-id="${esc(t.id)}" ${t.dini?'checked':''}> İbadet grubunda göster</label>
     <div class="between"><div style="display:flex;gap:8px"><button class="btn ghost" data-act="mv" data-id="${esc(t.id)}:-1" ${i===0?'disabled':''} aria-label="Yukarı taşı">↑</button><button class="btn ghost" data-act="mv" data-id="${esc(t.id)}:1" ${i===S.tasks.length-1?'disabled':''} aria-label="Aşağı taşı">↓</button></div>
       <button class="btn red" data-act="del" data-id="${esc(t.id)}" id="delb">Görevi sil</button></div></div>`);
 }
 function installHtml(){
-  if(isStandalone()) return `<p class="muted" style="font-size:14px">${ico('check')} SEFER bu cihazda uygulama olarak kurulu.</p>`;
-  if(deferredPrompt) return `<p class="muted" style="font-size:14px;line-height:1.45">Ana ekrana eklenir, internetsiz de açılır.</p><button class="btn turq" style="margin-top:10px" data-act="install">Uygulamayı kur</button>`;
-  if(/iphone|ipad|ipod/i.test(navigator.userAgent)) return `<p class="muted" style="font-size:14px;line-height:1.5">Safari'de alttaki <b>Paylaş</b> düğmesine dokun, sonra <b>Ana Ekrana Ekle</b>'yi seç.</p>`;
-  return `<p class="muted" style="font-size:14px;line-height:1.5">Chrome menüsünden (⋮) <b>Ana ekrana ekle</b> ya da <b>Uygulamayı yükle</b>'yi seç. Bilgisayarda adres çubuğundaki yükle simgesini kullanabilirsin.</p>`;
+  if(isStandalone()) return `<p class="muted" style="font-size:var(--t-body)">${ico('check')} SEFER bu cihazda uygulama olarak kurulu.</p>`;
+  if(deferredPrompt) return `<p class="muted" style="font-size:var(--t-body);line-height:1.45">Ana ekrana eklenir, internetsiz de açılır.</p><button class="btn turq" style="margin-top:10px" data-act="install">Uygulamayı kur</button>`;
+  if(/iphone|ipad|ipod/i.test(navigator.userAgent)) return `<p class="muted" style="font-size:var(--t-body);line-height:1.5">Safari'de alttaki <b>Paylaş</b> düğmesine dokun, sonra <b>Ana Ekrana Ekle</b>'yi seç.</p>`;
+  return `<p class="muted" style="font-size:var(--t-body);line-height:1.5">Chrome menüsünden (⋮) <b>Ana ekrana ekle</b> ya da <b>Uygulamayı yükle</b>'yi seç. Bilgisayarda adres çubuğundaki yükle simgesini kullanabilirsin.</p>`;
 }
 const isStandalone = () => { try{ return matchMedia('(display-mode: standalone)').matches || navigator.standalone===true; }catch(e){ return false; } };
 function vAyarlar(){
   let body='';
   if(setTab==='gorevler'){
-    body=`<div class="panel first"><h3>Zincir kuralı</h3><p class="muted" style="font-size:14px;line-height:1.45">O gün planlı görevlerinin en az bu kadarını yaparsan zincire halka eklenir.</p>
+    body=`<div class="panel first"><h3>Zincir kuralı</h3><p class="muted" style="font-size:var(--t-body);line-height:1.45">O gün planlı görevlerinin en az bu kadarını yaparsan zincire halka eklenir.</p>
       <div style="margin-top:10px">${seg(String(chainPct()),[['50','%50'],['75','%75'],['90','%90'],['100','Hepsi']],'cpct')}</div></div>
       <div class="tlist" style="margin-top:14px">${S.tasks.map(t=>`<button class="trow2" data-act="edit" data-id="${esc(t.id)}"><span class="medal sm" style="--c:${col(t)}">${ico(t.icon)}</span>
       <span class="tx"><b>${esc(t.name)}${t.dini?'<span class="tag">İbadet</span>':''}</b><small>${esc(taskSummary(t))}</small></span><span class="chev">›</span></button>`).join('')}</div>
       <button class="btn" style="width:100%;margin-top:12px" data-act="add">${ico('plus')} Görev ekle</button>
-      <p class="muted" style="font-size:13px;margin-top:10px">Günlerini, hatırlatma saatini ya da sırasını değiştirmek için göreve dokun.</p>`;
+      <p class="muted" style="font-size:var(--t-meta);margin-top:10px">Günlerini, hatırlatma saatini ya da sırasını değiştirmek için göreve dokun.</p>`;
   } else if(setTab==='hatirlatma'){
     const withTime=S.tasks.filter(t=>t.remind||(t.rv&&t.rv.v));
-    body=pushHtml()+nmzHtml()+`<div class="panel"><h3>Takvim hatırlatmaları</h3><p class="muted" style="font-size:14px;line-height:1.5">Bildirim kullanamıyorsan hatırlatmaları telefonunun takvimine de ekleyebilirsin. Görevlere saat vermek için Görevler sekmesinde göreve dokun.</p>
+    body=pushHtml()+nmzHtml()+`<div class="panel"><h3>Takvim hatırlatmaları</h3><p class="muted" style="font-size:var(--t-body);line-height:1.5">Bildirim kullanamıyorsan hatırlatmaları telefonunun takvimine de ekleyebilirsin. Görevlere saat vermek için Görevler sekmesinde göreve dokun.</p>
       <label class="switch"><span><b>Günlük özet hatırlatması</b><small>Her gün bu saatte tüm görevler için bir hatırlatma</small></span><input type="time" id="rmt" value="${esc(S.remindAll||'')}" data-f="remindAll" style="max-width:130px"></label>
-      <div class="rlist2">${withTime.length?withTime.map(t=>`<div class="log"><span>${esc(t.name)} <span class="muted">(${esc(isWeekly(t)?'her gün':dayTxt(t))})</span></span><b>${esc(t.remind||rvTxt(t))}</b></div>`).join(''):'<p class="muted" style="font-size:14px">Henüz saat verilmiş görev yok.</p>'}</div>
+      <div class="rlist2">${withTime.length?withTime.map(t=>`<div class="log"><span>${esc(t.name)} <span class="muted">(${esc(isWeekly(t)?'her gün':dayTxt(t))})</span></span><b>${esc(t.remind||rvTxt(t))}</b></div>`).join(''):'<p class="muted" style="font-size:var(--t-body)">Henüz saat verilmiş görev yok.</p>'}</div>
       <button class="btn" style="margin-top:14px" data-act="ics">${ico('bell')} Takvimime ekle</button>
-      <p class="muted" style="font-size:13px;margin-top:10px;line-height:1.45">Saatleri değiştirirsen dosyayı yeniden ekle. Eski hatırlatmalar aynı kayıtla güncellenir.</p></div>
-      <div class="panel"><h3>Namaz vakitleri</h3><p class="muted" style="font-size:14px;line-height:1.5">Vakitler namazvakti.com'dan (Türkiye Takvimi) alınır. Bugün ekranında görünür ve görevlere "vakitten sonra" hatırlatma verebilirsin.</p>
+      <p class="muted" style="font-size:var(--t-meta);margin-top:10px;line-height:1.45">Saatleri değiştirirsen dosyayı yeniden ekle. Eski hatırlatmalar aynı kayıtla güncellenir.</p></div>
+      <div class="panel"><h3>Namaz vakitleri</h3><p class="muted" style="font-size:var(--t-body);line-height:1.5">Vakitler namazvakti.com'dan (Türkiye Takvimi) alınır. Bugün ekranında görünür ve görevlere "vakitten sonra" hatırlatma verebilirsin.</p>
         <label style="display:block;margin-top:10px"><span class="lab">Şehir</span><select data-f="cityId">${[['','Seç'],...(CITIES||[]).map(c=>[c.id,c.name]),...(S.cityId&&!(CITIES||[]).some(c=>c.id===S.cityId)?[[S.cityId,`Şehir kodu ${S.cityId}`]]:[])].map(([v,l])=>`<option value="${esc(v)}" ${S.cityId===v?'selected':''}>${esc(l)}</option>`).join('')}</select></label>
         <div class="between" style="margin-top:10px"><input id="cityid" inputmode="numeric" placeholder="Listede yoksa şehir kodu" aria-label="Şehir kodu"><button class="btn ghost" data-act="cityset">Kullan</button></div>
-        <p class="muted" style="font-size:12.5px;margin-top:6px;line-height:1.45">Şehir kodu: namazvakti.com'da şehrini açınca adres çubuğundaki <b>cityID=</b> sayısı.</p>
+        <p class="muted" style="font-size:var(--t-meta);margin-top:6px;line-height:1.45">Şehir kodu: namazvakti.com'da şehrini açınca adres çubuğundaki <b>cityID=</b> sayısı.</p>
         ${vakitOf(dk())?`<div style="margin-top:12px">${vakitStrip()}</div>`:''}
-        <p class="muted" style="font-size:13px;margin-top:10px;line-height:1.45">Vakitler her gün değiştiği için vakte bağlı hatırlatmalar önümüzdeki 30 gün için eklenir. Ayda bir "Takvimime ekle"ye yeniden bas.</p></div>
+        <p class="muted" style="font-size:var(--t-meta);margin-top:10px;line-height:1.45">Vakitler her gün değiştiği için vakte bağlı hatırlatmalar önümüzdeki 30 gün için eklenir. Ayda bir "Takvimime ekle"ye yeniden bas.</p></div>
       <div class="panel"><h3>Telefona kur</h3>${installHtml()}</div>`;
   } else if(setTab==='gorunum'){
     const u=S.ui;
@@ -1306,10 +1322,10 @@ function vAyarlar(){
       <label class="switch"><span><b>Titreşim</b><small>Görev tamamlarken ve zikir çekerken</small></span><input type="checkbox" data-f="uiVib" ${u.vib!==false?'checked':''}></label>
       <label class="switch"><span><b>Zamanlayıcı sesi</b><small>Süre dolduğunda kısa bir zil</small></span><input type="checkbox" data-f="uiSound" ${u.sound!==false?'checked':''}></label></div>`;
   } else {
-    body=accountHtml()+`<div class="panel"><h3>Yedek</h3><p class="muted" style="font-size:14px;line-height:1.45">Verilerin bu tarayıcıda saklanıyor. Ara ara yedeği kopyalayıp bir yere kaydet. Başka bir cihazda metni yapıştırıp “Yedeği yükle” ile devam edebilirsin.</p>
+    body=accountHtml()+`<div class="panel"><h3>Yedek</h3><p class="muted" style="font-size:var(--t-body);line-height:1.45">Verilerin bu tarayıcıda saklanıyor. Ara ara yedeği kopyalayıp bir yere kaydet. Başka bir cihazda metni yapıştırıp “Yedeği yükle” ile devam edebilirsin.</p>
       <textarea id="bk" style="margin-top:10px" aria-label="Yedek metni">${esc(JSON.stringify(S))}</textarea>
       <div style="display:flex;gap:8px;margin-top:10px"><button class="btn ghost" data-act="copy">Kopyala</button><button class="btn ghost" data-act="import">Yedeği yükle</button></div></div>
-      <div class="panel"><h3>Baştan başla</h3><p class="muted" style="font-size:14px;line-height:1.45">Tüm geçmişin ve görevlerin silinir. Önce yedek almanı öneririm.</p>
+      <div class="panel"><h3>Baştan başla</h3><p class="muted" style="font-size:var(--t-body);line-height:1.45">Tüm geçmişin ve görevlerin silinir. Önce yedek almanı öneririm.</p>
       <button class="btn red" style="margin-top:10px" data-act="reset" id="rst">Sıfırla</button></div>`;
   }
   return `<header class="phead"><h1>Ayarlar</h1><p>Görevlerini, hatırlatmaları, görünümü ve hesabını buradan yönet.</p></header>
