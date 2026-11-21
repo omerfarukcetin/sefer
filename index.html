@@ -459,6 +459,14 @@ nav button.on:before{content:"";position:absolute;top:0;width:28px;height:3px;bo
 .dense .task .tick{width:26px;height:26px}
 @media (min-width:900px){ .dense .lantern{width:110px} }
 
+.rlog{margin-top:12px;border-top:1px solid var(--lapis3);padding-top:10px}
+.rlog summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;font-weight:800;font-size:var(--t-body)}
+.rlog summary::-webkit-details-marker{display:none}
+.rlog summary:after{content:"›";color:var(--mist);font-size:20px;transform:rotate(90deg);transition:transform .2s}
+.rlog[open] summary:after{transform:rotate(-90deg)}
+.rlog summary small{margin-left:auto;color:var(--mist);font-weight:600;font-size:var(--t-meta)}
+.rl{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:8px 0;border-bottom:1px solid var(--lapis3);font-size:var(--t-body)}
+.rl span:first-child{flex:1}.rl b{font-weight:700}.rl .chev{font-size:18px;padding:0}
 /* ---- tutarlılık: tek kutu ve yazı ölçüsü ---- */
 .panel,.hcard,.fold,.chainbox,.weekbar,.scard2,.stat,.hedit,.trow{border-radius:var(--r-lg);padding:var(--pad)}
 .fold{padding:0}.fold summary{padding:var(--pad)}.fold .sgrid,.ybox{padding:0 var(--pad) var(--pad)}
@@ -1034,13 +1042,23 @@ function etaText(h){
   if(!h.pace) return 'Bitiş tahmini için birkaç gün okuman gerekiyor.';
   return `Bu hızla (günde ${fmt1(h.pace)} sayfa) <b>${fmtDate(h.eta)}</b> tarihinde biter, ${h.etaDays} gün sonra.`;
 }
+function readLog(t){
+  const rows=[]; let sum=0; for(let i=0;i<120&&rows.length<40;i++){ const k=addDays(dk(),-i), p=pagesOn(t,k); if(p){ rows.push([k,p]); sum+=p; } }
+  const hist=(t.hist||[]).slice().reverse();
+  if(!rows.length&&!hist.length) return '';
+  const dfmt=k=>kDate(k).toLocaleDateString('tr-TR',{day:'numeric',month:'long',weekday:'short'});
+  return `<details class="rlog"><summary>Okuma geçmişi<small>${rows.length?`${rows.length} gün, ${sum} sayfa`:''}</small></summary>
+    ${rows.map(([k,p])=>`<button class="rl" data-act="day" data-id="${k}"><span>${dfmt(k)}</span><b>${p} sayfa</b><span class="chev">›</span></button>`).join('')}
+    ${hist.length?`<span class="lab" style="margin-top:10px">${t.quran?'Tamamlanan hatimler':'Biten kitaplar'}</span>${hist.map(x=>`<div class="rl"><span>${esc(x.name||(t.quran?'Hatim':'Kitap'))}</span><b>${x.end?fmtDate(x.end):''}</b></div>`).join('')}`:''}
+    <p class="muted" style="font-size:var(--t-meta);margin-top:8px">Bir güne dokunup o günün sayfa sayısını düzeltebilirsin.</p></details>`;
+}
 function hatimCard(t,compact){
   const h=hProg(t), n=(t.hist||[]).length;
   return `<div class="hcard"><div class="between"><span class="hname"><span class="medal sm" style="--c:${col(t)}">${ico(t.icon)}</span><span><b>${esc(t.name)}</b><small>${esc(t.proj||'')}</small></span></span><span class="hpct">%${h.pct}</span></div>
     <div class="bar big" style="margin-top:12px"><i style="width:${h.pct}%"></i></div>
     <div class="hmeta"><span>Sayfa <b>${h.cur}</b> / ${h.total}</span>${h.juz?`<span><b>${h.juz}.</b> cüz</span>`:''}<span>Kalan <b>${h.left}</b> sayfa</span></div>
     <p class="heta">${planText(t)||etaText(h)}</p>${planText(t)&&h.pace?`<p class="muted" style="font-size:var(--t-meta);margin-top:4px">${etaText(h).replace(/<\/?b>/g,'')}</p>`:''}
-    ${compact?'':`<p class="muted" style="font-size:var(--t-meta);margin-top:6px">${h.left>0&&!planOf(t)?`30 günde bitirmek için günde ${Math.ceil(h.left/30)} sayfa okuman yeterli.`:''}${n?` Tamamlanan: ${n} ${t.quran?'hatim':'kitap'}.`:''}</p>`}</div>`;
+    ${compact?'':`<p class="muted" style="font-size:var(--t-meta);margin-top:6px">${h.left>0&&!planOf(t)?`30 günde bitirmek için günde ${Math.ceil(h.left/30)} sayfa okuman yeterli.`:''}${n?` Tamamlanan: ${n} ${t.quran?'hatim':'kitap'}.`:''}</p>${readLog(t)}`}</div>`;
 }
 /* ---------- kitap hedefi: bitiş tarihi ve günlük sayfa birbirine bağlı ---------- */
 const hasBook = t => +t.total>0;
@@ -1214,7 +1232,7 @@ function vTakip(){
     return `<div class="scard2"><div class="sh"><span class="medal sm" style="--c:${col(t)}">${ico(t.icon)}</span><b>${esc(t.name)}</b></div>
       <div class="snum"><b>${st}</b><small>${wk?'hafta seri':'gün seri'}</small></div>
       <div class="smeta">${wk?`<span>Bu hafta ${weekDone(t,wkStart(dk()))} / ${+t.perWeek||3}</span><span>En uzun ${b} hafta</span>`:`<span>En uzun ${b} gün</span><span>Son 30 gün %${r.p}</span>`}${extra}</div>
-      <div class="d7">${dots7(t)}</div></div>`; }).join('');
+      <div class="d7">${dots7(t)}</div>${t.type==='pages'||t.type==='hatim'?readLog(t):''}</div>`; }).join('');
   const ch=chainNow(), best=chainBest();
   return `<header class="phead"><h1>Takip</h1><p>Zinciri kırma: planladığın görevlerin ${chainPct()===100?'hepsini':'en az %'+chainPct()+({50:"'sini",75:"'ini",90:"'ını"}[chainPct()]||"'ini")} yaptığın her gün zincire bir halka eklenir.</p></header>
     <div class="tk-top"><div class="chainhero panel first"><div class="cstat"><b>${ch}</b><small>günlük zincir</small></div><div class="cstat"><b>${best}</b><small>en uzun zincir</small></div>${chainSvg(14)}
