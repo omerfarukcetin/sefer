@@ -238,6 +238,9 @@ button.zikr:active{transform:scale(.97)}
 h4.sub{margin-top:18px;font-size:16px;font-weight:800}
 .cel-next{margin-top:8px;color:var(--saffron);font-weight:700}
 
+.ibrem{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--mist);margin:-2px 2px 10px}
+.ibrem .ico{width:16px;height:16px;color:var(--saffron)}
+
 /* ---------- ayarlar ---------- */
 .setwrap{max-width:680px}
 .seg{display:flex;flex-wrap:wrap;gap:4px;background:var(--lapis2);border:1px solid var(--lapis3);border-radius:14px;padding:4px}
@@ -447,8 +450,8 @@ const CARDS = [
   {t:'Kısa bir İngilizce video izle, 3 cümleyi sesli tekrar et', res:'lisan', amt:12, tl:10},
   {t:'Okuduğun kitaptan 3 not çıkar', res:'ilim', amt:12, tl:10},
   {t:'Bir saat telefonsuz zaman geçir', res:'ilim', amt:12, tl:10},
-  {t:'Bir aile büyüğünü ara, hâlini sor', res:'huzur', amt:12, tl:0, dini:true},
-  {t:'Kimse görmeden bir iyilik yap', res:'huzur', amt:12, tl:0, dini:true},
+  {t:'Bir aile büyüğünü ara, hâlini sor', res:'huzur', amt:12, tl:0, akhlak:true},
+  {t:'Kimse görmeden bir iyilik yap', res:'huzur', amt:12, tl:0, akhlak:true},
   {t:'Bir hadis-i şerif ezberle', res:'huzur', amt:12, tl:0, dini:true},
   {t:'Bir ayetin mealini ve tefsirini oku', res:'huzur', amt:12, tl:0, dini:true}
 ];
@@ -474,7 +477,7 @@ const KEY = 'sefer-v1';
 function defaults(){
   return {xp:0, res:{huzur:0,ilim:0,guc:0,lisan:0}, tlEarned:0, transfers:[],
     goal:{name:'1 gram altın', amt:3500}, builds:{gonul:0,ilim:0,kuvvet:0,liman:0},
-    days:{}, tasks:JSON.parse(JSON.stringify(DEF_TASKS)), comp:'Kandil', weekGoal:5, weeks:{}, ui:{theme:'dark',font:1,vib:true,sound:true,fx:true}};
+    days:{}, tasks:JSON.parse(JSON.stringify(DEF_TASKS)), comp:'Kandil', weekGoal:5, weeks:{}, ui:{theme:'dark',font:1,vib:true,sound:true,fx:true,sade:true}};
 }
 function merge(o){ const d=defaults(); return {...d, ...o, res:{...d.res,...(o.res||{})}, builds:{...d.builds,...(o.builds||{})}, goal:{...d.goal,...(o.goal||{})}, ui:{...d.ui,...(o.ui||{})}}; }
 function load(){ try{ const r=localStorage.getItem(KEY); if(r) return merge(JSON.parse(r)); }catch(e){} return defaults(); }
@@ -495,7 +498,9 @@ const esc = s => String(s??'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','
 const tl = n => Math.round(n).toLocaleString('tr-TR')+' ₺';
 const $ = id => document.getElementById(id);
 function rec(k=dk()){ if(!S.days[k]) S.days[k]={done:{},card:null}; return S.days[k]; }
-function doneCount(r){ return r ? Object.keys(r.done||{}).length + (r.card&&r.card.done?1:0) : 0; }
+const sadeOn = () => !S.ui || S.ui.sade!==false;
+const isIb = t => !!(t && t.dini && sadeOn());   // sade modda ibadet: sadece takip
+function doneCount(r){ return r ? Object.values(r.done||{}).filter(e=>!e.ib).length + (r.card&&r.card.done?1:0) : 0; }
 const qualified = k => doneCount(S.days[k]) >= MIN;
 const excused = k => !!(S.days[k]&&S.days[k].excused);
 const okDay = k => qualified(k)||excused(k);
@@ -734,7 +739,7 @@ function checkWeek(){ // haftalık hedef ödülünü verir ya da geri alır; ver
   return false;
 }
 function badgeList(){
-  return badgeDefs().map(([i,c,n,val,T,lab])=>{ let t=0; while(val>=T(t)) t++; const goal=T(t), prev=t?T(t-1):0;
+  return badgeDefs().filter(d=>!(sadeOn()&&["Kur'an",'Tesbihat','Dini kitap'].includes(d[2]))).map(([i,c,n,val,T,lab])=>{ let t=0; while(val>=T(t)) t++; const goal=T(t), prev=t?T(t-1):0;
     return {i,c,n:t?lab(prev):lab(goal),cur:val,goal,ok:t>0,tier:t,next:lab(goal)}; });
 }
 function nextBuild(){ // en yakın inşa hedefi
@@ -762,7 +767,7 @@ function goalsPanel(){
 function celebrate(ev){
   const q=qualifiedCount(), into=q%7, k=Math.floor(q/7), s=streak(), lv=level();
   const r=rec(), tot={}; let tlSum=0;
-  Object.values(r.done).forEach(e=>{ tot[e.res]=(tot[e.res]||0)+e.amt; tlSum+=e.tl; });
+  Object.values(r.done).forEach(e=>{ if(e.ib) return; tot[e.res]=(tot[e.res]||0)+e.amt; tlSum+=e.tl; });
   if(r.card&&r.card.done){ tot[r.card.earn.res]=(tot[r.card.earn.res]||0)+r.card.earn.amt; tlSum+=r.card.earn.tl; }
   const gains=Object.entries(tot).map(([k2,v])=>`<span class="res" style="--c:${RES[k2].color}">${ico(k2)}<em>+${v}</em> ${RES[k2].name}</span>`).join('')+(tlSum?`<span class="res" style="--c:var(--saffron)">${ico('tl')}<em>+${tl(tlSum)}</em></span>`:'');
   let top='', title='', body='';
@@ -790,8 +795,9 @@ function smartCard(){
   const idle = k => { const la=lastActive(k); return la? daysBetween(la,today) : 999; };
   const scored = resOk.map(k=>({k,d:idle(k)+Math.random()*.5})).sort((a,b)=>b.d-a.d);
   const pick = scored[0] ? scored[0].k : 'ilim';
-  const pool = CARDS.map((c,i)=>({c,i})).filter(x=>x.c.res===pick);
-  const ch = pool[Math.floor(Math.random()*pool.length)] || {i:Math.floor(Math.random()*CARDS.length)};
+  const allowed = CARDS.map((c,i)=>({c,i})).filter(x=>!(sadeOn()&&x.c.dini));
+  const pool = allowed.filter(x=>x.c.res===pick);
+  const ch = pool[Math.floor(Math.random()*pool.length)] || allowed[Math.floor(Math.random()*allowed.length)];
   const d = idle(pick);
   return {i:ch.i, why: d>=999 ? `${RES[pick].name} alanında henüz başlamadın` : d>=2 ? `${d} gündür ${RES[pick].name} kazanmadın` : ''};
 }
@@ -844,6 +850,7 @@ function afterGain(before){
 }
 function completeTask(id,el,n=1){
   const t=S.tasks.find(x=>x.id===id); if(!t) return; const r=rec(); if(r.done[id]) return;
+  if(isIb(t)){ r.done[id]={res:t.res,amt:0,tl:0,xp:0,n,ib:true}; save(); render(); return; }
   const before={lv:level(),q:qualifiedCount()};
   const e={res:t.res,amt:Math.round((+t.amt||0)*n),tl:t.dini?0:Math.round((+t.tl||0)*mult()),xp:10,n};
   r.done[id]=e; applyEarn(e,1); if(el) burst(el,RES[t.res].color); afterGain(before); save(); render();
@@ -882,7 +889,7 @@ function tapCounter(id,el){
   $('zring').setAttribute('stroke-dasharray',`${C*n/goal} ${C}`);
   vib(n%33===0?[30,40,30]:8);
   if(n%33===0 && n<goal) toast(zikrPhase(t,n-1)+' tamam.');
-  if(n>=goal){ burst(el,'#2bb3b1'); setTimeout(()=>{ closeModal(); completeTask(id,null); toast(`${t.name} tamamlandı. Allah kabul etsin.`); },450); }
+  if(n>=goal){ if(!isIb(t)) burst(el,'#2bb3b1'); setTimeout(()=>{ closeModal(); completeTask(id,null); toast(`${t.name} tamamlandı.`); },450); }
 }
 
 /* ---------- zamanlayıcı ---------- */
@@ -946,7 +953,7 @@ function savePages(id,n){
   const t=S.tasks.find(x=>x.id===id), r=rec(), goal=+t.goal||0; r.prog=r.prog||{};
   const total=(r.prog[id]||0)+n;
   if(goal && total<goal){ r.prog[id]=total; save(); closeModal(); render(); return toast(`${n} sayfa eklendi. Hedefe ${goal-total} sayfa kaldı.`); }
-  r.prog[id]=total; closeModal(); completeTask(id,null,total); toast(goal?`${total} sayfa, günlük hedef tamam. Allah kabul etsin.`:`${total} sayfa kaydedildi.`);
+  r.prog[id]=total; closeModal(); completeTask(id,null,total); toast(goal?`${total} sayfa, günlük hedef tamam.`:`${total} sayfa kaydedildi.`);
 }
 
 /* ---------- mazeret ---------- */
@@ -989,15 +996,21 @@ function taskRow(t,r){
   return `<button class="task ${d?'done':''}" data-act="toggle" data-id="${esc(t.id)}" aria-pressed="${d}">
     <span class="medal" style="--c:${R.color}">${ico(t.res)}</span>
     <span class="tx"><b>${esc(t.name)}</b><small ${run?`id="tmh-${esc(t.id)}" style="color:var(--turq)"`:''}>${hint}</small></span>
-    <span class="gain"><span style="color:${R.color}">+${amtTxt} ${R.name}${!d&&ty==='pages'?' / sayfa':''}</span>${tlv?`<span style="color:var(--saffron)">+${tl(tlv)}</span>`:''}</span>
+    ${isIb(t)?'':`<span class="gain"><span style="color:${R.color}">+${amtTxt} ${R.name}${!d&&ty==='pages'?' / sayfa':''}</span>${tlv?`<span style="color:var(--saffron)">+${tl(tlv)}</span>`:''}</span>`}
     <span class="tick ${d?'':'tool'}">${d||tool===''?ico('check'):ico(tool)}</span></button>`;
+}
+const GW = () => sadeOn() ? 'gelişim görevi' : 'görev';
+function ibReminder(r){
+  if(!sadeOn() || new Date().getHours()<17) return '';
+  const left=S.tasks.filter(t=>t.dini && !r.done[t.id]).map(t=>t.name);
+  return left.length ? `<p class="ibrem">${ico('sun')} Henüz yapılmadı: ${esc(left.join(', '))}</p>` : '';
 }
 function vBugun(){
   const r=rec(), n=doneCount(r), m=mult(), p=Math.min(1,n/MIN);
   const risk = evening() && n<MIN && !excused(dk());
   const st = streakFrom(addDays(dk(),-1));
   let head = n===0 ? `${esc(S.comp)} seni bekliyor` : n<MIN ? `${MIN-n} görev daha` : 'Bugünün konağına vardın';
-  let sub = n===0 ? `Bugün ${MIN} görev tamamladığında kandilin tam yanar ve kervanın bir adım ilerler.`
+  let sub = n===0 ? `Bugün ${MIN} ${GW()} tamamladığında kandilin tam yanar ve kervanın bir adım ilerler.`
     : n<MIN ? 'Her görev kandilini biraz daha aydınlatıyor.' : 'Allah kabul etsin. Dilersen kalan görevlerle daha fazla kaynak topla.';
   if(risk){ head=`${esc(S.comp)} sönmek üzere`; sub = st>0 ? `Gece yarısına kadar ${MIN-n} görev daha tamamla, ${st} günlük serin korunsun.` : `Gece yarısına kadar ${MIN-n} görev daha tamamlarsan yeni bir seri başlatırsın.`; }
   const dini=S.tasks.filter(t=>t.dini), gel=S.tasks.filter(t=>!t.dini), ex=excuseBox(n);
@@ -1013,7 +1026,7 @@ function vBugun(){
     ${ex.includes('warn')?ex:''}
     ${card}
     ${abhCard()}</div><div class="a-tasks">
-    <div class="group first"><div class="ghead"><h3>Dini görevler</h3><small>Huzur, seri ve rozet</small></div>${dini.map(t=>taskRow(t,r)).join('')||'<p class="muted">Ayarlar\'dan görev ekleyebilirsin.</p>'}</div>
+    <div class="group first"><div class="ghead"><h3>${sadeOn()?'İbadet takibi':'Dini görevler'}</h3><small>${sadeOn()?'Puan yok, sadece takip':'Huzur, seri ve rozet'}</small></div>${ibReminder(r)}${dini.map(t=>taskRow(t,r)).join('')||'<p class="muted">Ayarlar\'dan görev ekleyebilirsin.</p>'}</div>
     <div class="group"><div class="ghead"><h3>Gelişim görevleri</h3><small>Birikim hakkı kazandırır</small></div>${gel.map(t=>taskRow(t,r)).join('')||'<p class="muted">Ayarlar\'dan görev ekleyebilirsin.</p>'}</div>
     ${ex.includes('warn')?'':ex}</div><div class="a-goals">${goalsPanel()}</div></div>`;
 }
@@ -1053,7 +1066,7 @@ function vCal(){
 }
 function openDay(k){
   const r=S.days[k]||{done:{}}, name=id=>(S.tasks.find(t=>t.id===id)||{name:'Silinmiş görev'}).name;
-  const rows=Object.entries(r.done||{}).map(([id,e])=>`<div class="log"><span>${esc(name(id))}${e.n>1?` <span class="muted">(${e.n} sayfa)</span>`:''}</span><b style="color:${(RES[e.res]||{}).color}">+${e.amt} ${(RES[e.res]||{}).name||''}</b></div>`).join('');
+  const rows=Object.entries(r.done||{}).map(([id,e])=>`<div class="log"><span>${esc(name(id))}${e.n>1?` <span class="muted">(${e.n} sayfa)</span>`:''}</span>${e.ib?'<b style="color:var(--turq)">✓</b>':''}<b style="color:${(RES[e.res]||{}).color};${e.ib?'display:none':''}">+${e.amt} ${(RES[e.res]||{}).name||''}</b></div>`).join('');
   const card = r.card&&r.card.done ? `<div class="log"><span>Günün kartı: ${esc(CARDS[r.card.i].t)}</span><b style="color:var(--saffron)">✓</b></div>` : '';
   const tlSum = Object.values(r.done||{}).reduce((a,e)=>a+(e.tl||0),0)+(r.card&&r.card.done&&r.card.earn?r.card.earn.tl:0);
   modal(`<h3>${new Date(k).toLocaleDateString('tr-TR',{weekday:'long',day:'numeric',month:'long'})}</h3>
@@ -1062,7 +1075,7 @@ function openDay(k){
 }
 function vSefer(){
   const q=qualifiedCount(), bs=bestStreak(), B=badgeList(), wk=weekCount(), wg=+S.weekGoal||5;
-  return `<header class="phead"><h1>Sefer yolu</h1><p>En az ${MIN} görev yaptığın her gün kervanın bir adım ilerler, yedi adımda yeni bir konağa varırsın.</p></header><div class="cols v-sefer"><div class="a-stats">
+  return `<header class="phead"><h1>Sefer yolu</h1><p>En az ${MIN} ${GW()} yaptığın her gün kervanın bir adım ilerler, yedi adımda yeni bir konağa varırsın.</p></header><div class="cols v-sefer"><div class="a-stats">
     <div class="stats"><div class="stat"><b>${q}</b><small>gün yol</small></div><div class="stat"><b>${streak()}</b><small>günlük seri</small></div><div class="stat"><b>${bs}</b><small>en uzun seri</small></div></div>
     <div class="weekbar"><div class="between"><b>Bu hafta</b><span class="muted">${wk} / ${wg} konak günü</span></div><div class="wdots">${[0,1,2,3,4,5,6].map(i=>{ const k2=addDays(weekStart(dk()),i); return `<i class="${qualified(k2)?'on':excused(k2)?'ex':''} ${k2===dk()?'today':''}">${['Pt','Sa','Ça','Pe','Cu','Ct','Pz'][i]}</i>`; }).join('')}</div></div></div>
     <div class="a-cal">${vCal()}</div>
@@ -1080,7 +1093,7 @@ function vHazine(){
   <div class="panel"><div class="between"><h3>${esc(g.name)}</h3><span class="muted">%${pct}</span></div>
     <div class="bar"><i style="width:${pct}%"></i></div><p class="muted" style="margin-top:8px;font-size:14px">${tl(T)} birikti, hedef ${tl(g.amt)}</p>
     <div class="tiers">${VAULT.map(v=>`<div class="${T>=v.a?'ok':''}">${bldSvg(v.k,60,50).replace('class="bld"','')}${v.n}<br><span class="muted">${tl(v.a)}</span></div>`).join('')}</div></div></div><div class="a-right">
-  <div class="panel first"><h3>Seri bonusu</h3><div class="mbar big" style="margin:4px 0 10px"><i style="width:${Math.round(multGoal().cur/multGoal().goal*100)}%;background:var(--coral)"></i></div><p style="font-weight:700;margin-bottom:6px">${multGoal().txt}.</p><p class="muted" style="line-height:1.45">7 gün aralıksız devam edersen birikim hakların 1,5 katına, 30 günde 2 katına çıkar. Şu anki çarpanın: <b style="color:var(--saffron)">×${String(m).replace('.',',')}</b>. Dini görevler para kazandırmaz; karşılıkları Huzur, seri ve rozettir.</p></div>
+  <div class="panel first"><h3>Seri bonusu</h3><div class="mbar big" style="margin:4px 0 10px"><i style="width:${Math.round(multGoal().cur/multGoal().goal*100)}%;background:var(--coral)"></i></div><p style="font-weight:700;margin-bottom:6px">${multGoal().txt}.</p><p class="muted" style="line-height:1.45">7 gün aralıksız devam edersen birikim hakların 1,5 katına, 30 günde 2 katına çıkar. Şu anki çarpanın: <b style="color:var(--saffron)">×${String(m).replace('.',',')}</b>. ${sadeOn()?'Dini görevler sadece takip edilir; puan, kaynak ya da para kazandırmaz.':'Dini görevler para kazandırmaz; karşılıkları Huzur, seri ve rozettir.'}</p></div>
   ${S.transfers.length?`<div class="panel"><h3>Aktarımlar</h3>${S.transfers.slice().reverse().slice(0,15).map(t=>`<div class="log"><span class="muted">${new Date(t.d).toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'})}</span><b>${tl(t.a)}</b></div>`).join('')}</div>`:''}</div></div>`;
 }
 let setTab='gorevler';
@@ -1126,7 +1139,8 @@ function vAyarlar(){
       <label class="switch"><span><b>Zamanlayıcı sesi</b><small>Süre dolduğunda kısa bir zil</small></span><input type="checkbox" data-f="uiSound" ${u.sound!==false?'checked':''}></label>
       <label class="switch"><span><b>Hareketli efektler</b><small>Kutlama parçacıkları ve geçişler</small></span><input type="checkbox" data-f="uiFx" ${u.fx!==false?'checked':''}></label></div>`;
   } else if(setTab==='genel'){
-    body=`<div class="panel first"><label><span class="lab">Kandilinin adı</span><input value="${esc(S.comp)}" data-f="comp"></label>
+    body=`<div class="panel first"><label class="switch" style="padding-top:0"><span><b>Sade mod</b><small>Dini görevler sadece takip edilir ve hatırlatılır. Puan, kaynak, seri, rozet ya da kutlama yoktur.</small></span><input type="checkbox" data-f="uiSade" ${sadeOn()?'checked':''}></label></div>
+      <div class="panel"><label><span class="lab">Kandilinin adı</span><input value="${esc(S.comp)}" data-f="comp"></label>
       <label style="display:block;margin-top:12px"><span class="lab">Haftalık hedef (konak günü)</span><input type="number" min="1" max="7" value="${esc(S.weekGoal||5)}" data-f="weekGoal"></label>
       <div style="margin-top:12px"><span class="lab">Birikim hedefi</span><div class="between"><input value="${esc(S.goal.name)}" data-f="goalName" aria-label="Hedef adı"><input type="number" style="max-width:130px" value="${esc(S.goal.amt)}" data-f="goalAmt" aria-label="Hedef tutarı"></div></div></div>
       <div class="panel"><h3>Telefona kur</h3>${installHtml()}</div>
@@ -1241,6 +1255,7 @@ document.addEventListener('keydown',e=>{
 });
 document.addEventListener('change',e=>{
   const el=e.target, f=el.dataset&&el.dataset.f; if(!f) return;
+  if(f==='uiSade'){ S.ui.sade=el.checked; save(); render(); toast(el.checked?'Sade mod açık: dini görevler sadece takip ediliyor.':'Sade mod kapalı.'); return; }
   if(f==='uiVib'||f==='uiSound'||f==='uiFx'){ S.ui[{uiVib:'vib',uiSound:'sound',uiFx:'fx'}[f]]=el.checked; save(); applyUI(); return; }
   if(f==='weekGoal'){ S.weekGoal=Math.min(7,Math.max(1,Math.round(+el.value||5))); checkWeek(); save(); return; }
   if(f==='comp') S.comp=el.value.trim()||'Kandil';
