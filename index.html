@@ -668,8 +668,8 @@ function beep(){ try{ if(!actx||S.ui.sound===false) return; [0,.35,.7].forEach(d
 
 /* ---------- sayfa girişi ---------- */
 function openPages(id){
-  const t=S.tasks.find(x=>x.id===id), r=rec(), goal=+t.goal||0, have=(r.prog&&r.prog[id])||0, def=goal?Math.max(1,goal-have):1;
-  modal(`<h3>${esc(t.name)}</h3><p class="muted" style="margin-top:2px;line-height:1.45">${goal?`Günlük hedefin ${goal} sayfa. ${have?`Bugün ${have} sayfa okudun, ${Math.max(0,goal-have)} sayfa kaldı.`:'Gün içinde parça parça da girebilirsin.'}`:'Bugün kaç sayfa okudun?'}</p>
+  const t=S.tasks.find(x=>x.id===id), r=rec(), goal=effGoal(t), have=(r.prog&&r.prog[id])||0, def=goal?Math.max(1,goal-have):1, bk=hasBook(t);
+  modal(`<h3>${esc(t.name)}</h3>${bk?hatimCard(t,true):''}${bookable(t)?`<button class="linkb" style="margin:6px 0 4px;font-size:13px" data-act="bedit" data-id="${esc(id)}">${bk?'Kitabı ya da hedefi değiştir':'Kitap ekle (isteğe bağlı)'}</button>`:''}<p class="muted" style="margin-top:2px;line-height:1.45">${goal?`Günlük hedefin ${goal} sayfa. ${have?`Bugün ${have} sayfa okudun, ${Math.max(0,goal-have)} sayfa kaldı.`:'Gün içinde parça parça da girebilirsin.'}`:'Bugün kaç sayfa okudun?'}</p>
     ${goal?`<div class="bar" style="margin-top:14px"><i style="width:${Math.min(100,have/goal*100)}%"></i></div>`:''}
     <div class="stepper"><button class="btn ghost" data-act="pg" data-id="-1" aria-label="Azalt">−</button>
       <input id="pgn" type="number" inputmode="numeric" min="1" value="${def}" aria-label="Sayfa sayısı"><button class="btn ghost" data-act="pg" data-id="1" aria-label="Artır">+</button></div>
@@ -677,7 +677,8 @@ function openPages(id){
   $('pgn').dataset.task=id;
 }
 function savePages(id,n){
-  const t=S.tasks.find(x=>x.id===id), r=rec(), goal=+t.goal||0; r.prog=r.prog||{}; const total=(r.prog[id]||0)+n; r.prog[id]=total;
+  const t=S.tasks.find(x=>x.id===id), r=rec(), goal=effGoal(t); r.prog=r.prog||{}; const total=(r.prog[id]||0)+n; r.prog[id]=total;
+  if(hasBook(t)&&hProg(t).left<=0){ const fin=finishBook(t); if(!goal||total>=goal){ closeModal(); completeTask(id,total); } else { save(); closeModal(); render(); } return toast(`${fin} bitti. Yeni kitap eklemek istersen göreve dokun.`); }
   if(goal && total<goal){ save(); closeModal(); render(); return toast(`${n} sayfa eklendi. Hedefe ${goal-total} sayfa kaldı.`); }
   closeModal(); completeTask(id,total); toast(goal?`${total} sayfa, günlük hedef tamam.`:`${total} sayfa kaydedildi.`);
 }
@@ -982,14 +983,16 @@ function planOf(t){ // bugünün başındaki duruma göre plan
   if(+t.goal>0){ const days=Math.ceil(leftStart/(+t.goal)); return {mode:'daily', daily:+t.goal, days, due:addDays(dk(),Math.max(0,days-1)), leftStart}; }
   return null;
 }
-const effGoal = t => { if(t.type==='hatim'){ const p=planOf(t); return p?p.daily:0; } return +t.goal||0; };
+const effGoal = t => { if(t.type==='hatim'){ const p=planOf(t); return p?p.daily:0; } if(t.type==='pages'&&hasBook(t)){ const p=planOf(t); if(p) return p.daily; } return +t.goal||0; };
+const bookable = t => t.type==='hatim'||(t.type==='pages'&&t.id!=='kuran');
+function finishBook(t){ const h=hProg(t); (t.hist=t.hist||[]).push({name:t.proj||'',start:t.projStart||'',end:dk(),pages:h.total}); const fin=t.proj; Object.assign(t,{proj:'',total:0,start:0,projStart:'',due:''}); return fin||'Kitap'; }
 function planText(t){
   const p=planOf(t), h=hProg(t); if(!p||h.left<=0) return '';
   if(p.mode==='due'){ const ok=h.pace>=p.daily; return `Hedef: <b>${fmtDate(p.due)}</b>. Bunun için günde <b>${p.daily}</b> sayfa okuman gerekiyor${h.pace?`, şu anki hızın günde ${fmt1(h.pace)} sayfa. ${ok?'Hedefe yetişiyorsun.':'Biraz hızlanman gerekiyor.'}`:'.'}`; }
   return `Günde <b>${p.daily}</b> sayfa okursan <b>${fmtDate(p.due)}</b> tarihinde bitirirsin.`;
 }
 function openBook(id){
-  const t=S.tasks.find(x=>x.id===id); if(!t) return; const h=hasBook(t)?hProg(t):null;
+  const t=S.tasks.find(x=>x.id===id); if(!t) return; const h=hasBook(t)?hProg(t):null; window._bkT=t;
   modal(`<h3>${t.quran?'Hatim':'Kitabını gir'}</h3><p class="muted" style="margin-top:2px;font-size:14px">Sayfa sayısını ve hedefini yaz; günlük okuman gereken sayfa kendiliğinden hesaplanır.</p>
     <div class="form">
       ${t.quran?'':`<label><span class="lab">Kitabın adı</span><input id="bk_n" value="${esc(t.proj||'')}" placeholder="Örneğin Saadet-i Ebediyye"></label>`}
@@ -999,11 +1002,12 @@ function openBook(id){
       <div id="bk_due" ${t.due||!(+t.goal)?'':'hidden'}><label><span class="lab">Ne zamana kadar bitirmek istiyorsun?</span><input id="bk_d" type="date" min="${dk()}" value="${esc(t.due||'')}"></label></div>
       <div id="bk_day" ${t.due||!(+t.goal)?'hidden':''}><label><span class="lab">Günde kaç sayfa?</span><input id="bk_g" type="number" inputmode="numeric" min="1" value="${esc(+t.goal||'')}"></label></div>
       <p class="heta" id="bk_info"></p>
-      <button class="btn turq" data-act="bsave" data-id="${esc(id)}">Kaydet</button></div>`);
+      <button class="btn turq" data-act="bsave" data-id="${esc(id)}">Kaydet</button>
+      ${t.type==='pages'&&hasBook(t)?`<button class="btn ghost" data-act="bdel" data-id="${esc(id)}">Kitabı kaldır, sadece sayfa say</button>`:''}</div>`);
   ['bk_t','bk_c','bk_d','bk_g'].forEach(i=>{ const el=$(i); if(el) el.addEventListener('input',bookInfo); }); bookInfo();
 }
 function bookInfo(){
-  const tot=+($('bk_t')||{}).value||0, cur=+($('bk_c')||{}).value||0, left=Math.max(0,tot-cur), dueMode=!$('bk_due').hidden, info=$('bk_info'); if(!info) return;
+  const tot=+($('bk_t')||{}).value||0, cur=+($('bk_c')||{}).value||0, left=Math.max(0,tot-cur)+(window._bkT?todayPages(window._bkT):0), dueMode=!$('bk_due').hidden, info=$('bk_info'); if(!info) return;
   if(!tot){ info.innerHTML=''; return; }
   if(dueMode){ const d=$('bk_d').value; if(!d){ info.innerHTML=`Kalan ${left} sayfa. Bir tarih seç.`; return; } const days=Math.max(1,daysBetween0(dk(),d)+1); info.innerHTML=`Kalan <b>${left}</b> sayfa, <b>${days}</b> gün. Günde <b>${Math.ceil(left/days)}</b> sayfa okuman gerekiyor.`; }
   else { const g=+$('bk_g').value||0; if(!g){ info.innerHTML=`Kalan ${left} sayfa.`; return; } const days=Math.ceil(left/g); info.innerHTML=`Günde ${g} sayfa ile <b>${days}</b> günde, <b>${fmtDate(addDays(dk(),Math.max(0,days-1)))}</b> tarihinde bitirirsin.`; }
@@ -1015,9 +1019,9 @@ function saveBook(id){
   if(dueMode&&!d) return toast('Bitiş tarihini seç.'); if(!dueMode&&!g) return toast('Günlük sayfa sayısını yaz.');
   const newBook = !t.quran && $('bk_n') && ($('bk_n').value.trim()!==(t.proj||'') || +t.total!==tot);
   if(!t.quran){ t.proj=$('bk_n').value.trim()||'Kitap'; t.total=tot; }
-  if(newBook || !t.projStart){ t.projStart = todayPages(t) ? addDays(dk(),1) : dk(); t.start=cur; }
+  if(newBook || !t.projStart){ t.projStart = dk(); t.start = cur - todayPages(t); }
   else { const h=hProg(t); t.start=(+t.start||0)+(cur-h.cur); }
-  if(dueMode){ t.due=d; t.goal=0; } else { t.due=''; t.goal=g; }
+  if(dueMode){ t.due=d; if(t.type!=='pages') t.goal=0; } else { t.due=''; t.goal=g; }
   save(); closeModal(); render(); toast('Kaydedildi.');
 }
 
@@ -1066,6 +1070,7 @@ function taskRow(t,k=dk()){
   else if(run) hint=`${mmss(tmLeft())} ${TM.running?'kaldı':'duraklatıldı'}`;
   else if(!d&&ty==='count'&&prog) hint=`${prog} / ${t.goal} çekildi`;
   else if(!d&&ty==='pages'&&+t.goal&&prog) hint=`${prog} / ${t.goal} sayfa okundu`;
+  if(ty==='pages'&&hasBook(t)){ const h=hProg(t), g=effGoal(t); hint = `${esc(t.proj)}, ${d?`bugün ${e.n} sayfa`:prog?`bugün ${prog}${g?' / '+g:''} sayfa`:g?`bugün ${g} sayfa hedef`:'bugün okumadın'}, sayfa ${h.cur} / ${h.total}`; }
   let hbar='';
   if(isWeekly(t)&&!run&&!(d&&ty==='pages')){ const n=weekDone(t,wkStart(k)), g=+t.perWeek||3; hint = n>=g ? `Bu hafta ${n} / ${g}, haftalık hedef tamam` : `Bu hafta ${n} / ${g}${t.hint?`, ${esc(t.hint)}`:''}`; }
   if(ty==='hatim'&&!t.quran&&!hasBook(t)){ hint='Kitabını girmek için dokun'; } else if(ty==='hatim'){ const h=hProg(t), g=effGoal(t); hint = `${!t.quran&&t.proj?esc(t.proj)+', ':''}${d?`bugün ${e.n} sayfa, `:prog?`bugün ${prog}${g?' / '+g:''} sayfa, `:g?`bugün ${g} sayfa hedef, `:''}sayfa ${h.cur} / ${h.total}${h.juz?`, ${h.juz}. cüz`:''}`; hbar=`<span class="mbar"><i style="width:${h.pct}%;background:${col(t)}"></i></span>`; }
@@ -1148,7 +1153,7 @@ function vTakip(){
     <div class="tk-top"><div class="chainhero panel first"><div class="cstat"><b>${ch}</b><small>günlük zincir</small></div><div class="cstat"><b>${best}</b><small>en uzun zincir</small></div>${chainSvg(14)}
       <p class="muted" style="grid-column:1/-1;font-size:13px;line-height:1.45">Altın halkalar zincir hedefinin tutturulduğu günler. Kesik turkuaz halkalar mazeretli günler. Kırmızı kopukluk zincirin kırıldığı gün.</p></div>
     ${vCal()}</div>
- ${S.tasks.some(t=>t.type==='hatim')?`<div class="hsec"><h3>Hatim ve kitaplar</h3><div class="hgrid">${S.tasks.filter(t=>t.type==='hatim').map(t=>t.quran||hasBook(t)?hatimCard(t):`<button class="hcard hempty" data-act="bedit" data-id="${esc(t.id)}"><b>${esc(t.name)}</b><span>Okuduğun kitabı, sayfa sayısını ve bitirme hedefini gir.</span></button>`).join('')}</div></div>`:''}
+ ${S.tasks.some(t=>t.type==='hatim'||(t.type==='pages'&&hasBook(t)))?`<div class="hsec"><h3>Hatim ve kitaplar</h3><div class="hgrid">${S.tasks.filter(t=>t.type==='hatim'||(t.type==='pages'&&hasBook(t))).map(t=>t.quran||hasBook(t)?hatimCard(t):`<button class="hcard hempty" data-act="bedit" data-id="${esc(t.id)}"><b>${esc(t.name)}</b><span>Okuduğun kitabı, sayfa sayısını ve bitirme hedefini gir.</span></button>`).join('')}</div></div>`:''}
     ${insightsHtml()}
     <button class="btn ghost wsbtn" data-act="wsum" data-id="${addDays(wkStart(dk()),-7)}">${ico('cal')} Geçen haftanın özeti</button>
     <details class="fold" ${yfoldOpen?'open':''} id="yfold"><summary><span>Yıllık görünüm</span><small>${yearV||dk().slice(0,4)}</small></summary><div class="ybox">${vYear()}</div></details>
@@ -1182,7 +1187,7 @@ function seg(cur,items,act){ return `<div class="seg" role="tablist">${items.map
 function dayTxt(t){ const d=t.days||ALL; if(d.length===7) return 'Her gün'; if(d.join()==='0,1,2,3,4') return 'Hafta içi'; if(d.join()==='5,6') return 'Hafta sonu'; return d.map(i=>WD[i]).join(', '); }
 const vLabel = t => t.vakit ? (NAMAZ.find(x=>x[0]===t.vakit)||[])[1] : '';
 function taskSummary(t){ const g=+t.goal||0;
-  const how = t.type==='hatim'?(t.quran||hasBook(t)?`${t.proj||'Takip'}, sayfa ${hProg(t).cur} / ${hProg(t).total}${t.due?`, hedef ${fmtDate(t.due)}`:''}`:'Kitap girilmedi'): t.type==='count'?`Sayaçla, ${g} kez`: t.type==='timer'?`${g} dakika`: t.type==='pages'?(g?`Günde ${g} sayfa`:'Sayfa sayısıyla'):'Tek dokunuş';
+  const how = t.type==='hatim'?(t.quran||hasBook(t)?`${t.proj||'Takip'}, sayfa ${hProg(t).cur} / ${hProg(t).total}${t.due?`, hedef ${fmtDate(t.due)}`:''}`:'Kitap girilmedi'): t.type==='count'?`Sayaçla, ${g} kez`: t.type==='timer'?`${g} dakika`: t.type==='pages'?(hasBook(t)?`${esc(t.proj)}, sayfa ${hProg(t).cur} / ${hProg(t).total}`:g?`Günde ${g} sayfa`:'Sayfa sayısıyla'):'Tek dokunuş';
   return `${t.vakit?vLabel(t)+', ':''}${isWeekly(t)?`Haftada ${+t.perWeek||3} kez`:dayTxt(t)}, ${how}${t.remind?`, ${t.remind}`:''}${t.rv&&t.rv.v?`, ${rvTxt(t)}`:''}`; }
 function editTask(id){
   const t=S.tasks.find(x=>x.id===id); if(!t) return; const i=S.tasks.indexOf(t), dd=t.days||ALL;
@@ -1191,7 +1196,7 @@ function editTask(id){
     <label><span class="lab">Açıklama</span><input value="${esc(t.hint)}" data-f="hint" data-id="${esc(t.id)}" placeholder="Örneğin 20 dakika"></label>
     <div class="g2"><label><span class="lab">Nasıl tamamlanır</span><select data-f="type" data-id="${esc(t.id)}">${TYPES.map(([v,l])=>`<option value="${v}" ${(t.type||'check')===v?'selected':''}>${l}</option>`).join('')}</select></label>
       <label><span class="lab">${t.type==='timer'?'Süre (dakika)':t.type==='count'?'Hedef sayı':(t.type==='pages'||t.type==='hatim')?'Günlük sayfa (0 = serbest)':'Hedef'}</span><input type="number" value="${esc(t.goal||'')}" data-f="goal" data-id="${esc(t.id)}" ${t.type==='check'||!t.type?'disabled':''}></label></div>
-    ${t.type==='hatim'?`<button class="btn" data-act="bedit" data-id="${esc(t.id)}">${t.quran?'Hatim hedefini ayarla':'Kitabı ve hedefi ayarla'}</button>`:''}
+    ${t.type==='hatim'?`<button class="btn" data-act="bedit" data-id="${esc(t.id)}">${t.quran?'Hatim hedefini ayarla':'Kitabı ve hedefi ayarla'}</button>`:''}${t.type==='pages'&&bookable(t)?`<button class="btn" data-act="bedit" data-id="${esc(t.id)}">${hasBook(t)?`Kitap: ${esc(t.proj)} (değiştir)`:'Kitap ekle (isteğe bağlı)'}</button>`:''}
     ${t.type==='hatim'&&t.quran?`<div class="hedit"><div class="g2"><label><span class="lab">${t.quran?'Hatim adı':'Kitap adı'}</span><input value="${esc(t.proj||'')}" data-f="proj" data-id="${esc(t.id)}"></label>
         <label><span class="lab">Toplam sayfa</span><input type="number" min="1" value="${esc(t.total||604)}" data-f="total" data-id="${esc(t.id)}"></label></div>
       <label><span class="lab">Şu an kaldığın sayfa</span><input type="number" min="0" value="${hProg(t).cur}" data-f="curpage" data-id="${esc(t.id)}"></label>
@@ -1285,6 +1290,7 @@ const ACT={
   pg:d=>{ const i=$('pgn'); i.value=Math.max(1,Math.round(+i.value||1)+(+d)); },
   hsave:id=>saveHatim(id),
   bedit:id=>openBook(id), bsave:id=>saveBook(id),
+  bdel:id=>{ const t=S.tasks.find(x=>x.id===id); Object.assign(t,{proj:'',total:0,start:0,projStart:'',due:''}); save(); closeModal(); render(); toast('Kitap kaldırıldı. Günlük sayfa hedefin aynen duruyor.'); },
   bkmode:v=>{ const due=v==='due'; $('bk_due').hidden=!due; $('bk_day').hidden=due; document.querySelectorAll('#sheet [data-act="bkmode"]').forEach(b=>b.classList.toggle('on',b.dataset.id===v)); bookInfo(); },
   pon:()=>enablePush(), poff:()=>disablePush(),
   ptest:async()=>{ const ok=await pushSync({at:new Date(Date.now()+60000).toISOString(),title:'SEFER',body:'Bildirimler çalışıyor. Allah kolaylık versin.',tag:'deneme'}); toast(ok?'Deneme bildirimi 1-2 dakika içinde gelecek.':'Gönderilemedi. Girişini ve kurulumu kontrol et.'); },

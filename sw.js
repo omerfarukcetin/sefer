@@ -1,6 +1,6 @@
 // SEFER service worker: uygulamayı internetsiz de açar.
 // Yeni sürüm yayınlarken CACHE adındaki numarayı artır.
-const CACHE = 'sefer-v24';
+const CACHE = 'sefer-v25';
 const SHELL = ['./', './index.html', './manifest.webmanifest',
   './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png', './icons/apple-touch-icon.png', './js/config.js', './js/vendor/supabase.js', './js/vendor/591.supabase.js'];
 
