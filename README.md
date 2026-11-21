@@ -1,11 +1,11 @@
-# SEFER — Kendi Yolculuğun
+# SEFER — Günlük takip
 
-Gerçek hayattaki günlük görevlerini oynadığın kişisel gelişim oyunu.
+İbadet ve gelişim görevlerini her gün takip ettiğin sade bir uygulama.
 
-- **Bugün:** Dini görevler (Kur'an, tesbihat, dini kitap) ve gelişim görevleri (kitap, spor, İngilizce). Zikirmatik, zamanlayıcı ve sayfa girişi.
-- **Harita:** Kazandığın Huzur, İlim, Güç ve Lisan ile bölgelerine yapı inşa et.
-- **Sefer:** Takvim, kervan yolu, konaklar ve rozetler.
-- **Hazine:** Gelişim görevlerinden kazandığın birikim hakkını gerçek birikime aktar.
+- **Bugün:** Günün görevleri. Zikirmatik, zamanlayıcı ve sayfa girişi. Her görevin kendi serisi.
+- **Takip:** Her görevin serisi, en uzun serisi, son 30 gündeki düzeni ve aylık takvim.
+- **Hatırlatma:** Görevlere saat ver, hepsini tek dosyayla telefonunun takvimine ekle.
+- **Mazeret hakkı:** Ayda 2 gün; hastalık ya da yolculukta serilerin bozulmaz.
 
 Veriler tarayıcıda saklanır. Ayarlar → Yedek bölümünden kopyalayıp başka cihaza taşıyabilirsin.
 
