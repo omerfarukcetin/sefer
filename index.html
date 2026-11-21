@@ -240,7 +240,24 @@ button.zikr:active{transform:scale(.97)}
 .daypick button.on{background:var(--turq);border-color:var(--turq);color:var(--lapis)}
 .rlist2{margin-top:6px}
 @media (min-width:700px){ .sgrid{grid-template-columns:1fr 1fr} }
-@media (min-width:1000px){ .v-takip{grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr)} .v-takip .a-cal .calbox{margin-top:0} .v-takip .sgrid{grid-template-columns:1fr 1fr} }
+.chain{display:block;width:100%;height:auto;margin-top:10px}
+.chainbox{margin-top:16px;background:var(--lapis2);border:1px solid var(--lapis3);border-radius:var(--r-md);padding:12px 14px}
+.chainbox b{font-size:14px}.chainbox .muted{font-size:13px;font-weight:600}
+.chainhero{display:grid;grid-template-columns:auto auto 1fr;align-items:center;gap:8px 22px}
+.chainhero .chain{grid-column:1/-1;margin-top:4px}
+.cstat b{display:block;font-size:34px;font-weight:800;line-height:1;color:var(--saffron)}.cstat small{color:var(--mist);font-weight:700;font-size:13px}
+.cd.link:before{content:"";position:absolute;left:-8px;top:50%;width:10px;height:4px;margin-top:-2px;background:var(--saffron);border-radius:2px}
+.cal .cd.full{background:var(--saffron);border-color:var(--saffron);color:var(--ink)}
+.calleg i.full{background:var(--saffron)!important}
+.fold{margin-top:16px;background:var(--lapis2);border:1px solid var(--lapis3);border-radius:var(--r-lg)}
+.fold summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:16px;font-weight:800;font-size:16px}
+.fold summary::-webkit-details-marker{display:none}
+.fold summary:after{content:"›";font-size:22px;color:var(--mist);transform:rotate(90deg);transition:transform .2s;margin-left:10px}
+.fold[open] summary:after{transform:rotate(-90deg)}
+.fold summary small{margin-left:auto;color:var(--mist);font-weight:600;font-size:13px}
+.fold .sgrid{padding:0 12px 12px}
+.fold .scard2{background:var(--lapis)}
+@media (min-width:1000px){ .fold .sgrid{grid-template-columns:1fr 1fr 1fr} .tk-top{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:16px;align-items:start} .tk-top .calbox{margin-top:0} .tk-top .cd{aspect-ratio:auto;height:52px} }
 
 /* ---------- ayarlar ---------- */
 .setwrap{max-width:680px}
@@ -412,6 +429,7 @@ const IC = {
   page:'<path d="M6 3.5h9l3.5 3.5v13.5H6z"/><path d="M9.5 11.5h6M9.5 15h6"/>',
   pin:'<path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>'
 };
+IC.chain='<path d="M9.5 14.5l5-5"/><path d="M11 6.5l1.6-1.6a4 4 0 0 1 5.6 5.6L16.6 12"/><path d="M13 17.5l-1.6 1.6a4 4 0 0 1-5.6-5.6L7.4 12"/>';
 IC.cal='<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>';
 IC.star='<path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8-5.2-2.8-5.2 2.8 1-5.8-4.3-4.1 5.9-.8z"/>';
 IC.bell='<path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>';
@@ -461,7 +479,7 @@ const esc = s => String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>
 const $ = id => document.getElementById(id);
 const col = t => COL[t.icon]||COL.star;
 function rec(k=dk()){ if(!S.days[k]) S.days[k]={done:{}}; if(!S.days[k].done) S.days[k].done={}; return S.days[k]; }
-const scheduled = (t,k) => (t.days||ALL).includes(wd(k));
+const scheduled = (t,k) => (!t.since || k>=t.since) && (t.days||ALL).includes(wd(k));
 const isDone = (t,k) => !!(S.days[k]&&S.days[k].done&&S.days[k].done[t.id]);
 const excused = k => !!(S.days[k]&&S.days[k].excused);
 function firstKey(){ const ks=Object.keys(S.days).sort(); return ks[0]||dk(); }
@@ -476,6 +494,29 @@ function bestOf(t){ let k=firstKey(), end=dk(), run=0, best=0, g=0;
   return best; }
 function rate(t,days=30){ let s=0,d=0,k=dk(); const min=firstKey(); for(let i=0;i<days&&k>=min;i++){ if(scheduled(t,k)&&!excused(k)){ if(k!==dk()||isDone(t,k)){ s++; if(isDone(t,k)) d++; } } k=addDays(k,-1); } return {s,d,p:s?Math.round(d/s*100):0}; }
 const todays = () => S.tasks.filter(t=>scheduled(t,dk()));
+/* ---------- zincir: tüm planlı görevlerin yapıldığı günler ---------- */
+function dayState(k){ // full | part | none | ex | rest | fut
+  if(k>dk()) return 'fut';
+  const sc=S.tasks.filter(t=>scheduled(t,k)); if(!sc.length) return 'rest';
+  const dn=sc.filter(t=>isDone(t,k)).length;
+  if(dn===sc.length) return 'full'; if(excused(k)) return 'ex'; return dn?'part':'none';
+}
+function chainFrom(k){ const min=firstKey(); let n=0,g=0; while(k>=min && g++<4000){ const st=dayState(k); if(st==='full'){ n++; } else if(st!=='ex'&&st!=='rest') break; k=addDays(k,-1); } return n; }
+function chainNow(){ const t=dk(); return dayState(t)==='full' ? chainFrom(t) : chainFrom(addDays(t,-1)); }
+function chainBest(){ let k=firstKey(), end=dk(), run=0, best=0, g=0; while(k<=end && g++<4000){ const st=dayState(k); if(st==='full'){ run++; best=Math.max(best,run); } else if(st==='ex'||st==='rest'){} else if(k!==end) run=0; k=addDays(k,1); } return best; }
+function chainSvg(days=14){
+  const W=days*24+10; let links='';
+  for(let i=0;i<days;i++){
+    const k=addDays(dk(),-(days-1-i)), st=dayState(k), today=k===dk(), x=8+i*24, y=18;
+    const c = st==='full'?'var(--saffron)': st==='ex'?'var(--turq)': st==='rest'?'var(--lapis3)': today?'var(--mist)':'var(--coral)';
+    const dash = st==='ex'||(today&&st!=='full') ? 'stroke-dasharray="3 3"' : '';
+    if(st==='part'||st==='none'){ if(!today){ links+=`<g opacity=".9"><path d="M${x+2} ${y-6}l6 5M${x+14} ${y+6}l6-5" stroke="var(--coral)" stroke-width="3" stroke-linecap="round"/></g>`; continue; } }
+    links+= i%2===0
+      ? `<rect x="${x}" y="${y-8}" width="26" height="16" rx="8" fill="none" stroke="${c}" stroke-width="4" ${dash}/>`
+      : `<rect x="${x}" y="${y-3}" width="26" height="6" rx="3" fill="${st==='full'?c:'none'}" stroke="${c}" stroke-width="3" ${dash}/>`;
+  }
+  return `<svg class="chain" viewBox="0 0 ${W+18} 36" preserveAspectRatio="xMinYMid meet" role="img" aria-label="Son ${days} günün zinciri">${links}</svg>`;
+}
 function excuseLeft(k=dk()){ const m=k.slice(0,7); return EXCUSES-Object.keys(S.days).filter(d=>d.startsWith(m)&&S.days[d].excused).length; }
 
 /* ================= GÖRÜNÜM AYARLARI ================= */
@@ -598,7 +639,7 @@ function vHeader(){
   const T=todays(), d=T.filter(t=>isDone(t,dk())).length;
   return `<div class="hrow"><div class="brandm">${ico('huzur')}</div>
     <div class="who"><strong>SEFER</strong><span>${new Date().toLocaleDateString('tr-TR',{weekday:'long',day:'numeric',month:'long'})}</span></div>
-    <div class="pills"><span class="pill" style="color:var(--turq)">${ico('check')}<span style="color:var(--white)">${d} / ${T.length}</span></span></div></div>`;
+    <div class="pills"><span class="pill" style="color:var(--saffron)" title="Zincir">${ico('chain')}<span style="color:var(--white)">${chainNow()} gün</span></span><span class="pill" style="color:var(--turq)">${ico('check')}<span style="color:var(--white)">${d} / ${T.length}</span></span></div></div>`;
 }
 function taskRow(t,k=dk()){
   const r=S.days[k]||{done:{}}, e=(r.done||{})[t.id], d=!!e, ty=t.type||'check', tool={count:'beads',timer:'timer',pages:'page'}[ty]||'';
@@ -619,19 +660,22 @@ function excuseBox(){
   if(excused(t)) return `<div class="panel excuse"><p>Bugün mazeretli. Serilerin korunuyor.</p><button class="btn ghost" data-act="unexcuse" data-id="${t}">Geri al</button></div>`;
   const broken=S.tasks.filter(x=>scheduled(x,y)&&!isDone(x,y)&&!excused(y)&&(()=>{ let k=addDays(y,-1),g=0; while(g++<60){ if(!scheduled(x,k)||excused(k)){k=addDays(k,-1);continue;} return isDone(x,k);} return false; })());
   if(broken.length && excuseLeft(y)>0 && y>=firstKey())
-    return `<div class="panel excuse warn"><p>Dün yapılmayan görevler yüzünden ${broken.length===1?'bir serin':broken.length+' serin'} bozulmak üzere: ${esc(broken.map(x=>x.name).join(', '))}. Dün hasta ya da yolculukta idiysen mazeret hakkını kullanabilirsin.</p><button class="btn" data-act="excuse" data-id="${y}">Dünü mazeretli say</button></div>`;
+    return `<div class="panel excuse warn"><p>Dün yapılmayan görevler yüzünden zincirin ve ${broken.length===1?'bir serin':broken.length+' serin'} kırılmak üzere: ${esc(broken.map(x=>x.name).join(', '))}. Dün hasta ya da yolculukta idiysen mazeret hakkını kullanabilirsin.</p><button class="btn" data-act="excuse" data-id="${y}">Dünü mazeretli say</button></div>`;
   return '';
 }
 function vBugun(){
   const T=todays(), k=dk(), n=T.filter(t=>isDone(t,k)).length, p=T.length?n/T.length:0, left=T.filter(t=>!isDone(t,k));
   const ev=new Date().getHours()>=17;
-  const head = !T.length ? 'Bugün planlı görev yok' : n===T.length ? 'Bugünkü görevler tamam' : `${left.length} görev kaldı`;
-  const sub = !T.length ? 'Ayarlar\'dan görevlerinin hangi günlerde yapılacağını seçebilirsin.' : n===T.length ? 'Allah kabul etsin. Yarın görüşmek üzere.' :
-    ev ? `Henüz yapılmadı: ${esc(left.map(t=>t.name).join(', '))}` : 'Her görevin kendi serisi var. Tamamladıkça seriler uzar.';
+  const ch=chainNow(), done=n===T.length&&T.length, prevCh=done?ch:ch;
+  const head = !T.length ? 'Bugün dinlenme günü' : done ? `Zincir ${ch} gün` : 'Zinciri kırma';
+  const sub = !T.length ? 'Bugün planlı görev yok, zincirin bozulmaz.' : done ? 'Bugünün halkası eklendi. Allah kabul etsin.' :
+    ev ? `${left.length} görev kaldı: ${esc(left.map(t=>t.name).join(', '))}. Gece yarısına kadar tamamlarsan zincir ${ch+1} gün olur.`
+       : `${left.length} görev kaldı. Hepsini tamamlarsan zincir ${ch+1} gün olur.`;
+  const strip = `<div class="chainbox"><div class="between"><b>Son 14 gün</b><span class="muted">En uzun zincir: ${chainBest()} gün</span></div>${chainSvg(14)}</div>`;
   const dini=T.filter(t=>t.dini), diger=T.filter(t=>!t.dini), off=S.tasks.filter(t=>!scheduled(t,k));
   const ex=excuseBox(), left2=excuseLeft();
   return `<div class="cols v-bugun"><div class="a-hero"><section class="hero ${ev&&left.length?'risk':''}">${lanternSvg(p)}<div class="txt"><h2>${head}</h2><p>${sub}</p></div></section>
-    ${ex.includes('warn')?ex:''}</div><div class="a-tasks">
+    ${strip}${ex.includes('warn')?ex:''}</div><div class="a-tasks">
     ${dini.length?`<div class="group first"><div class="ghead"><h3>İbadet</h3><small>${dini.filter(t=>isDone(t,k)).length} / ${dini.length}</small></div>${dini.map(t=>taskRow(t)).join('')}</div>`:''}
     ${diger.length?`<div class="group ${dini.length?'':'first'}"><div class="ghead"><h3>Gelişim</h3><small>${diger.filter(t=>isDone(t,k)).length} / ${diger.length}</small></div>${diger.map(t=>taskRow(t)).join('')}</div>`:''}
     ${off.length?`<p class="offday">Bugün planlı değil: ${esc(off.map(t=>t.name).join(', '))}</p>`:''}
@@ -644,7 +688,7 @@ let calM=null, calTask=null;
 function dots7(t){ let h=''; for(let i=6;i>=0;i--){ const k=addDays(dk(),-i), sc=scheduled(t,k);
   h+=`<i class="${!sc?'off':excused(k)?'ex':isDone(t,k)?'on':k===dk()?'pend':''}" title="${WD[wd(k)]}">${['Pt','Sa','Ça','Pe','Cu','Ct','Pz'][wd(k)]}</i>`; } return h; }
 function vCal(){
-  const cur=dk().slice(0,7), m=calM||cur, [y,mo]=m.split('-').map(Number), today=dk(), T=calTask?S.tasks.filter(t=>t.id===calTask):S.tasks;
+  const cur=dk().slice(0,7), m=calM||cur, [y,mo]=m.split('-').map(Number), today=dk(), T=S.tasks;
   const startDow=(new Date(y,mo-1,1).getDay()+6)%7, nd=new Date(y,mo,0).getDate();
   let cells='', full=0, ex=0;
   for(let i=0;i<startDow;i++) cells+='<span></span>';
@@ -652,26 +696,31 @@ function vCal(){
     const k=`${m}-${String(d).padStart(2,'0')}`, fut=k>today, sc=T.filter(t=>scheduled(t,k)), dn=sc.filter(t=>isDone(t,k)).length;
     if(sc.length&&dn===sc.length&&!fut) full++; if(excused(k)) ex++;
     const cls = fut?'fut' : excused(k)&&dn<sc.length?'ex' : !sc.length?'free' : dn===sc.length?'full' : dn?'part':'';
-    cells+=`<button class="cd ${cls} ${k===today?'today':''}" ${fut?'disabled':`data-act="day" data-id="${k}"`} aria-label="${d}: ${dn}/${sc.length}">${d}${sc.length>1&&!fut&&dn?`<i>${dn}/${sc.length}</i>`:''}</button>`;
+    const pst = dayState(addDays(k,-1)), link = !fut && ['full','ex'].includes(dayState(k)) && wd(k)!==0 && ['full','ex'].includes(pst);
+    cells+=`<button class="cd ${cls} ${link?'link':''} ${k===today?'today':''}" ${fut?'disabled':`data-act="day" data-id="${k}"`} aria-label="${d}: ${dn}/${sc.length}">${d}${sc.length>1&&!fut&&dn?`<i>${dn}/${sc.length}</i>`:''}</button>`;
   }
   const label=new Date(y,mo-1,1).toLocaleDateString('tr-TR',{month:'long',year:'numeric'});
-  return `<div class="calbox panel"><div class="calfilter">${seg(calTask||'all',[['all','Tümü'],...S.tasks.map(t=>[t.id,t.name])],'calTask')}</div>
-    <div class="between" style="margin-top:12px"><button class="btn ghost cnav" data-act="calm" data-id="-1" aria-label="Önceki ay">‹</button>
+  return `<div class="calbox panel"><div class="between"><button class="btn ghost cnav" data-act="calm" data-id="-1" aria-label="Önceki ay">‹</button>
       <h3 style="margin:0;text-transform:capitalize">${label}</h3>
       <button class="btn ghost cnav" data-act="calm" data-id="1" aria-label="Sonraki ay" ${m>=cur?'disabled':''}>›</button></div>
     <div class="cal">${WD.map(w=>`<b>${w}</b>`).join('')}${cells}</div>
-    <div class="calleg"><span><i class="full"></i>Tamamı yapıldı</span><span><i class="part"></i>Bir kısmı</span><span><i class="ex"></i>Mazeretli</span></div>
+    <div class="calleg"><span><i class="full"></i>Zincir halkası (hepsi yapıldı)</span><span><i class="part"></i>Bir kısmı</span><span><i class="ex"></i>Mazeretli</span></div>
     <div class="calsum"><div><b>${full}</b><small>tam gün</small></div><div><b>${ex}</b><small>mazeret</small></div><div><b>${Math.max(0,excuseLeft())}</b><small>kalan hak</small></div></div></div>`;
 }
+let foldOpen=false;
 function vTakip(){
   const cards=S.tasks.map(t=>{ const st=streakOf(t), b=bestOf(t), r=rate(t);
     let extra=''; if(t.type==='pages'){ const m=dk().slice(0,7); let p=0; Object.entries(S.days).forEach(([k,r2])=>{ if(k.startsWith(m)&&r2.done&&r2.done[t.id]) p+=r2.done[t.id].n||0; }); extra=`<span>${p} sayfa bu ay</span>`; }
-    return `<button class="scard2" data-act="taskcal" data-id="${esc(t.id)}"><div class="sh"><span class="medal sm" style="--c:${col(t)}">${ico(t.icon)}</span><b>${esc(t.name)}</b></div>
+    return `<div class="scard2"><div class="sh"><span class="medal sm" style="--c:${col(t)}">${ico(t.icon)}</span><b>${esc(t.name)}</b></div>
       <div class="snum"><b>${st}</b><small>gün seri</small></div>
       <div class="smeta"><span>En uzun ${b} gün</span><span>Son 30 gün %${r.p}</span>${extra}</div>
-      <div class="d7">${dots7(t)}</div></button>`; }).join('');
-  return `<header class="phead"><h1>Takip</h1><p>Her görevin serisi, en uzun serisi ve son 30 gündeki düzenin.</p></header>
-    <div class="cols v-takip"><div class="a-cards"><div class="sgrid">${cards}</div></div><div class="a-cal">${vCal()}</div></div>`;
+      <div class="d7">${dots7(t)}</div></div>`; }).join('');
+  const ch=chainNow(), best=chainBest();
+  return `<header class="phead"><h1>Takip</h1><p>Zinciri kırma: planladığın görevlerin hepsini yaptığın her gün zincire bir halka ekler.</p></header>
+    <div class="tk-top"><div class="chainhero panel first"><div class="cstat"><b>${ch}</b><small>günlük zincir</small></div><div class="cstat"><b>${best}</b><small>en uzun zincir</small></div>${chainSvg(14)}
+      <p class="muted" style="grid-column:1/-1;font-size:13px;line-height:1.45">Altın halkalar tüm görevlerin yapıldığı günler. Kesik turkuaz halkalar mazeretli günler. Kırmızı kopukluk zincirin kırıldığı gün.</p></div>
+    ${vCal()}</div>
+    <details class="fold" ${foldOpen?'open':''} id="fold"><summary><span>Görev görev seriler</span><small>${S.tasks.length} görev</small></summary><div class="sgrid">${cards}</div></details>`;
 }
 function openDay(k){
   const T=S.tasks.filter(t=>scheduled(t,k)||isDone(t,k));
@@ -771,13 +820,11 @@ const ACT={
   unexcuse:k=>{ if(S.days[k]) S.days[k].excused=false; save(); render(); },
   day:k=>openDay(k),
   calm:d=>{ const cur=dk().slice(0,7), m=calM||cur, [y,mo]=m.split('-').map(Number), n=new Date(y,mo-1+(+d),1); const nm=n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0'); calM=nm>cur?cur:nm; render(); },
-  calTask:v=>{ calTask=v==='all'?null:v; render(); },
-  taskcal:id=>{ calTask=id; render(); const c=document.querySelector('.a-cal'); if(c) c.scrollIntoView({behavior:'smooth',block:'start'}); },
   setTab:v=>{ setTab=v; render(); },
   uiTheme:v=>{ S.ui.theme=v; save(); applyUI(); render(); },
   uiFont:v=>{ S.ui.font=+v; save(); applyUI(); render(); },
   edit:id=>editTask(id),
-  add:()=>{ const id='t'+Date.now(); S.tasks.push({id,name:'Yeni görev',hint:'',icon:'star',type:'check',goal:0,dini:false,days:[...ALL],remind:''}); save(); render(); editTask(id); },
+  add:()=>{ const id='t'+Date.now(); S.tasks.push({id,name:'Yeni görev',hint:'',icon:'star',type:'check',goal:0,dini:false,days:[...ALL],remind:'',since:dk()}); save(); render(); editTask(id); },
   mv:v=>{ const [id,d]=v.split(':'), i=S.tasks.findIndex(t=>t.id===id), j=i+(+d); if(i<0||j<0||j>=S.tasks.length) return; [S.tasks[i],S.tasks[j]]=[S.tasks[j],S.tasks[i]]; save(); render(); editTask(id); },
   tday:v=>{ const [id,j]=v.split(':'), t=S.tasks.find(x=>x.id===id); if(!t) return; const d=new Set(t.days||ALL); d.has(+j)?d.delete(+j):d.add(+j);
     if(!d.size) return toast('En az bir gün seçili olmalı.'); t.days=[...d].sort(); save(); render(); editTask(id); },
@@ -808,6 +855,7 @@ document.addEventListener('click',e=>{
   const f=ACT[b.dataset.act]; if(f) f(b.dataset.id,b);
 });
 document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
+document.addEventListener('toggle',e=>{ if(e.target&&e.target.id==='fold') foldOpen=e.target.open; },true);
 document.addEventListener('change',e=>{
   const el=e.target, f=el.dataset&&el.dataset.f; if(!f) return;
   if(f==='uiVib'||f==='uiSound'){ S.ui[f==='uiVib'?'vib':'sound']=el.checked; save(); return; }
