@@ -249,6 +249,21 @@ button.zikr:active{transform:scale(.97)}
 .cd.link:before{content:"";position:absolute;left:-8px;top:50%;width:10px;height:4px;margin-top:-2px;background:var(--saffron);border-radius:2px}
 .cal .cd.full{background:var(--saffron);border-color:var(--saffron);color:var(--ink)}
 .calleg i.full{background:var(--saffron)!important}
+.notep{margin-top:22px}.notep h3{font-size:16px;margin-bottom:8px}.notep textarea,.sheet textarea{min-height:72px;font-size:15px;line-height:1.45}
+.cd .ndot2{position:absolute;top:4px;right:5px;width:6px;height:6px;border-radius:50%;background:var(--sky)}
+.vakitler{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin-top:14px}
+.vakitler span{text-align:center;padding:7px 2px;border-radius:10px;background:var(--lapis2);border:1px solid var(--lapis3)}
+.vakitler small{display:block;font-size:11px;color:var(--mist);font-weight:700}.vakitler b{font-size:14px}
+.vakitler .next{border-color:var(--saffron);background:color-mix(in srgb,var(--saffron) 14%,var(--lapis2))}
+.wsbtn{width:100%;margin-top:16px;justify-content:center}
+.ybox{padding:0 14px 14px}
+.yscroll{overflow-x:auto;margin-top:12px;padding-bottom:4px}
+.ymonths{display:grid;grid-template-columns:repeat(12,minmax(40px,1fr));font-size:11px;color:var(--mist);font-weight:700;min-width:640px;margin-bottom:4px}
+.ygrid{display:grid;grid-template-rows:repeat(7,10px);grid-auto-flow:column;grid-auto-columns:10px;gap:3px;min-width:640px}
+.ygrid i{width:10px;height:10px;border-radius:2px;background:var(--lapis);border:1px solid var(--lapis3)}
+.ygrid i.pad{visibility:hidden}.ygrid i.y-full{background:var(--saffron);border-color:var(--saffron)}.ygrid i.y-part{background:color-mix(in srgb,var(--turq) 45%,var(--lapis))}
+.ygrid i.y-ex{background:var(--turq);opacity:.5}.ygrid i.y-rest{opacity:.4}.ygrid i.y-fut{opacity:.25}.ygrid i.today{outline:1.5px solid var(--white)}
+.nprev{padding:8px 0;border-bottom:1px solid var(--lapis3)}.nprev b{font-size:13px;color:var(--mist);text-transform:capitalize}.nprev p{font-size:14px;line-height:1.45;margin-top:2px}
 .hsec{margin-top:18px}.hsec h3{font-size:18px;margin:0 2px 10px}
 .hgrid{display:grid;gap:10px}
 .hcard{background:var(--lapis2);border:1px solid var(--lapis3);border-radius:var(--r-lg);padding:16px}
@@ -490,7 +505,7 @@ const esc = s => String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>
 const $ = id => document.getElementById(id);
 const col = t => COL[t.icon]||COL.star;
 function rec(k=dk()){ if(!S.days[k]) S.days[k]={done:{}}; if(!S.days[k].done) S.days[k].done={}; return S.days[k]; }
-const scheduled = (t,k) => (!t.since || k>=t.since) && (t.days||ALL).includes(wd(k));
+const scheduled = (t,k) => t.freq!=='week' && (!t.since || k>=t.since) && (t.days||ALL).includes(wd(k));
 const isDone = (t,k) => !!(S.days[k]&&S.days[k].done&&S.days[k].done[t.id]);
 const excused = k => !!(S.days[k]&&S.days[k].excused);
 function firstKey(){ const ks=Object.keys(S.days).sort(); return ks[0]||dk(); }
@@ -647,6 +662,90 @@ function savePages(id,n){
   closeModal(); completeTask(id,total); toast(goal?`${total} sayfa, günlük hedef tamam.`:`${total} sayfa kaydedildi.`);
 }
 
+/* ================= HAFTADA X KEZ ================= */
+const isWeekly = t => t.freq==='week';
+const wkStart = k => addDays(k,-wd(k));
+function weekDone(t,ws){ let n=0; for(let i=0;i<7;i++){ const k=addDays(ws,i); if(k>dk()) break; if(isDone(t,k)) n++; } return n; }
+function weekExcused(ws){ for(let i=0;i<7;i++) if(excused(addDays(ws,i))) return true; return false; }
+const weekMet = (t,ws) => weekDone(t,ws) >= Math.max(1,+t.perWeek||3) || weekExcused(ws);
+function weekStreak(t){ let ws=wkStart(dk()), n=weekMet(t,ws)?1:0, g=0; const min=wkStart(t.since&&t.since>firstKey()?t.since:firstKey());
+  ws=addDays(ws,-7); while(ws>=min && g++<600){ if(weekMet(t,ws)){ n++; ws=addDays(ws,-7); } else break; } return n; }
+function weekBest(t){ let ws=wkStart(t.since&&t.since>firstKey()?t.since:firstKey()), end=wkStart(dk()), run=0, best=0, g=0;
+  while(ws<=end && g++<600){ if(weekMet(t,ws)){ run++; best=Math.max(best,run); } else if(ws!==end) run=0; ws=addDays(ws,7); } return best; }
+const weeklies = () => S.tasks.filter(isWeekly);
+
+/* ================= NOTLAR ================= */
+const noteOf = k => (S.days[k]&&S.days[k].note)||'';
+
+/* ================= YILLIK GÖRÜNÜM ================= */
+let yearV=null, yfoldOpen=false;
+function vYear(){
+  const y=yearV||+dk().slice(0,4), start=`${y}-01-01`, end=`${y}-12-31`, today=dk();
+  let cells='', full=0, notes=0;
+  for(let i=0;i<wd(start);i++) cells+='<i class="pad"></i>';
+  for(let k=start;k<=end;k=addDays(k,1)){ const st=dayState(k); if(st==='full') full++; if(noteOf(k)) notes++;
+    cells+=`<i class="y-${st} ${k===today?'today':''}" title="${kDate(k).toLocaleDateString('tr-TR',{day:'numeric',month:'long'})}"></i>`; }
+  const months=['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
+  return `<div class="between"><button class="btn ghost cnav" data-act="yr" data-id="-1" aria-label="Önceki yıl">‹</button><h3 style="margin:0">${y}</h3>
+      <button class="btn ghost cnav" data-act="yr" data-id="1" aria-label="Sonraki yıl" ${y>=+today.slice(0,4)?'disabled':''}>›</button></div>
+    <div class="yscroll"><div class="ymonths">${months.map(m=>`<span>${m}</span>`).join('')}</div><div class="ygrid">${cells}</div></div>
+    <div class="calsum"><div><b>${full}</b><small>tam gün</small></div><div><b>${chainBest()}</b><small>en uzun zincir</small></div><div><b>${notes}</b><small>not</small></div></div>`;
+}
+
+/* ================= HAFTALIK ÖZET ================= */
+function weekSummary(ws){
+  const we=addDays(ws,6), lbl=`${kDate(ws).toLocaleDateString('tr-TR',{day:'numeric',month:'long'})} – ${kDate(we).toLocaleDateString('tr-TR',{day:'numeric',month:'long'})}`;
+  let full=0, ex=0, pages=0, notes=[]; const last=[we,dk()].sort()[0];
+  for(let k=ws;k<=we;k=addDays(k,1)){ const st=dayState(k); if(st==='full') full++; if(st==='ex'||excused(k)) ex++; if(noteOf(k)) notes.push(k); }
+  const rows=S.tasks.map(t=>{
+    if(isWeekly(t)){ const n=weekDone(t,ws), g=+t.perWeek||3; return `<div class="log"><span>${esc(t.name)} <span class="muted">(haftada ${g})</span></span><b style="color:${n>=g?'var(--turq)':'var(--coral)'}">${n} / ${g}</b></div>`; }
+    let s=0,d=0,p=0; for(let k=ws;k<=last;k=addDays(k,1)){ if(scheduled(t,k)&&!excused(k)){ s++; if(isDone(t,k)) d++; } if(t.type==='pages'||t.type==='hatim') p+=pagesOn(t,k); }
+    pages+=p; if(!s && !p) return '';
+    return `<div class="log"><span>${esc(t.name)}${p?` <span class="muted">(${p} sayfa)</span>`:''}</span><b style="color:${d===s?'var(--turq)':'var(--coral)'}">${d} / ${s}</b></div>`; }).join('');
+  const prev=addDays(ws,-7), next=addDays(ws,7);
+  return `<h3>Haftalık özet</h3><p class="muted" style="margin-top:2px">${lbl}</p>
+    <div class="cel-stats"><div><b>${full}</b><small>tam gün</small></div><div><b>${pages}</b><small>sayfa okundu</small></div><div><b>${ex}</b><small>mazeret</small></div></div>
+    ${rows}
+    ${notes.length?`<h4 class="sub">Notların</h4>${notes.map(k=>`<div class="nprev"><b>${kDate(k).toLocaleDateString('tr-TR',{weekday:'long'})}</b><p>${esc(noteOf(k))}</p></div>`).join('')}`:''}
+    <div class="between" style="margin-top:14px"><button class="btn ghost" data-act="wsum" data-id="${prev}" ${prev<wkStart(firstKey())?'disabled':''}>‹ Önceki hafta</button>
+      <button class="btn ghost" data-act="wsum" data-id="${next}" ${next>wkStart(dk())?'disabled':''}>Sonraki hafta ›</button></div>`;
+}
+function maybeWeekSummary(){
+  const cur=wkStart(dk()), prev=addDays(cur,-7);
+  if(S.sumSeen===cur) return; if(firstKey()>addDays(prev,6)){ S.sumSeen=cur; save(); return; }
+  S.sumSeen=cur; save(); setTimeout(()=>modal(weekSummary(prev)),400);
+}
+
+/* ================= NAMAZ VAKİTLERİ ================= */
+const VAKIT=[['imsak','İmsak','Fajr'],['gunes','Güneş','Sunrise'],['ogle','Öğle','Dhuhr'],['ikindi','İkindi','Asr'],['aksam','Akşam','Maghrib'],['yatsi','Yatsı','Isha']];
+let VK={}; try{ VK=JSON.parse(localStorage.getItem('sefer-vakit'))||{}; }catch(e){ VK={}; }
+function saveVK(){ try{ localStorage.setItem('sefer-vakit',JSON.stringify(VK)); }catch(e){} }
+async function fetchMonth(y,m){
+  const city=(S.city||'').trim(); if(!city) return false; const key=`${city.toLowerCase()}|${y}-${String(m).padStart(2,'0')}`;
+  if(VK.months&&VK.months[key]) return true;
+  const r=await fetch(`https://api.aladhan.com/v1/calendarByCity/${y}/${m}?city=${encodeURIComponent(city)}&country=Turkey&method=13`);
+  if(!r.ok) throw new Error(r.status); const j=await r.json(); if(!j.data||!j.data.length) throw new Error('bos');
+  VK.days=VK.days||{}; VK.months=VK.months||{}; VK.city=city;
+  j.data.forEach(d=>{ const [dd,mm,yy]=d.date.gregorian.date.split('-'); const k=`${yy}-${mm}-${dd}`, o={};
+    VAKIT.forEach(([id,,api])=>o[id]=String(d.timings[api]||'').slice(0,5)); VK.days[`${city.toLowerCase()}|${k}`]=o; });
+  VK.months[key]=1; saveVK(); return true;
+}
+async function loadVakit(force){
+  if(!S.city) return; const n=new Date(), n2=new Date(n.getFullYear(),n.getMonth()+1,1);
+  try{ await fetchMonth(n.getFullYear(),n.getMonth()+1); await fetchMonth(n2.getFullYear(),n2.getMonth()+1); if(force) toast(`${S.city} için vakitler alındı.`); render(); }
+  catch(e){ if(force) toast('Vakitler alınamadı. Şehir adını kontrol et ve internete bağlı olduğundan emin ol.'); }
+}
+const vakitOf = k => S.city && VK.days ? VK.days[`${S.city.trim().toLowerCase()}|${k}`] : null;
+function vakitStrip(){
+  const v=vakitOf(dk()); if(!v) return '';
+  const now=new Date(), hm=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+  const nx=VAKIT.find(([id])=>v[id]>hm);
+  return `<div class="vakitler">${VAKIT.map(([id,l])=>`<span class="${nx&&nx[0]===id?'next':''}"><small>${l}</small><b>${v[id]}</b></span>`).join('')}</div>`;
+}
+const addMin = (hm,m) => { const [h,mi]=hm.split(':').map(Number); const t=((h*60+mi+m)%1440+1440)%1440; return String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0'); };
+const VABL={imsak:'İmsaktan',gunes:'Güneşten',ogle:'Öğleden',ikindi:'İkindiden',aksam:'Akşamdan',yatsi:'Yatsıdan'};
+function rvTxt(t){ if(!t.rv||!t.rv.v) return ''; const l=(VAKIT.find(x=>x[0]===t.rv.v)||[])[1], o=+t.rv.off||0; return o===0?`${l} vaktinde`: o>0?`${VABL[t.rv.v]} ${o} dk sonra`:`${VABL[t.rv.v]} ${-o} dk önce`; }
+
 /* ================= HATİM / KİTAP TAKİBİ ================= */
 const pagesOn = (t,k) => { const r=S.days[k]; if(!r) return 0; const e=r.done&&r.done[t.id]; return e ? (e.n||0) : ((r.prog&&r.prog[t.id])||0); };
 function hProg(t){ // projenin durumu
@@ -713,18 +812,19 @@ function vHeader(){
 }
 function taskRow(t,k=dk()){
   const r=S.days[k]||{done:{}}, e=(r.done||{})[t.id], d=!!e, ty=t.type||'check', tool={count:'beads',timer:'timer',pages:'page',hatim:'ilim'}[ty]||'';
-  const run=!d&&TM&&TM.id===t.id, prog=r.prog&&r.prog[t.id], st=streakOf(t);
+  const run=!d&&TM&&TM.id===t.id, prog=r.prog&&r.prog[t.id], st=isWeekly(t)?weekStreak(t):streakOf(t);
   let hint=esc(t.hint);
   if(d&&ty==='pages') hint=`${e.n} sayfa okundu`;
   else if(run) hint=`${mmss(tmLeft())} ${TM.running?'kaldı':'duraklatıldı'}`;
   else if(!d&&ty==='count'&&prog) hint=`${prog} / ${t.goal} çekildi`;
   else if(!d&&ty==='pages'&&+t.goal&&prog) hint=`${prog} / ${t.goal} sayfa okundu`;
   let hbar='';
+  if(isWeekly(t)&&!run&&!(d&&ty==='pages')){ const n=weekDone(t,wkStart(k)), g=+t.perWeek||3; hint = n>=g ? `Bu hafta ${n} / ${g}, haftalık hedef tamam` : `Bu hafta ${n} / ${g}${t.hint?`, ${esc(t.hint)}`:''}`; }
   if(ty==='hatim'){ const h=hProg(t); hint = `${d?`Bugün ${e.n} sayfa, `:prog?`Bugün ${prog} sayfa, `:''}sayfa ${h.cur} / ${h.total}${h.juz?`, ${h.juz}. cüz`:''}`; hbar=`<span class="mbar"><i style="width:${h.pct}%;background:${col(t)}"></i></span>`; }
   return `<button class="task ${d?'done':''}" data-act="toggle" data-id="${esc(t.id)}" aria-pressed="${d}">
     <span class="medal" style="--c:${col(t)}">${ico(t.icon)}</span>
     <span class="tx"><b>${esc(t.name)}</b><small ${run?`id="tmh-${esc(t.id)}" style="color:var(--turq)"`:''}>${hint}</small>${hbar}</span>
-    ${st?`<span class="streak" title="${st} günlük seri">${ico('flame')}${st}</span>`:''}
+    ${st?`<span class="streak" title="${st} ${isWeekly(t)?'haftalık':'günlük'} seri">${ico('flame')}${st}${isWeekly(t)?' hf':''}</span>`:''}
     <span class="tick ${d?'':'tool'}">${d||!tool?ico('check'):ico(tool)}</span></button>`;
 }
 function excuseBox(){
@@ -744,20 +844,22 @@ function vBugun(){
     ev ? `${left.length} görev kaldı: ${esc(left.map(t=>t.name).join(', '))}. Gece yarısına kadar tamamlarsan zincir ${ch+1} gün olur.`
        : `${left.length} görev kaldı. Hepsini tamamlarsan zincir ${ch+1} gün olur.`;
   const strip = `<div class="chainbox"><div class="between"><b>Son 14 gün</b><span class="muted">En uzun zincir: ${chainBest()} gün</span></div>${chainSvg(14)}</div>`;
-  const dini=T.filter(t=>t.dini), diger=T.filter(t=>!t.dini), off=S.tasks.filter(t=>!scheduled(t,k));
+  const dini=T.filter(t=>t.dini), diger=T.filter(t=>!t.dini), off=S.tasks.filter(t=>!isWeekly(t)&&!scheduled(t,k)), W=weeklies();
   const ex=excuseBox(), left2=excuseLeft();
   return `<div class="cols v-bugun"><div class="a-hero"><section class="hero ${ev&&left.length?'risk':''}">${lanternSvg(p)}<div class="txt"><h2>${head}</h2><p>${sub}</p></div></section>
-    ${strip}${ex.includes('warn')?ex:''}</div><div class="a-tasks">
+    ${vakitStrip()}${strip}${ex.includes('warn')?ex:''}</div><div class="a-tasks">
     ${dini.length?`<div class="group first"><div class="ghead"><h3>İbadet</h3><small>${dini.filter(t=>isDone(t,k)).length} / ${dini.length}</small></div>${dini.map(t=>taskRow(t)).join('')}</div>`:''}
     ${diger.length?`<div class="group ${dini.length?'':'first'}"><div class="ghead"><h3>Gelişim</h3><small>${diger.filter(t=>isDone(t,k)).length} / ${diger.length}</small></div>${diger.map(t=>taskRow(t)).join('')}</div>`:''}
+    ${W.length?`<div class="group"><div class="ghead"><h3>Bu hafta</h3><small>${W.filter(t=>weekMet(t,wkStart(k))).length} / ${W.length} hedef tamam</small></div>${W.map(t=>taskRow(t)).join('')}</div>`:''}
     ${off.length?`<p class="offday">Bugün planlı değil: ${esc(off.map(t=>t.name).join(', '))}</p>`:''}
     ${ex.includes('warn')?'':ex||`<div class="excuse-link"><button data-act="excuse" data-id="${k}" ${left2<=0?'disabled':''}>Bugün mazeretliyim</button><span>Hastalık, yolculuk gibi günlerde serilerin bozulmaz. Bu ay ${Math.max(0,left2)} hakkın kaldı.</span></div>`}
+    <div class="panel notep"><h3>Günün notu</h3><textarea data-f="note" data-id="${k}" rows="3" placeholder="Bugün neler oldu? Neyi okudun, neyi aksattın?">${esc(noteOf(k))}</textarea></div>
     </div></div>`;
 }
 
 /* ---------- takip ---------- */
 let calM=null, calTask=null;
-function dots7(t){ let h=''; for(let i=6;i>=0;i--){ const k=addDays(dk(),-i), sc=scheduled(t,k);
+function dots7(t){ let h=''; for(let i=6;i>=0;i--){ const k=addDays(dk(),-i), sc=isWeekly(t)||scheduled(t,k);
   h+=`<i class="${!sc?'off':excused(k)?'ex':isDone(t,k)?'on':k===dk()?'pend':''}" title="${WD[wd(k)]}">${['Pt','Sa','Ça','Pe','Cu','Ct','Pz'][wd(k)]}</i>`; } return h; }
 function vCal(){
   const cur=dk().slice(0,7), m=calM||cur, [y,mo]=m.split('-').map(Number), today=dk(), T=S.tasks;
@@ -769,7 +871,7 @@ function vCal(){
     if(sc.length&&dn===sc.length&&!fut) full++; if(excused(k)) ex++;
     const cls = fut?'fut' : excused(k)&&dn<sc.length?'ex' : !sc.length?'free' : dn===sc.length?'full' : dn?'part':'';
     const pst = dayState(addDays(k,-1)), link = !fut && ['full','ex'].includes(dayState(k)) && wd(k)!==0 && ['full','ex'].includes(pst);
-    cells+=`<button class="cd ${cls} ${link?'link':''} ${k===today?'today':''}" ${fut?'disabled':`data-act="day" data-id="${k}"`} aria-label="${d}: ${dn}/${sc.length}">${d}${sc.length>1&&!fut&&dn?`<i>${dn}/${sc.length}</i>`:''}</button>`;
+    cells+=`<button class="cd ${cls} ${link?'link':''} ${k===today?'today':''}" ${fut?'disabled':`data-act="day" data-id="${k}"`} aria-label="${d}: ${dn}/${sc.length}">${noteOf(k)?'<em class="ndot2"></em>':''}${d}${sc.length>1&&!fut&&dn?`<i>${dn}/${sc.length}</i>`:''}</button>`;
   }
   const label=new Date(y,mo-1,1).toLocaleDateString('tr-TR',{month:'long',year:'numeric'});
   return `<div class="calbox panel"><div class="between"><button class="btn ghost cnav" data-act="calm" data-id="-1" aria-label="Önceki ay">‹</button>
@@ -781,11 +883,11 @@ function vCal(){
 }
 let foldOpen=false;
 function vTakip(){
-  const cards=S.tasks.map(t=>{ const st=streakOf(t), b=bestOf(t), r=rate(t);
+  const cards=S.tasks.map(t=>{ const wk=isWeekly(t), st=wk?weekStreak(t):streakOf(t), b=wk?weekBest(t):bestOf(t), r=rate(t);
     let extra=''; if(t.type==='hatim'){ const h=hProg(t); extra=`<span>Sayfa ${h.cur}/${h.total}</span>`; } if(t.type==='pages'){ const m=dk().slice(0,7); let p=0; Object.entries(S.days).forEach(([k,r2])=>{ if(k.startsWith(m)&&r2.done&&r2.done[t.id]) p+=r2.done[t.id].n||0; }); extra=`<span>${p} sayfa bu ay</span>`; }
     return `<div class="scard2"><div class="sh"><span class="medal sm" style="--c:${col(t)}">${ico(t.icon)}</span><b>${esc(t.name)}</b></div>
-      <div class="snum"><b>${st}</b><small>gün seri</small></div>
-      <div class="smeta"><span>En uzun ${b} gün</span><span>Son 30 gün %${r.p}</span>${extra}</div>
+      <div class="snum"><b>${st}</b><small>${wk?'hafta seri':'gün seri'}</small></div>
+      <div class="smeta">${wk?`<span>Bu hafta ${weekDone(t,wkStart(dk()))} / ${+t.perWeek||3}</span><span>En uzun ${b} hafta</span>`:`<span>En uzun ${b} gün</span><span>Son 30 gün %${r.p}</span>`}${extra}</div>
       <div class="d7">${dots7(t)}</div></div>`; }).join('');
   const ch=chainNow(), best=chainBest();
   return `<header class="phead"><h1>Takip</h1><p>Zinciri kırma: planladığın görevlerin hepsini yaptığın her gün zincire bir halka ekler.</p></header>
@@ -793,13 +895,16 @@ function vTakip(){
       <p class="muted" style="grid-column:1/-1;font-size:13px;line-height:1.45">Altın halkalar tüm görevlerin yapıldığı günler. Kesik turkuaz halkalar mazeretli günler. Kırmızı kopukluk zincirin kırıldığı gün.</p></div>
     ${vCal()}</div>
  ${S.tasks.some(t=>t.type==='hatim')?`<div class="hsec"><h3>Hatim ve kitaplar</h3><div class="hgrid">${S.tasks.filter(t=>t.type==='hatim').map(t=>hatimCard(t)).join('')}</div></div>`:''}
+    <button class="btn ghost wsbtn" data-act="wsum" data-id="${addDays(wkStart(dk()),-7)}">${ico('cal')} Geçen haftanın özeti</button>
+    <details class="fold" ${yfoldOpen?'open':''} id="yfold"><summary><span>Yıllık görünüm</span><small>${yearV||dk().slice(0,4)}</small></summary><div class="ybox">${vYear()}</div></details>
     <details class="fold" ${foldOpen?'open':''} id="fold"><summary><span>Görev görev seriler</span><small>${S.tasks.length} görev</small></summary><div class="sgrid">${cards}</div></details>`;
 }
 function openDay(k){
-  const T=S.tasks.filter(t=>scheduled(t,k)||isDone(t,k));
+  const T=S.tasks.filter(t=>scheduled(t,k)||isDone(t,k)||(isWeekly(t)&&isDone(t,k)));
   const rows=T.map(t=>{ const e=isDone(t,k)&&S.days[k].done[t.id]; return `<div class="log"><span>${esc(t.name)}${e&&e.n>1?` <span class="muted">(${e.n} sayfa)</span>`:''}</span><b style="color:${e?'var(--turq)':'var(--mist)'}">${e?'✓':'—'}</b></div>`; }).join('');
   modal(`<h3>${kDate(k).toLocaleDateString('tr-TR',{weekday:'long',day:'numeric',month:'long'})}</h3>
-    <p class="muted" style="margin:4px 0 10px">${excused(k)?'Mazeretli gün: seriler korundu.':`${T.filter(t=>isDone(t,k)).length} / ${T.length} görev yapıldı.`}</p>${rows||'<p class="muted">Bu gün planlı görev yoktu.</p>'}`);
+    <p class="muted" style="margin:4px 0 10px">${excused(k)?'Mazeretli gün: seriler korundu.':`${T.filter(t=>isDone(t,k)).length} / ${T.length} görev yapıldı.`}</p>${rows||'<p class="muted">Bu gün planlı görev yoktu.</p>'}
+    <h4 class="sub">Not</h4><textarea data-f="note" data-id="${k}" rows="3" placeholder="Bu gün için bir not yaz">${esc(noteOf(k))}</textarea>`);
 }
 
 /* ---------- ayarlar ---------- */
@@ -809,7 +914,7 @@ function seg(cur,items,act){ return `<div class="seg" role="tablist">${items.map
 function dayTxt(t){ const d=t.days||ALL; if(d.length===7) return 'Her gün'; if(d.join()==='0,1,2,3,4') return 'Hafta içi'; if(d.join()==='5,6') return 'Hafta sonu'; return d.map(i=>WD[i]).join(', '); }
 function taskSummary(t){ const g=+t.goal||0;
   const how = t.type==='hatim'?`${t.proj||'Takip'}, sayfa ${hProg(t).cur} / ${+t.total||604}`: t.type==='count'?`Sayaçla, ${g} kez`: t.type==='timer'?`${g} dakika`: t.type==='pages'?(g?`Günde ${g} sayfa`:'Sayfa sayısıyla'):'Tek dokunuş';
-  return `${dayTxt(t)}, ${how}${t.remind?`, ${t.remind}`:''}`; }
+  return `${isWeekly(t)?`Haftada ${+t.perWeek||3} kez`:dayTxt(t)}, ${how}${t.remind?`, ${t.remind}`:''}${t.rv&&t.rv.v?`, ${rvTxt(t)}`:''}`; }
 function editTask(id){
   const t=S.tasks.find(x=>x.id===id); if(!t) return; const i=S.tasks.indexOf(t), dd=t.days||ALL;
   modal(`<h3>Görevi düzenle</h3><div class="form">
@@ -823,9 +928,13 @@ function editTask(id){
       <label class="ck"><input type="checkbox" data-f="quran" data-id="${esc(t.id)}" ${t.quran?'checked':''}> Kur'an-ı Kerim (cüz göster, 604 sayfa)</label>
       ${(t.hist||[]).length?`<div><span class="lab">Tamamlananlar</span>${t.hist.map(x=>`<div class="log"><span>${esc(x.name)}</span><span class="muted">${x.end?fmtDate(x.end):''}</span></div>`).join('')}</div>`:''}
       <button class="btn ghost" data-act="hnew" data-id="${esc(t.id)}">${t.quran?'Yeni hatme baştan başla':'Yeni kitaba başla'}</button></div>`:''}
-    <div><span class="lab">Hangi günler</span><div class="daypick">${WD.map((w,j)=>`<button class="${dd.includes(j)?'on':''}" data-act="tday" data-id="${esc(t.id)}:${j}" aria-pressed="${dd.includes(j)}">${w}</button>`).join('')}</div></div>
+    <div><span class="lab">Sıklık</span>${seg(isWeekly(t)?'week':'days',[['days','Belirli günler'],['week','Haftada X kez']],'tfreq:'+t.id)}</div>
+    ${isWeekly(t)?`<label><span class="lab">Haftada kaç kez</span><input type="number" min="1" max="7" value="${esc(t.perWeek||3)}" data-f="perWeek" data-id="${esc(t.id)}"></label>`:`<div><span class="lab">Hangi günler</span><div class="daypick">${WD.map((w,j)=>`<button class="${dd.includes(j)?'on':''}" data-act="tday" data-id="${esc(t.id)}:${j}" aria-pressed="${dd.includes(j)}">${w}</button>`).join('')}</div></div>`}
     <div class="g2"><label><span class="lab">Simge</span><select data-f="icon" data-id="${esc(t.id)}">${ICONS.map(([v,l])=>`<option value="${v}" ${t.icon===v?'selected':''}>${l}</option>`).join('')}</select></label>
-      <label><span class="lab">Hatırlatma saati</span><input type="time" value="${esc(t.remind||'')}" data-f="remind" data-id="${esc(t.id)}"></label></div>
+      <label><span class="lab">Hatırlatma</span><select data-f="rmode" data-id="${esc(t.id)}"><option value="none" ${!t.remind&&!(t.rv&&t.rv.v)?'selected':''}>Yok</option><option value="time" ${t.remind?'selected':''}>Belirli saatte</option><option value="vakit" ${t.rv&&t.rv.v?'selected':''}>Vakte göre</option></select></label></div>
+    ${t.remind?`<label><span class="lab">Saat</span><input type="time" value="${esc(t.remind)}" data-f="remind" data-id="${esc(t.id)}"></label>`:''}
+    ${t.rv&&t.rv.v?`<div class="g2"><label><span class="lab">Vakit</span><select data-f="rvv" data-id="${esc(t.id)}">${VAKIT.map(([v,l])=>`<option value="${v}" ${t.rv.v===v?'selected':''}>${l}</option>`).join('')}</select></label>
+      <label><span class="lab">Dakika (önce: eksi)</span><input type="number" value="${esc(t.rv.off||0)}" data-f="rvoff" data-id="${esc(t.id)}"></label></div>${S.city?'':'<p class="muted" style="font-size:13px">Önce Ayarlar → Hatırlatma\'dan şehrini seç.</p>'}`:''}
     <label class="ck"><input type="checkbox" data-f="dini" data-id="${esc(t.id)}" ${t.dini?'checked':''}> İbadet grubunda göster</label>
     <div class="between"><div style="display:flex;gap:8px"><button class="btn ghost" data-act="mv" data-id="${esc(t.id)}:-1" ${i===0?'disabled':''} aria-label="Yukarı taşı">↑</button><button class="btn ghost" data-act="mv" data-id="${esc(t.id)}:1" ${i===S.tasks.length-1?'disabled':''} aria-label="Aşağı taşı">↓</button></div>
       <button class="btn red" data-act="del" data-id="${esc(t.id)}" id="delb">Görevi sil</button></div></div>`);
@@ -845,12 +954,16 @@ function vAyarlar(){
       <button class="btn" style="width:100%;margin-top:12px" data-act="add">${ico('plus')} Görev ekle</button>
       <p class="muted" style="font-size:13px;margin-top:10px">Günlerini, hatırlatma saatini ya da sırasını değiştirmek için göreve dokun.</p>`;
   } else if(setTab==='hatirlatma'){
-    const withTime=S.tasks.filter(t=>t.remind);
+    const withTime=S.tasks.filter(t=>t.remind||(t.rv&&t.rv.v));
     body=`<div class="panel first"><h3>Hatırlatmalar</h3><p class="muted" style="font-size:14px;line-height:1.5">Hatırlatmalar telefonunun takvimine eklenir. Görevlere saat vermek için Görevler sekmesinde göreve dokun.</p>
       <label class="switch"><span><b>Günlük özet hatırlatması</b><small>Her gün bu saatte tüm görevler için bir hatırlatma</small></span><input type="time" id="rmt" value="${esc(S.remindAll||'')}" data-f="remindAll" style="max-width:130px"></label>
-      <div class="rlist2">${withTime.length?withTime.map(t=>`<div class="log"><span>${esc(t.name)} <span class="muted">(${esc(dayTxt(t))})</span></span><b>${esc(t.remind)}</b></div>`).join(''):'<p class="muted" style="font-size:14px">Henüz saat verilmiş görev yok.</p>'}</div>
+      <div class="rlist2">${withTime.length?withTime.map(t=>`<div class="log"><span>${esc(t.name)} <span class="muted">(${esc(isWeekly(t)?'her gün':dayTxt(t))})</span></span><b>${esc(t.remind||rvTxt(t))}</b></div>`).join(''):'<p class="muted" style="font-size:14px">Henüz saat verilmiş görev yok.</p>'}</div>
       <button class="btn" style="margin-top:14px" data-act="ics">${ico('bell')} Takvimime ekle</button>
       <p class="muted" style="font-size:13px;margin-top:10px;line-height:1.45">Saatleri değiştirirsen dosyayı yeniden ekle. Eski hatırlatmalar aynı kayıtla güncellenir.</p></div>
+      <div class="panel"><h3>Namaz vakitleri</h3><p class="muted" style="font-size:14px;line-height:1.5">Şehrini yaz; vakitler Diyanet hesabına göre alınır. Bugün ekranında görünür ve görevlere "vakitten sonra" hatırlatma verebilirsin.</p>
+        <div class="between" style="margin-top:10px"><input id="city" value="${esc(S.city||'')}" placeholder="Örneğin Istanbul" aria-label="Şehir"><button class="btn" data-act="vkload">Vakitleri al</button></div>
+        ${vakitOf(dk())?`<div style="margin-top:12px">${vakitStrip()}</div>`:''}
+        <p class="muted" style="font-size:13px;margin-top:10px;line-height:1.45">Vakitler her gün değiştiği için vakte bağlı hatırlatmalar önümüzdeki 30 gün için eklenir. Ayda bir "Takvimime ekle"ye yeniden bas.</p></div>
       <div class="panel"><h3>Telefona kur</h3>${installHtml()}</div>`;
   } else if(setTab==='gorunum'){
     const u=S.ui;
@@ -895,6 +1008,10 @@ const ACT={
   treset:()=>{ if(!TM) return; TM.left=TM.total; TM.running=false; clearInterval(tmInt); saveTM(); renderTimer(); render(); },
   pg:d=>{ const i=$('pgn'); i.value=Math.max(1,Math.round(+i.value||1)+(+d)); },
   hsave:id=>saveHatim(id),
+  tfreq:v=>{ const [id,fq]=v.split(':'), t=S.tasks.find(x=>x.id===id); if(!t) return; t.freq=fq==='week'?'week':'days'; if(t.freq==='week'&&!t.perWeek) t.perWeek=3; save(); render(); editTask(id); },
+  wsum:ws=>modal(weekSummary(ws)),
+  yr:d=>{ yearV=(yearV||+dk().slice(0,4))+(+d); yfoldOpen=true; render(); },
+  vkload:()=>{ S.city=($('city').value||'').trim(); save(); if(!S.city) return toast('Önce şehrini yaz.'); VK={}; saveVK(); loadVakit(true); },
   hundo:id=>{ const r=rec(); if(r.done) delete r.done[id]; if(r.prog) delete r.prog[id]; save(); closeModal(); render(); toast('Bugünkü kayıt silindi.'); },
   pgMode:v=>{ pgMode=v; const id=$('pgn')&&$('pgn').dataset.task; if(id) openHatim(id); },
   hnew:id=>{ const t=S.tasks.find(x=>x.id===id); if(!t) return; const b=document.querySelector('[data-act="hnew"]'); if(b&&!b.dataset.arm){ b.dataset.arm=1; b.textContent='Emin misin? Tekrar bas'; return; }
@@ -923,7 +1040,12 @@ const ACT={
       'BEGIN:VALARM','ACTION:DISPLAY',`DESCRIPTION:${sum}`,'TRIGGER:PT0M','END:VALARM','END:VEVENT']; };
     let lines=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//SEFER//TR','CALSCALE:GREGORIAN'];
     if(S.remindAll) lines=lines.concat(ev('sefer-gunluk',S.remindAll,'SEFER: Günün görevleri'));
-    S.tasks.filter(t=>t.remind).forEach(t=>{ lines=lines.concat(ev('sefer-'+t.id,t.remind,'SEFER: '+t.name.replace(/[,;\\]/g,' '),t.days)); });
+    S.tasks.filter(t=>t.remind).forEach(t=>{ lines=lines.concat(ev('sefer-'+t.id,t.remind,'SEFER: '+t.name.replace(/[,;\\]/g,' '),isWeekly(t)?ALL:t.days)); });
+    const one=(uid,k,time,sum)=>{ const [hh,mm]=time.split(':'); return ['BEGIN:VEVENT',`UID:${uid}@omerfarukcetin.github.io`,'DTSTAMP:'+stamp,`DTSTART:${k.replace(/-/g,'')}T${hh}${mm}00`,'DURATION:PT10M',`SUMMARY:${sum}`,'DESCRIPTION:'+url,'BEGIN:VALARM','ACTION:DISPLAY',`DESCRIPTION:${sum}`,'TRIGGER:PT0M','END:VALARM','END:VEVENT']; };
+    let missing=false;
+    S.tasks.filter(t=>t.rv&&t.rv.v).forEach(t=>{ for(let i=0;i<30;i++){ const k=addDays(dk(),i); if(!isWeekly(t)&&!scheduled(t,k)&&!(t.since&&k<t.since&&(t.days||ALL).includes(wd(k)))) continue; const v=vakitOf(k); if(!v){ missing=true; continue; }
+      lines=lines.concat(one(`sefer-${t.id}-${k}`,k,addMin(v[t.rv.v],+t.rv.off||0),'SEFER: '+t.name.replace(/[,;\\]/g,' '))); } });
+    if(missing && S.tasks.some(t=>t.rv&&t.rv.v)) toast('Bazı günlerin vakitleri yok. Önce "Vakitleri al"a bas.');
     if(lines.length===4) return toast('Önce bir hatırlatma saati seç.');
     const ics=lines.concat(['END:VCALENDAR']).join('\r\n');
     try{ const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([ics],{type:'text/calendar'})); a.download='sefer-hatirlatmalar.ics'; document.body.appendChild(a); a.click(); a.remove();
@@ -937,18 +1059,24 @@ const ACT={
 document.addEventListener('click',e=>{
   if(e.target===$('modal')) return closeModal();
   const b=e.target.closest('[data-act]'); if(!b||b.disabled) return;
-  const f=ACT[b.dataset.act]; if(f) f(b.dataset.id,b);
+  const [an,extra]=b.dataset.act.split(':'); const f=ACT[an]; if(f) f(extra!==undefined?extra+':'+b.dataset.id:b.dataset.id,b);
 });
 document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
-document.addEventListener('toggle',e=>{ if(e.target&&e.target.id==='fold') foldOpen=e.target.open; },true);
+let noteT; document.addEventListener('input',e=>{ const el=e.target; if(el.dataset&&el.dataset.f==='note'){ clearTimeout(noteT); noteT=setTimeout(()=>{ rec(el.dataset.id).note=el.value; save(); },400); } });
+document.addEventListener('toggle',e=>{ if(e.target&&e.target.id==='fold') foldOpen=e.target.open; if(e.target&&e.target.id==='yfold') yfoldOpen=e.target.open; },true);
 document.addEventListener('change',e=>{
   const el=e.target, f=el.dataset&&el.dataset.f; if(!f) return;
   if(f==='uiVib'||f==='uiSound'){ S.ui[f==='uiVib'?'vib':'sound']=el.checked; save(); return; }
   if(f==='remindAll'){ S.remindAll=el.value; save(); render(); return; }
+  if(f==='note'){ rec(el.dataset.id).note=el.value; save(); return; }
   const t=S.tasks.find(x=>x.id===el.dataset.id); if(!t) return;
   if(f==='dini'){ t.dini=el.checked; }
   else if(f==='type'){ t.type=el.value; if(t.type==='count'&&!t.goal) t.goal=33; if(t.type==='timer'&&!t.goal) t.goal=10; if(t.type==='hatim'){ t.total=t.total||604; t.start=t.start||0; t.proj=t.proj||'1. hatim'; t.projStart=t.projStart||dk(); t.hist=t.hist||[]; } save(); render(); return editTask(t.id); }
   else if(f==='goal'){ t.goal=Math.max(0,+el.value||0); }
+  else if(f==='perWeek'){ t.perWeek=Math.min(7,Math.max(1,Math.round(+el.value||3))); }
+  else if(f==='rmode'){ if(el.value==='time'){ t.remind=t.remind||'21:00'; t.rv=null; } else if(el.value==='vakit'){ t.remind=''; t.rv={v:'aksam',off:15}; } else { t.remind=''; t.rv=null; } save(); render(); return editTask(t.id); }
+  else if(f==='rvv'){ t.rv={...(t.rv||{}),v:el.value}; }
+  else if(f==='rvoff'){ t.rv={...(t.rv||{}),off:Math.round(+el.value||0)}; }
   else if(f==='total'){ t.total=Math.max(1,Math.round(+el.value||604)); }
   else if(f==='curpage'){ const h=hProg(t), want=Math.max(0,Math.min(+t.total||604,Math.round(+el.value||0))); t.start=(+t.start||0)+(want-h.cur); save(); render(); return editTask(t.id); }
   else if(f==='quran'){ t.quran=el.checked; if(t.quran){ t.total=604; } save(); render(); return editTask(t.id); }
@@ -962,10 +1090,10 @@ if('serviceWorker' in navigator && location.protocol==='https:' && !/claude/.tes
   window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
 }
 window.addEventListener('hashchange',()=>{ readHash(); render(); });
-document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'){ tick(); render(); } });
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'){ tick(); if(!(document.activeElement&&document.activeElement.tagName==='TEXTAREA')) render(); } });
 function addHatim(){ if(!S.tasks.some(t=>t.type==='hatim') && !S.hatimAdded){ S.hatimAdded=true; const i=S.tasks.findIndex(t=>t.id==='kuran');
   S.tasks.splice(i>=0?i+1:0,0,{id:'hatim',name:'Hatim',hint:'',icon:'huzur',type:'hatim',goal:0,dini:true,days:[...ALL],remind:'',since:dk(),total:604,start:0,proj:'1. hatim',projStart:dk(),hist:[],quran:true}); } }
-addHatim(); readHash(); tmRestore(); applyUI(); save(); render();
+addHatim(); readHash(); tmRestore(); applyUI(); save(); render(); maybeWeekSummary(); loadVakit();
 try{ localStorage.removeItem('sefer-abh'); }catch(e){}
 </script>
 </body>
