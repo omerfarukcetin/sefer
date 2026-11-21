@@ -1,6 +1,6 @@
 // SEFER service worker: uygulamayı internetsiz de açar.
 // Yeni sürüm yayınlarken CACHE adındaki numarayı artır.
-const CACHE = 'sefer-v26';
+const CACHE = 'sefer-v27';
 const SHELL = ['./', './index.html', './manifest.webmanifest',
   './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png', './icons/apple-touch-icon.png', './js/config.js', './js/vendor/supabase.js', './js/vendor/591.supabase.js'];
 
@@ -31,12 +31,16 @@ self.addEventListener('fetch', e => {
 // Bildirimler
 self.addEventListener('push', e => {
   let d = {}; try { d = e.data ? e.data.json() : {}; } catch (_) { d = { body: e.data && e.data.text() }; }
-  e.waitUntil(self.registration.showNotification(d.title || 'SEFER', { body: d.body || '', tag: d.tag || undefined, icon: 'icons/icon-192.png', badge: 'icons/icon-192.png', data: { url: d.url || './' } }));
+  const m = /^nc?-([a-z]+)-(\d{4}-\d\d-\d\d)$/.exec(d.tag || '');
+  const opt = { body: d.body || '', tag: d.tag || undefined, icon: 'icons/icon-192.png', badge: 'icons/icon-192.png', data: { url: d.url || './', kildim: m ? { id: m[1], k: m[2] } : null } };
+  if (m) opt.actions = [{ action: 'kildim', title: 'Kıldım' }];
+  e.waitUntil(self.registration.showNotification(d.title || 'SEFER', opt));
 });
 self.addEventListener('notificationclick', e => {
   e.notification.close();
+  const data = e.notification.data || {}, kl = e.action === 'kildim' && data.kildim;
   e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
-    for (const c of list) { if ('focus' in c) return c.focus(); }
-    return self.clients.openWindow((e.notification.data && e.notification.data.url) || './');
+    for (const c of list) { if ('focus' in c) { if (kl) c.postMessage({ type: 'kildim', id: kl.id, k: kl.k }); return c.focus(); } }
+    return self.clients.openWindow(kl ? `./?kildim=${kl.id}_${kl.k}` : (data.url || './'));
   }));
 });

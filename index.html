@@ -255,8 +255,12 @@ button.zikr:active{transform:scale(.97)}
 .notep{margin-top:22px}.notep h3{font-size:16px;margin-bottom:8px}.notep textarea,.sheet textarea{min-height:72px;font-size:15px;line-height:1.45}
 .cd .ndot2{position:absolute;top:4px;right:5px;width:6px;height:6px;border-radius:50%;background:var(--sky)}
 .vakitler{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin-top:14px}
+.vakitler button{font:inherit;color:inherit;text-align:center;padding:7px 2px;border-radius:10px;background:var(--lapis2);border:1px dashed var(--mist);cursor:pointer}
+.vakitler button.kil{border:1px solid var(--turq);background:color-mix(in srgb,var(--turq) 22%,var(--lapis2))}.vakitler button.kil b{color:var(--turq)}
+.vhint{font-size:12px;color:var(--mist);margin-top:5px;text-align:center}
 .vakitler span{text-align:center;padding:7px 2px;border-radius:10px;background:var(--lapis2);border:1px solid var(--lapis3)}
 .vakitler small{display:block;font-size:11px;color:var(--mist);font-weight:700}.vakitler b{font-size:14px}
+.vakitler button.next:not(.kil){border-style:solid}
 .vakitler .next{border-color:var(--saffron);background:color-mix(in srgb,var(--saffron) 14%,var(--lapis2))}
 .wsbtn{width:100%;margin-top:16px;justify-content:center}
 .ybox{padding:0 14px 14px}
@@ -503,7 +507,7 @@ const EXCUSES = 2;
 const KEY='sefer-v1';
 function defaults(){ return {v:2, tasks:JSON.parse(JSON.stringify(DEF_TASKS)).map(t=>({...t,days:[...ALL],remind:''})), days:{}, remindAll:'21:00',
   ui:{theme:'dark',font:1,vib:true,sound:true}}; }
-function merge(o){ const d=defaults(); return {...o, v:2, hatimAdded:o.hatimAdded, kitapConv:o.kitapConv, updatedAt:+o.updatedAt||0, tasks:o.tasks||d.tasks, days:o.days||{}, remindAll:o.remindAll||d.remindAll, ui:{...d.ui,...(o.ui||{})}}; }
+function merge(o){ const d=defaults(); return {...o, v:2, hatimAdded:o.hatimAdded, kitapConv:o.kitapConv, cumaAdded:o.cumaAdded, updatedAt:+o.updatedAt||0, tasks:o.tasks||d.tasks, days:o.days||{}, remindAll:o.remindAll||d.remindAll, ui:{...d.ui,...(o.ui||{})}}; }
 function load(){ try{ const r=localStorage.getItem(KEY); if(r) return merge(JSON.parse(r)); }catch(e){} return defaults(); }
 function persist(){ try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} }
 function save(touch=true){ if(touch) S.updatedAt=Date.now(); persist(); if(touch&&typeof scheduleSave==='function'){ scheduleSave(); schedulePush(); } }
@@ -693,7 +697,7 @@ function mergeDays(older,newer){
   for(const [k,v] of Object.entries(newer||{})){ const x=out[k]; if(!x){ out[k]=v; continue; }
     const done={...(x.done||{})}; for(const [id,e] of Object.entries(v.done||{})){ const c=done[id]; done[id]=!c?e:((e.n||0)>=(c.n||0)?e:c); }
     const prog={...(x.prog||{})}; for(const [id,n] of Object.entries(v.prog||{})) prog[id]=Math.max(prog[id]||0,n||0);
-    out[k]={...x,...v,done,prog,excused:!!(x.excused||v.excused),note:v.note||x.note||''};
+    out[k]={...x,...v,done,prog,excused:!!(x.excused||v.excused),note:v.note||x.note||'',nmz:{...(x.nmz||{}),...(v.nmz||{})}};
   }
   return out;
 }
@@ -835,7 +839,10 @@ function vakitStrip(){
   const v=vakitOf(dk()); if(!v) return '';
   const now=new Date(), hm=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
   const nx=VAKIT.filter(x=>x[0]!=='sabah').find(([id])=>v[id]>hm);
-  return `<div class="vakitler">${VAKIT.filter(x=>x[0]!=='sabah').map(([id,l])=>`<span class="${nx&&nx[0]===id?'next':''}"><small>${l}</small><b>${v[id]}</b></span>`).join('')}</div>`;
+  const NM={imsak:'sabah',ogle:'ogle',ikindi:'ikindi',aksam:'aksam',yatsi:'yatsi'}, k=dk();
+  return `<div class="vakitler">${VAKIT.filter(x=>x[0]!=='sabah').map(([id,l])=>{ const n=NM[id], ok=n&&prayed(k,n), open=n&&v[id]<=hm;
+    return n&&open?`<button class="${nx&&nx[0]===id?'next':''} ${ok?'kil':''}" data-act="nmzpr" data-id="${n}" aria-pressed="${ok}" title="${ok?'Kılındı':'Kıldım olarak işaretle'}"><small>${id==='imsak'?'Sabah':l}</small><b>${ok?'✓ ':''}${v[id]}</b></button>`
+      :`<span class="${nx&&nx[0]===id?'next':''}"><small>${l}</small><b>${v[id]}</b></span>`; }).join('')}</div>${nmz().on?'<p class="vhint">Kıldığın namazın vaktine dokun.</p>':''}`;
 }
 const addMin = (hm,m) => { const [h,mi]=hm.split(':').map(Number); const t=((h*60+mi+m)%1440+1440)%1440; return String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0'); };
 const VABL={imsak:'İmsaktan',sabah:'Sabahtan',gunes:'Güneşten',ogle:'Öğleden',ikindi:'İkindiden',aksam:'Akşamdan',yatsi:'Yatsıdan'};
@@ -891,13 +898,17 @@ const pushOn = () => { try{ return !!localStorage.getItem(PEP); }catch(e){ retur
 const atOf = (k,hm) => { const [y,m,d]=k.split('-').map(Number), [h,mi]=hm.split(':').map(Number); return new Date(y,m-1,d,h,mi).getTime(); };
 /* ---------- namaz vakti bildirimleri ---------- */
 const NMZ_END={sabah:'gunes',ogle:'ikindi',ikindi:'aksam',aksam:'yatsi',yatsi:'imsak'};
+const prayed = (k,id) => !!(S.days[k]&&S.days[k].nmz&&S.days[k].nmz[id]);
+function markPrayed(id,k=dk(),val){ const r=S.days[k]=S.days[k]||{done:{}}; r.nmz=r.nmz||{}; r.nmz[id]= val==null ? !r.nmz[id] : val; save(); render(); const l=(NAMAZ.find(x=>x[0]===id)||[])[1]||''; toast(r.nmz[id]?`${l} kılındı olarak işaretlendi. Allah kabul etsin.`:`${l} işareti kaldırıldı.`); }
 const nmz = () => Object.assign({on:false,list:NAMAZ.map(x=>x[0]),enter:true,before:10}, S.nmz||{});
 function nmzQueue(k,now){
   const c=nmz(), out=[]; if(!c.on) return out; const v=vakitOf(k); if(!v) return out;
   c.list.forEach(id=>{ const nm=(NAMAZ.find(x=>x[0]===id)||[])[1], st=v[id]; if(!st) return; const short=nm.replace(' namazı','');
-    if(c.enter){ const at=atOf(k,st); if(at>now) out.push({at:new Date(at).toISOString(), title:`${short} vakti`, body:`${nm} vakti girdi (${st}).`, tag:`n-${id}-${k}`}); }
+    if(prayed(k,id)) return;
+    if(c.enter){ const at=atOf(k,st), vt=S.tasks.filter(t=>t.vakit===id&&scheduled(t,k)&&!isDone(t,k)).map(t=>t.name);
+      if(at>now) out.push({at:new Date(at).toISOString(), title:`${short} vakti`, body:`${nm} vakti girdi (${st}).${vt.length?` Bu vakitte: ${vt.join(', ')}.`:''}`, tag:`n-${id}-${k}`}); }
     if(+c.before>0){ const ek=id==='yatsi'?addDays(k,1):k, ev=vakitOf(ek), en=ev&&ev[NMZ_END[id]]; if(!en) return;
-      const at=atOf(ek,en)-c.before*60000; if(at>now) out.push({at:new Date(at).toISOString(), title:nm, body:`Vaktin çıkmasına ${c.before} dakika kaldı (${en}).`, tag:`nc-${id}-${k}`}); } });
+      const at=atOf(ek,en)-c.before*60000; if(at>now) out.push({at:new Date(at).toISOString(), title:nm, body:`Henüz kıldım demedin. Vaktin çıkmasına ${c.before} dakika kaldı (${en}).`, tag:`nc-${id}-${k}`}); } });
   return out;
 }
 function nmzHtml(){
@@ -906,8 +917,8 @@ function nmzHtml(){
     <label class="switch"><span><b>Namaz vakti bildirimlerini kullan</b></span><input type="checkbox" data-f="nmzOn" ${c.on?'checked':''}></label>
     ${c.on?`<div style="margin-top:10px"><span class="lab">Hangi namazlar</span><div class="daypick n5">${NAMAZ.map(([id,l])=>`<button class="${c.list.includes(id)?'on':''}" data-act="nmzv" data-id="${id}">${esc(l.replace(' namazı',''))}</button>`).join('')}</div></div>
     <label class="switch"><span><b>Vakit girince</b><small>Örneğin "Öğle vakti girdi"</small></span><input type="checkbox" data-f="nmzIn" ${c.enter?'checked':''}></label>
-    <div style="margin-top:10px"><span class="lab">Vaktin çıkmasına kala</span>${seg(String(c.before),[['0','Kapalı'],['5','5 dk'],['10','10 dk'],['15','15 dk'],['30','30 dk']],'nmzb')}</div>
-    <p class="muted" style="font-size:13px;margin-top:8px">Vaktin çıkışı bir sonraki vakittir: sabah için güneş, ikindi için akşam, yatsı için imsak.</p>
+    <label class="switch"><span><b>Kılmadıysam hatırlat</b><small>Kıldım demediysen vaktin çıkmasına bu kadar kala</small></span><select data-f="nmzB" style="max-width:130px">${[[0,'Kapalı'],[5,'5 dk'],[10,'10 dk'],[15,'15 dk'],[30,'30 dk'],[45,'45 dk'],[60,'1 saat']].map(([v,l])=>`<option value="${v}" ${+c.before===v?'selected':''}>${l}</option>`).join('')}</select></label>
+    <p class="muted" style="font-size:13px;margin-top:8px;line-height:1.5">Namazı kılınca Bugün sayfasındaki vakit kutusuna ya da bildirimdeki <b>Kıldım</b> düğmesine dokun; o vaktin uyarısı gelmez. Vaktin çıkışı bir sonraki vakittir: sabah için güneş, ikindi için akşam, yatsı için imsak.</p>
     ${S.cityId?'':'<p class="muted" style="font-size:13px">Önce aşağıdan şehrini seç.</p>'}`:''}</div>`;
 }
 function buildQueue(extra){
@@ -1290,6 +1301,8 @@ function vAyarlar(){
 /* ================= YÖNLENDİRME ================= */
 const TABS=[['bugun','sun','Bugün',vBugun],['takip','cal','Takip',vTakip],['ayarlar','sliders','Ayarlar',vAyarlar]];
 let tab='bugun';
+function kildimFromUrl(){ const m=location.search.match(/[?&]kildim=([a-z]+)_(\d{4}-\d\d-\d\d)/); if(!m) return; history.replaceState(null,'',location.pathname+location.hash); setTimeout(()=>markPrayed(m[1],m[2],true),300); }
+if('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message',e=>{ const d=e.data||{}; if(d.type==='kildim') markPrayed(d.id,d.k,true); });
 function readHash(){ const h=location.hash.slice(1); tab=TABS.some(t=>t[0]===h)?h:'bugun'; }
 function render(){
   $('hdr').innerHTML=vHeader();
@@ -1324,7 +1337,7 @@ const ACT={
     save(); render(); editTask(id); toast(n?`${n} vakte daha eklendi.`:'Bu görev zaten bütün vakitlerde var.'); },
   cpct:v=>{ S.chainPct=+v; save(); render(); },
   nmzv:v=>{ const c=nmz(), l=c.list.includes(v)?c.list.filter(x=>x!==v):[...c.list,v]; S.nmz={...c,list:NAMAZ.map(x=>x[0]).filter(x=>l.includes(x))}; save(); render(); },
-  nmzb:v=>{ S.nmz={...nmz(),before:+v}; save(); render(); },
+  nmzpr:v=>markPrayed(v),
   cpull:()=>{ setCloud('Eşitleniyor…'); pullCloud(); },
   cout:async()=>{ try{ await sb.auth.signOut(); }catch(e){} sbUser=null; setCloud(''); render(); toast('Çıkış yapıldı. Veriler bu cihazda duruyor.'); },
   amode:()=>{ authMode=authMode==='up'?'in':'up'; render(); },
@@ -1396,6 +1409,7 @@ document.addEventListener('change',e=>{
   if(f==='riskOn'){ S.riskOn=el.checked; save(); return; }
   if(f==='nmzOn'){ S.nmz={...nmz(),on:el.checked}; save(); render(); if(el.checked&&!pushOn()) toast('Bildirimlerin gelmesi için yukarıdan bildirimleri de aç.'); return; }
   if(f==='nmzIn'){ S.nmz={...nmz(),enter:el.checked}; save(); return; }
+  if(f==='nmzB'){ S.nmz={...nmz(),before:+el.value}; save(); return; }
   if(f==='note'){ rec(el.dataset.id).note=el.value; save(); return; }
   const t=S.tasks.find(x=>x.id===el.dataset.id); if(!t) return;
   if(f==='dini'){ t.dini=el.checked; }
@@ -1421,11 +1435,14 @@ if('serviceWorker' in navigator && location.protocol==='https:' && !/claude/.tes
 window.addEventListener('hashchange',()=>{ readHash(); render(); });
 document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'){ tick(); if(cloudOn()&&Date.now()-lastPull>20000) pullCloud(); else schedulePush(); if(!(document.activeElement&&document.activeElement.tagName==='TEXTAREA')) render(); } });
 function convKitap(){ if(S.kitapConv) return; S.kitapConv=true; const t=S.tasks.find(x=>x.id==='kitap'&&x.type==='check'); if(t){ Object.assign(t,{type:'hatim',quran:false,total:0,proj:'',start:0,projStart:'',hist:[],goal:0,due:''}); } }
+function addCuma(){ if(S.cumaAdded) return; S.cumaAdded=true;
+  if(!S.tasks.some(t=>t.id==='salavat')) S.tasks.push({id:'salavat',name:'Salavat-ı şerife',hint:'Cuma günü',icon:'huzur',type:'count',goal:100,dini:true,days:[4],remind:'',rv:{v:'ogle',off:-90},since:dk()});
+  if(!S.tasks.some(t=>t.id==='sadaka')) S.tasks.push({id:'sadaka',name:'Sadaka ver',hint:'Cuma günü',icon:'heart',type:'check',goal:0,dini:true,days:[4],remind:'',rv:{v:'ogle',off:60},since:dk()}); }
 function addHatim(){ if(!S.tasks.some(t=>t.type==='hatim') && !S.hatimAdded){ S.hatimAdded=true; const i=S.tasks.findIndex(t=>t.id==='kuran');
   S.tasks.splice(i>=0?i+1:0,0,{id:'hatim',name:'Hatim',hint:'',icon:'huzur',type:'hatim',goal:0,dini:true,days:[...ALL],remind:'',since:dk(),total:604,start:0,proj:'1. hatim',projStart:dk(),hist:[],quran:true}); } }
 if(S.city&&!S.cityId){ const m={istanbul:'16741','i̇stanbul':'16741',ankara:'16709',izmir:'16742','i̇zmir':'16742',bursa:'16724',kayseri:'16748'}[S.city.trim().toLocaleLowerCase('tr')]; if(m) S.cityId=m; }
 if(!S.cityId && !S.cityAuto){ S.cityId='62737'; S.cityAuto=true; }
-addHatim(); convKitap(); readHash(); tmRestore(); applyUI(); save(false); render(); maybeWeekSummary(); loadCities(); loadVakit();
+addHatim(); convKitap(); addCuma(); readHash(); kildimFromUrl(); tmRestore(); applyUI(); save(false); render(); maybeWeekSummary(); loadCities(); loadVakit();
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',initCloud); else initCloud();
 try{ localStorage.removeItem('sefer-abh'); }catch(e){}
 </script>
