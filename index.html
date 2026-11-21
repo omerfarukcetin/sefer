@@ -1145,10 +1145,9 @@ function vBugun(){
   const ev=new Date().getHours()>=17;
   const ch=chainNow(), need=chainNeed(T.length), done=n===T.length&&T.length, linked=T.length&&n>=need, more=need-n, pct=chainPct();
   const head = !T.length ? 'Bugün dinlenme günü' : linked ? `Zincir ${ch} gün` : 'Zinciri kırma';
-  const sub = !T.length ? 'Bugün planlı görev yok, zincirin bozulmaz.' : done ? 'Bugünkü görevlerin tamam. Allah kabul etsin.' :
-    linked ? `Bugünün halkası eklendi. ${left.length} görev daha var, onları da yapabilirsin.` :
-    ev ? `Zincir için ${more} görev daha gerekiyor. Kalanlar: ${esc(left.map(t=>t.name).join(', '))}.`
-       : `Zincir için bugün ${T.length} görevden en az ${need} tanesini yap. ${more} görev kaldı.`;
+  const sub = !T.length ? 'Bugün planlı görev yok, zincirin bozulmaz.' : done ? 'Bugünkü görevlerin tamam.' :
+    linked ? `Bugünün halkası eklendi. ${left.length} görev daha var.` :
+    `Zincir için ${more} görev daha gerekiyor.`;
   const strip = `<div class="chainbox"><div class="between"><b>Son 14 gün</b><span class="muted">En uzun zincir: ${chainBest()} gün</span></div>${chainSvg(14)}</div>`;
   const VT=T.filter(t=>t.vakit), rest=T.filter(t=>!t.vakit);
   const dini=rest.filter(t=>t.dini), diger=rest.filter(t=>!t.dini), off=S.tasks.filter(t=>!isWeekly(t)&&!scheduled(t,k)), W=weeklies();
@@ -1301,7 +1300,7 @@ function vAyarlar(){
   } else if(setTab==='gorunum'){
     const u=S.ui;
     body=`<div class="panel first"><h3>Tema</h3>${seg(u.theme,[['dark','Gece'],['light','Gündüz'],['auto','Cihaza göre']],'uiTheme')}
-      <h3 style="margin-top:20px">Yazı boyutu</h3>${seg(String(u.font),[['0.9','Küçük'],['1','Normal'],['1.12','Büyük'],['1.25','Çok büyük']],'uiFont')}
+      <h3 style="margin-top:20px">Yazı boyutu</h3>${seg(String(u.font),[['0.8','Çok küçük'],['0.9','Küçük'],['1','Normal'],['1.12','Büyük'],['1.25','Çok büyük']],'uiFont')}
       <h3 style="margin-top:20px">Bugün listesi</h3>${seg(u.dense!==false?'1':'0',[['1','Kompakt'],['0','Geniş']],'uiDense')}</div>
       <div class="panel"><h3>Ses ve titreşim</h3>
       <label class="switch"><span><b>Titreşim</b><small>Görev tamamlarken ve zikir çekerken</small></span><input type="checkbox" data-f="uiVib" ${u.vib!==false?'checked':''}></label>
