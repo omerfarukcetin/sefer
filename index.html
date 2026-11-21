@@ -937,7 +937,7 @@ const scr = () => Object.assign({on:false,limit:120}, S.screen||{});
 const hmTxt = m => { m=Math.round(+m||0); const h=Math.floor(m/60), r=m%60; return h?`${h} sa${r?` ${r} dk`:''}`:`${r} dk`; };
 const scrOf = k => S.days[k]&&S.days[k].screen!=null ? +S.days[k].screen : null;
 function screenFromUrl(){ const q=new URLSearchParams(location.search), m=q.get('ekran'); if(m==null) return false;
-  const k=/^\d{4}-\d\d-\d\d$/.test(q.get('k')||'')?q.get('k'):dk(), v=Math.max(0,Math.round(+m||0));
+  const k=/^\d{4}-\d\d-\d\d$/.test(q.get('k')||'')?q.get('k'):(new Date().getHours()<5?addDays(dk(),-1):dk()), v=Math.max(0,Math.round(+m||0));
   q.delete('ekran'); q.delete('k'); history.replaceState(null,'',location.pathname+(q.toString()?'?'+q:'')+location.hash);
   const r=S.days[k]=S.days[k]||{done:{}}; r.screen=v; S.screen={...scr(),on:true}; save();
   setTimeout(()=>toast(`Ekran süresi kaydedildi: ${hmTxt(v)}.`),300); return true; }
