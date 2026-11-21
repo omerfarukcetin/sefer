@@ -217,30 +217,6 @@ button.zikr:active{transform:scale(.97)}
 .celebrate .cel-lv,.celebrate .cel-konak,.celebrate .cel-lantern{animation:pop .6s cubic-bezier(.2,1.4,.4,1)}
 @keyframes pop{from{transform:scale(.4);opacity:0}}
 
-/* ---------- âb-ı hayat ---------- */
-.abh{display:block;margin-top:18px;padding:16px 16px 14px;border-radius:var(--r-lg);background:var(--lapis2);border:1px solid var(--lapis3);border-left:4px solid var(--turq);color:inherit;text-decoration:none}
-.abh-h{display:block;font-size:13px;font-weight:800;color:var(--turq)}
-.abh-h small{color:var(--mist);font-weight:600;margin-left:6px}
-.abh p{margin:8px 0 12px;font-size:15px;line-height:1.55;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
-.abh b{display:block;margin-top:6px;font-size:15px}.abh small{color:var(--mist);font-size:13px}
-.abh .btn{padding:8px 14px;font-size:14px}
-.celebrate blockquote cite{display:block;margin-top:8px;font-style:normal;font-size:13px;font-weight:700}
-.celebrate blockquote cite a{color:#7a5a34}
-
-/* ---------- sonsuz ilerleme ---------- */
-.sefer-head{display:flex;align-items:baseline;gap:10px;margin:4px 0 6px}
-.sefer-head b{font-size:13px;font-weight:800;color:var(--ink);background:var(--saffron);padding:3px 10px;border-radius:99px}
-.sefer-head span{font-size:18px;font-weight:800}
-.bwrap{position:relative;display:block;width:58px;margin:0 auto 4px}
-.bwrap svg{margin:0}
-.btier{position:absolute;right:-4px;bottom:0;font-size:10px;font-weight:800;color:var(--ink);background:var(--saffron);border-radius:99px;padding:1px 5px;border:2px solid var(--lapis)}
-.lvtag{font-size:13px;font-weight:800;color:var(--ink);background:var(--saffron);padding:2px 9px;border-radius:99px;vertical-align:4px;margin-left:4px}
-h4.sub{margin-top:18px;font-size:16px;font-weight:800}
-.cel-next{margin-top:8px;color:var(--saffron);font-weight:700}
-
-.ibrem{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--mist);margin:-2px 2px 10px}
-.ibrem .ico{width:16px;height:16px;color:var(--saffron)}
-
 /* ---------- ayarlar ---------- */
 .setwrap{max-width:680px}
 .seg{display:flex;flex-wrap:wrap;gap:4px;background:var(--lapis2);border:1px solid var(--lapis3);border-radius:14px;padding:4px}
@@ -777,8 +753,7 @@ function celebrate(ev){
   else if(ev.konak!=null){ const K2=konak(ev.konak), done=K2.local===11;
     top=`<div class="cel-konak"><span></span><b>${K2.local+1}</b></div>`; title= done ? `${K2.seferName} tamamlandı` : `Yeni konak: ${K2.n}`;
     if(done) top+=`<p class="cel-next">Yeni sefer başlıyor: <b>${seferName(K2.sefer+1)}</b></p>`;
-    const a=abhFor(ev.konak);
-    body = a ? `<blockquote>${esc(a.x)}<cite><a href="${esc(a.l)}" target="_blank" rel="noopener">${esc(a.t)}, huzurpinari.com</a></cite></blockquote>` : `<blockquote>${esc(K2.story)}</blockquote>`; }
+    body = `<blockquote>${esc(K2.story)}</blockquote>`; }
   else { top=`<div class="cel-lantern">${lanternSvg(1)}</div>`; title='Bugünün konağına vardın'; body=`<p>Kandilin tam yandı, kervanın bir adım ilerledi.</p>`; }
   const week = ev.week ? `<div class="cel-note">${ico('route')} Haftalık hedef tamam: +${WEEK_BONUS.xp} XP ve her kaynaktan +${WEEK_BONUS.each}</div>` : '';
   modal(`<div class="celebrate">${top}<h3>${title}</h3>${body}
@@ -801,30 +776,6 @@ function smartCard(){
   const d = idle(pick);
   return {i:ch.i, why: d>=999 ? `${RES[pick].name} alanında henüz başlamadın` : d>=2 ? `${d} gündür ${RES[pick].name} kazanmadın` : ''};
 }
-
-/* ================= ÂB-I HAYAT (huzurpinari.com) ================= */
-const ABH_KEY='sefer-abh', ABH_CAT='https://www.huzurpinari.com/makaleler/ab-i-hayat/';
-let ABH=null; try{ ABH=JSON.parse(localStorage.getItem(ABH_KEY)); }catch(e){}
-function cleanHtml(h){ let t=''; try{ t=new DOMParser().parseFromString(h||'','text/html').body.textContent||''; }catch(e){ t=String(h||'').replace(/<[^>]+>/g,' '); }
-  return t.replace(/Günün videosu/gi,'').replace(/\[(…|&hellip;|\.\.\.)\]/g,'…').replace(/Devamını oku.*$/i,'').replace(/(\s*(…|\.\.\.))+\s*$/,'…').replace(/\s+/g,' ').trim(); }
-async function loadAbh(){
-  if(ABH && ABH.day===dk() && ABH.items && ABH.items.length) return;
-  try{
-    const r=await fetch('https://www.huzurpinari.com/wp-json/wp/v2/posts?categories=16&per_page=20&_fields=id,title,link,date,excerpt',{cache:'no-store'});
-    if(!r.ok) throw new Error(r.status); const a=await r.json();
-    const items=a.map(p=>({t:cleanHtml(p.title&&p.title.rendered),l:p.link,d:p.date,x:cleanHtml(p.excerpt&&p.excerpt.rendered)})).filter(p=>p.x);
-    if(!items.length) return;
-    ABH={day:dk(),items}; try{ localStorage.setItem(ABH_KEY,JSON.stringify(ABH)); }catch(e){}
-    if(tab==='bugun' && !$('modal').classList.contains('open')) render();
-  }catch(e){}
-}
-function abhCard(){
-  const it = ABH && ABH.items && ABH.items[0];
-  if(!it) return `<a class="abh" href="${ABH_CAT}" target="_blank" rel="noopener"><span class="abh-h">Âb-ı Hayat</span><b>Günün yazısını huzurpinari.com'da oku</b><small>İnternete bağlandığında yazı burada görünür.</small></a>`;
-  return `<div class="abh"><span class="abh-h">Günün Âb-ı Hayat'ı <small>${esc(it.t)}</small></span><p>${esc(it.x)}</p>
-    <a class="btn ghost" href="${esc(it.l)}" target="_blank" rel="noopener">Devamını oku</a></div>`;
-}
-function abhFor(i){ const L=ABH&&ABH.items; if(!L||!L.length) return null; return L[i%L.length]; }
 
 /* ================= EFEKTLER ================= */
 let toastT, celebrateAt=0;
@@ -1024,8 +975,7 @@ function vBugun(){
   return `<div class="cols v-bugun"><div class="a-hero"><section class="hero ${risk?'risk':''}">${lanternSvg(p)}<div class="txt"><h2>${head}</h2><p>${sub}</p>
       ${m>1?`<span class="mult">${ico('flame')} Seri bonusu ×${String(m).replace('.',',')}</span>`:''}</div></section>
     ${ex.includes('warn')?ex:''}
-    ${card}
-    ${abhCard()}</div><div class="a-tasks">
+    ${card}</div><div class="a-tasks">
     <div class="group first"><div class="ghead"><h3>${sadeOn()?'İbadet takibi':'Dini görevler'}</h3><small>${sadeOn()?'Puan yok, sadece takip':'Huzur, seri ve rozet'}</small></div>${ibReminder(r)}${dini.map(t=>taskRow(t,r)).join('')||'<p class="muted">Ayarlar\'dan görev ekleyebilirsin.</p>'}</div>
     <div class="group"><div class="ghead"><h3>Gelişim görevleri</h3><small>Birikim hakkı kazandırır</small></div>${gel.map(t=>taskRow(t,r)).join('')||'<p class="muted">Ayarlar\'dan görev ekleyebilirsin.</p>'}</div>
     ${ex.includes('warn')?'':ex}</div><div class="a-goals">${goalsPanel()}</div></div>`;
@@ -1283,7 +1233,7 @@ if('serviceWorker' in navigator && location.protocol==='https:' && !/claude/.tes
 }
 document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'){ tick(); render(); } });
 readHash(); tmRestore(); applyUI(); const wkNew=checkWeek(); save(); render();
-loadAbh(); document.addEventListener('visibilitychange',()=>{ if(!document.hidden) loadAbh(); });
+try{ localStorage.removeItem('sefer-abh'); }catch(e){}
 if(wkNew) setTimeout(()=>toast(`Haftalık hedef tamam: +${WEEK_BONUS.xp} XP ve her kaynaktan +${WEEK_BONUS.each}`),400);
 </script>
 </body>
