@@ -269,6 +269,15 @@ button.zikr:active{transform:scale(.97)}
 .linkb{color:var(--turq);font-weight:700;text-decoration:underline;text-underline-offset:3px}
 .vtime{font-size:13px;font-weight:700;color:var(--mist);margin-left:6px}
 .vgroup.nowv .ghead h3{color:var(--saffron)}.vgroup.nowv .vtime{color:var(--saffron)}
+.drow{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--lapis3)}
+.drow .tx b{font-size:15px}.drow .tx small{color:var(--mist);font-size:12px}
+.dtick{width:30px;height:30px;flex:none;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;color:var(--lapis)}
+.drow.on .dtick{background:var(--turq);border-color:var(--turq)}.dtick .ico{width:16px;height:16px;stroke-width:2.6}
+.dpg{width:84px;padding:6px 8px;text-align:center}
+.insp{margin-top:16px}.insp h3{margin-bottom:6px}
+.ins{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--lapis3);font-size:14.5px;line-height:1.45}.ins:last-child{border:0}
+.ins i{width:8px;height:8px;border-radius:50%;margin-top:7px;flex:none;background:var(--sky)}.ins.up i{background:var(--turq)}.ins.down i{background:var(--coral)}
+.ins b{color:var(--white)}
 .hsec{margin-top:18px}.hsec h3{font-size:18px;margin:0 2px 10px}
 .hgrid{display:grid;gap:10px}
 .hcard{background:var(--lapis2);border:1px solid var(--lapis3);border-radius:var(--r-lg);padding:16px}
@@ -308,7 +317,9 @@ button.zikr:active{transform:scale(.97)}
 .switch b{display:block;font-size:15px}.switch small{color:var(--mist);font-size:13px;font-weight:600}
 .switch input{appearance:none;-webkit-appearance:none;width:46px;height:28px;flex:none;border-radius:99px;background:var(--lapis3);border:0;padding:0;position:relative;cursor:pointer;transition:background .2s}
 .switch input:after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:transform .2s}
-.switch input:checked{background:var(--turq)}.switch input:checked:after{transform:translateX(18px)}
+.switch input:checked{background:var(--turq)}
+.switch input[type=time]{appearance:auto;-webkit-appearance:auto;width:auto;height:auto;padding:8px 10px;background:var(--lapis);border:1px solid var(--line);border-radius:10px;color:var(--white)}
+.switch input[type=time]:after{display:none}.switch input:checked:after{transform:translateX(18px)}
 
 /* ---------- yazı boyutu ve efektler ---------- */
 #hdr,#view,.sheet{zoom:var(--zoom,1)}
@@ -493,7 +504,7 @@ function defaults(){ return {v:2, tasks:JSON.parse(JSON.stringify(DEF_TASKS)).ma
 function merge(o){ const d=defaults(); return {...o, v:2, hatimAdded:o.hatimAdded, updatedAt:+o.updatedAt||0, tasks:o.tasks||d.tasks, days:o.days||{}, remindAll:o.remindAll||d.remindAll, ui:{...d.ui,...(o.ui||{})}}; }
 function load(){ try{ const r=localStorage.getItem(KEY); if(r) return merge(JSON.parse(r)); }catch(e){} return defaults(); }
 function persist(){ try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} }
-function save(touch=true){ if(touch) S.updatedAt=Date.now(); persist(); if(touch&&typeof scheduleSave==='function') scheduleSave(); }
+function save(touch=true){ if(touch) S.updatedAt=Date.now(); persist(); if(touch&&typeof scheduleSave==='function'){ scheduleSave(); schedulePush(); } }
 let S=load();
 // eski sürümden geçiş
 S.tasks.forEach(t=>{ if(!t.icon) t.icon=t.res||'star'; if(!Array.isArray(t.days)) t.days=[...ALL]; if(t.remind==null) t.remind='';
@@ -586,7 +597,7 @@ function lanternSvg(p){ // p: 0..1 günlük ilerleme
 /* ================= GÖREV TAMAMLAMA ================= */
 function completeTask(id,n=1){
   const t=S.tasks.find(x=>x.id===id); if(!t) return; const r=rec(); if(r.done[id]) return;
-  r.done[id]={n}; vib(12); save(); render();
+  r.done[id]={n,t:Date.now()}; vib(12); save(); render();
   const T=todays(); if(T.length && T.every(x=>isDone(x,dk()))) toast('Bugünkü görevlerin tamam.');
 }
 function undoTask(id){ const r=rec(); if(!r.done[id]) return; delete r.done[id]; if(r.prog) delete r.prog[id]; save(); render(); }
@@ -704,7 +715,7 @@ async function pullCloud(){
   if(S.owner && S.owner!==sbUser.id){ S = data&&data.data ? merge(data.data) : defaults(); }
   else if(data&&data.data){ const before=JSON.stringify(data.data); S=mergeState(S,{...data.data,updatedAt:+data.updated_at||+data.data.updatedAt||0}); if(JSON.stringify(S)!==before) scheduleSave(); }
   else scheduleSave();
-  S.owner=sbUser.id; persist(); applyUI(); setCloud('Eşitlendi');
+  S.owner=sbUser.id; persist(); applyUI(); setCloud('Eşitlendi'); schedulePush();
   if(!(document.activeElement&&document.activeElement.tagName==='TEXTAREA')) render();
 }
 async function initCloud(){
@@ -826,6 +837,112 @@ function vakitStrip(){
 const addMin = (hm,m) => { const [h,mi]=hm.split(':').map(Number); const t=((h*60+mi+m)%1440+1440)%1440; return String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0'); };
 const VABL={imsak:'İmsaktan',sabah:'Sabahtan',gunes:'Güneşten',ogle:'Öğleden',ikindi:'İkindiden',aksam:'Akşamdan',yatsi:'Yatsıdan'};
 function rvTxt(t){ if(!t.rv||!t.rv.v) return ''; const l=(VAKIT.find(x=>x[0]===t.rv.v)||[])[1], o=+t.rv.off||0; return o===0?`${l} vaktinde`: o>0?`${VABL[t.rv.v]} ${o} dk sonra`:`${VABL[t.rv.v]} ${-o} dk önce`; }
+
+/* ================= İÇGÖRÜLER ================= */
+const WDL=['Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi','Pazar'];
+function rateRange(t,from,to){ let s=0,d=0; for(let k=from;k<=to;k=addDays(k,1)){ if(scheduled(t,k)&&!excused(k)){ s++; if(isDone(t,k)) d++; } } return s>=4?{p:Math.round(d/s*100),s}:null; }
+function insights(){
+  const today=dk(), y=addDays(today,-1), start=[firstKey(),addDays(today,-55)].sort()[1];
+  const span=daysBetween0(firstKey(),today);
+  if(span<6) return null;
+  const out=[], D=S.tasks.filter(t=>!isWeekly(t));
+  // haftanın günleri
+  const wdS=[0,0,0,0,0,0,0], wdD=[0,0,0,0,0,0,0];
+  for(let k=start;k<=y;k=addDays(k,1)){ if(excused(k)) continue; D.forEach(t=>{ if(scheduled(t,k)){ wdS[wd(k)]++; if(isDone(t,k)) wdD[wd(k)]++; } }); }
+  const wr=wdS.map((s,i)=>s>=3?{i,p:Math.round(wdD[i]/s*100)}:null).filter(Boolean);
+  if(wr.length>=4){ const avg=Math.round(wr.reduce((a,b)=>a+b.p,0)/wr.length), lo=wr.reduce((a,b)=>b.p<a.p?b:a), hi=wr.reduce((a,b)=>b.p>a.p?b:a);
+    if(avg-lo.p>=12) out.push(['down',`En çok <b>${WDL[lo.i]}</b> günleri aksatıyorsun. O günlerde tamamlama oranın %${lo.p}, genel ortalaman %${avg}.`]);
+    if(hi.p-avg>=8) out.push(['up',`En düzenli günün <b>${WDL[hi.i]}</b>. O günlerde tamamlama oranın %${hi.p}.`]); }
+  // son 14 gün ile önceki 14 gün
+  D.forEach(t=>{ const a=rateRange(t,addDays(today,-28),addDays(today,-15)), b=rateRange(t,addDays(today,-14),y);
+    if(a&&b&&Math.abs(b.p-a.p)>=20) out.push([b.p>a.p?'up':'down',`<b>${esc(t.name)}</b> düzenin ${b.p>a.p?'yükseliyor':'düşüyor'}: son iki hafta %${b.p}, önceki iki hafta %${a.p}.`]); });
+  // en düzenli ve en çok aksayan görev (son 30 gün)
+  const r30=D.map(t=>({t,r:rateRange(t,addDays(today,-30),y)})).filter(x=>x.r);
+  if(r30.length>=2){ const best=r30.reduce((a,b)=>b.r.p>a.r.p?b:a), worst=r30.reduce((a,b)=>b.r.p<a.r.p?b:a);
+    if(best.r.p>=80) out.push(['up',`En düzenli görevin <b>${esc(best.t.name)}</b>: son 30 günde %${best.r.p}.`]);
+    if(worst!==best && worst.r.p<=60) out.push(['down',`En çok aksayan görev <b>${esc(worst.t.name)}</b>: son 30 günde %${worst.r.p}. Günlerini ya da hedefini hafifletmeyi düşünebilirsin.`]); }
+  // günün hangi saatinde
+  S.tasks.forEach(t=>{ const hs=[]; Object.keys(S.days).forEach(k=>{ const e=S.days[k].done&&S.days[k].done[t.id]; if(e&&e.t){ const h=new Date(e.t).getHours(); hs.push(h); } });
+    if(hs.length>=5){ const b={'sabah':0,'öğlen':0,'akşamüstü':0,'akşam':0,'gece':0}; hs.forEach(h=>{ b[h<11?'sabah':h<14?'öğlen':h<18?'akşamüstü':h<22?'akşam':'gece']++; });
+      const [part,c]=Object.entries(b).sort((x,y2)=>y2[1]-x[1])[0]; if(c/hs.length>=0.6) out.push(['info',`<b>${esc(t.name)}</b> görevini genelde <b>${part}</b> yapıyorsun.`]); } });
+  // okuma
+  let pg=0; S.tasks.filter(t=>t.type==='pages'||t.type==='hatim').forEach(t=>{ for(let k=addDays(today,-29);k<=today;k=addDays(k,1)) pg+=pagesOn(t,k); });
+  if(pg) out.push(['info',`Son 30 günde <b>${pg}</b> sayfa okudun, günde ortalama ${fmt1(pg/30)} sayfa.`]);
+  // zincir
+  const ch=chainNow(), best=chainBest(); if(ch>0 && best>ch && best-ch<=7) out.push(['up',`En uzun zincirine <b>${best-ch}</b> gün kaldı.`]); else if(ch>0 && ch===best && ch>=7) out.push(['up',`Şu an en uzun zincirindesin: <b>${ch}</b> gün.`]);
+  return out.slice(0,6);
+}
+function daysBetween0(a,b){ return Math.round((kDate(b)-kDate(a))/864e5); }
+function insightsHtml(){
+  const L=insights();
+  const body = !L ? '<p class="muted" style="font-size:14px">İçgörüler için birkaç gün daha kayıt gerekiyor. Bir hafta sonra burada düzenine dair tespitler göreceksin.</p>'
+    : !L.length ? '<p class="muted" style="font-size:14px">Şimdilik dikkat çeken bir değişiklik yok. Düzenin istikrarlı görünüyor.</p>'
+    : L.map(([k,h])=>`<div class="ins ${k}"><i></i><p>${h}</p></div>`).join('');
+  return `<div class="panel insp"><h3>İçgörüler</h3>${body}</div>`;
+}
+
+/* ================= BİLDİRİMLER ================= */
+const PEP='sefer-push-ep', PSUB='sefer-push-sub';
+const pushSupported = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window && location.protocol==='https:' && !/claude/.test(location.hostname);
+const pushOn = () => { try{ return !!localStorage.getItem(PEP); }catch(e){ return false; } };
+const atOf = (k,hm) => { const [y,m,d]=k.split('-').map(Number), [h,mi]=hm.split(':').map(Number); return new Date(y,m-1,d,h,mi).getTime(); };
+function buildQueue(extra){
+  const now=Date.now(), q=[], today=dk();
+  for(let i=0;i<7;i++){
+    const k=addDays(today,i), sc=S.tasks.filter(t=>scheduled(t,k)), W=S.tasks.filter(t=>isWeekly(t)&&(!t.since||k>=t.since));
+    [...sc,...W].forEach(t=>{
+      if(isDone(t,k)) return; if(isWeekly(t)&&i===0&&weekMet(t,wkStart(k))) return;
+      let hm=t.remind||''; if(!hm&&t.rv&&t.rv.v){ const v=vakitOf(k); if(v&&v[t.rv.v]) hm=addMin(v[t.rv.v],+t.rv.off||0); }
+      if(!/^\d\d:\d\d$/.test(hm)) return; const at=atOf(k,hm); if(at<=now) return;
+      q.push({at:new Date(at).toISOString(), title:t.vakit?`${vLabel(t)}`:'SEFER', body:`${t.name}${t.hint?` · ${t.hint}`:''}`, tag:`t-${t.id}-${k}`}); });
+    if(S.remindAll && sc.length){ const at=atOf(k,S.remindAll); if(at>now){ const left=sc.filter(t=>!isDone(t,k)).length;
+      if(i>0||left) q.push({at:new Date(at).toISOString(), title:'SEFER', body:i===0?`Bugün ${left} görev kaldı.`:'Günün görevlerine göz at.', tag:`g-${k}`}); } }
+    if(S.riskOn!==false && sc.length){ const at=atOf(k,S.riskTime||'21:00'); if(at>now){
+      const n=sc.filter(t=>isDone(t,k)).length, need=chainNeed(sc.length);
+      if(i>0 || n<need) q.push({at:new Date(at).toISOString(), title:'Zinciri kırma', body:i===0?`Zincir için ${need-n} görev daha gerekiyor.`:`Bugünkü zincir hedefine ulaştın mı? ${need} görev gerekiyor.`, tag:`z-${k}`}); } }
+  }
+  if(extra) q.push(extra);
+  return q.sort((a,b)=>a.at<b.at?-1:1).slice(0,120);
+}
+let pushT=null;
+function schedulePush(){ if(!pushOn()) return; clearTimeout(pushT); pushT=setTimeout(()=>pushSync(),2000); }
+async function pushSync(extra){
+  if(!pushOn()||!cloudOn()) return false;
+  let sub=null; try{ sub=JSON.parse(localStorage.getItem(PSUB)); }catch(e){}
+  if(!sub) return false;
+  try{ const r=await sb.from('sefer_push').upsert({endpoint:sub.endpoint, sub, queue:buildQueue(extra), updated_at:new Date().toISOString()}); if(r.error) throw r.error; return true; }
+  catch(e){ const m=(e&&e.message)||''; if(/sefer_push|relation|schema cache/i.test(m)) toast('Supabase\'de bildirim tablosu yok. Kurulum adımını uygula.'); return false; }
+}
+const u8 = s => Uint8Array.from(atob(s.replace(/-/g,'+').replace(/_/g,'/')+'==='.slice((s.length+3)%4)), c=>c.charCodeAt(0));
+async function enablePush(){
+  if(!pushSupported()) return toast('Bu tarayıcı bildirim desteklemiyor.');
+  if(!cloudOn()) { setTab='hesap'; render(); return toast('Bildirimler için önce giriş yap.'); }
+  if(!CFG.vapidPublicKey) return toast('Bildirim anahtarı ayarlanmamış.');
+  const perm=await Notification.requestPermission(); if(perm!=='granted') { render(); return toast('Bildirim izni verilmedi. Tarayıcı ayarlarından izin verebilirsin.'); }
+  try{ const reg=await navigator.serviceWorker.ready; let s2=await reg.pushManager.getSubscription();
+    if(!s2) s2=await reg.pushManager.subscribe({userVisibleOnly:true, applicationServerKey:u8(CFG.vapidPublicKey)});
+    const j=s2.toJSON(); localStorage.setItem(PEP,j.endpoint); localStorage.setItem(PSUB,JSON.stringify({endpoint:j.endpoint,keys:j.keys}));
+    const ok=await pushSync(); render(); toast(ok?'Bildirimler açıldı.':'Bildirim kaydedilemedi. Biraz sonra tekrar dene.'); }
+  catch(e){ toast('Bildirim açılamadı: '+(e.message||e)); }
+}
+async function disablePush(){
+  const ep=localStorage.getItem(PEP);
+  try{ const reg=await navigator.serviceWorker.ready; const s2=await reg.pushManager.getSubscription(); if(s2) await s2.unsubscribe(); }catch(e){}
+  try{ if(ep&&cloudOn()) await sb.from('sefer_push').delete().eq('endpoint',ep); }catch(e){}
+  localStorage.removeItem(PEP); localStorage.removeItem(PSUB); render(); toast('Bildirimler bu cihazda kapatıldı.');
+}
+function pushHtml(){
+  let state;
+  if(!pushSupported()) state=/iphone|ipad|ipod/i.test(navigator.userAgent)?'<p class="muted" style="font-size:14px;line-height:1.5">iPhone\'da bildirim için önce SEFER\'i ana ekrana ekle (Paylaş → Ana Ekrana Ekle), sonra ana ekrandaki simgeden açıp buraya gel.</p>':'<p class="muted" style="font-size:14px">Bildirimler bu sayfada kullanılamıyor. GitHub adresindeki SEFER\'den açabilirsin.</p>';
+  else if(!cloudOn()) state='<p class="muted" style="font-size:14px;line-height:1.5">Bildirimler hesabın üzerinden gönderilir. Önce <b>Hesap</b> sekmesinden giriş yap.</p>';
+  else if(Notification.permission==='denied') state='<p class="muted" style="font-size:14px;line-height:1.5">Bu tarayıcıda bildirim izni kapalı. Tarayıcı ya da telefon ayarlarından SEFER için bildirimlere izin ver.</p>';
+  else if(pushOn()) state=`<p style="font-size:14px;margin-top:4px">${ico('check')} Bu cihazda bildirimler açık.</p>
+    <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn" data-act="ptest">Deneme bildirimi</button><button class="btn ghost" data-act="poff">Kapat</button></div>`;
+  else state='<button class="btn turq" style="margin-top:8px" data-act="pon">Bildirimleri aç</button>';
+  return `<div class="panel first"><h3>Bildirimler</h3><p class="muted" style="font-size:14px;line-height:1.5">Görevlerine verdiğin saatlerde ve vakitlerde telefonuna bildirim gelir. Uygulamayı açman gerekmez.</p>${state}
+    <label class="switch"><span><b>Zincir uyarısı</b><small>Bu saatte hedefin tamamlanmadıysa haber ver</small></span><input type="time" value="${esc(S.riskTime||'21:00')}" data-f="riskTime"></label>
+    <label class="switch"><span><b>Zincir uyarısını kullan</b><small>Kapatırsan yalnızca görev hatırlatmaları gelir</small></span><input type="checkbox" data-f="riskOn" ${S.riskOn!==false?'checked':''}></label></div>`;
+}
 
 /* ================= HATİM / KİTAP TAKİBİ ================= */
 const pagesOn = (t,k) => { const r=S.days[k]; if(!r) return 0; const e=r.done&&r.done[t.id]; return e ? (e.n||0) : ((r.prog&&r.prog[t.id])||0); };
@@ -982,16 +1099,30 @@ function vTakip(){
       <p class="muted" style="grid-column:1/-1;font-size:13px;line-height:1.45">Altın halkalar zincir hedefinin tutturulduğu günler. Kesik turkuaz halkalar mazeretli günler. Kırmızı kopukluk zincirin kırıldığı gün.</p></div>
     ${vCal()}</div>
  ${S.tasks.some(t=>t.type==='hatim')?`<div class="hsec"><h3>Hatim ve kitaplar</h3><div class="hgrid">${S.tasks.filter(t=>t.type==='hatim').map(t=>hatimCard(t)).join('')}</div></div>`:''}
+    ${insightsHtml()}
     <button class="btn ghost wsbtn" data-act="wsum" data-id="${addDays(wkStart(dk()),-7)}">${ico('cal')} Geçen haftanın özeti</button>
     <details class="fold" ${yfoldOpen?'open':''} id="yfold"><summary><span>Yıllık görünüm</span><small>${yearV||dk().slice(0,4)}</small></summary><div class="ybox">${vYear()}</div></details>
     <details class="fold" ${foldOpen?'open':''} id="fold"><summary><span>Görev görev seriler</span><small>${S.tasks.length} görev</small></summary><div class="sgrid">${cards}</div></details>`;
 }
 function openDay(k){
-  const T=S.tasks.filter(t=>scheduled(t,k)||isDone(t,k)||(isWeekly(t)&&isDone(t,k)));
-  const rows=T.map(t=>{ const e=isDone(t,k)&&S.days[k].done[t.id]; return `<div class="log"><span>${esc(t.name)}${e&&e.n>1?` <span class="muted">(${e.n} sayfa)</span>`:''}</span><b style="color:${e?'var(--turq)':'var(--mist)'}">${e?'✓':'—'}</b></div>`; }).join('');
+  const past=k<dk(), T=S.tasks.filter(t=>scheduled(t,k)||isDone(t,k)||isWeekly(t));
+  const row=t=>{ const e=isDone(t,k)&&S.days[k].done[t.id], pg=t.type==='pages'||t.type==='hatim';
+    return `<div class="drow ${e?'on':''}"><button class="dtick" data-act="dtog" data-id="${k}|${esc(t.id)}" aria-pressed="${!!e}" aria-label="${esc(t.name)}">${e?ico('check'):''}</button>
+      <span class="tx"><b>${esc(t.name)}${t.vakit?` <span class="muted">(${vLabel(t).replace(' namazı','')})</span>`:''}${isWeekly(t)?' <span class="muted">(haftalık)</span>':''}</b>${pg&&e?`<small>${e.n} sayfa</small>`:''}</span>
+      ${pg?`<input type="number" min="1" class="dpg" value="${e?e.n:''}" placeholder="sayfa" data-f="dpg" data-id="${k}|${esc(t.id)}" aria-label="Sayfa">`:''}</div>`; };
+  const st=dayState(k);
   modal(`<h3>${kDate(k).toLocaleDateString('tr-TR',{weekday:'long',day:'numeric',month:'long'})}</h3>
-    <p class="muted" style="margin:4px 0 10px">${excused(k)?'Mazeretli gün: seriler korundu.':`${T.filter(t=>isDone(t,k)).length} / ${T.length} görev yapıldı.`}</p>${rows||'<p class="muted">Bu gün planlı görev yoktu.</p>'}
+    <p class="muted" style="margin:4px 0 6px">${st==='full'?'Zincir halkası tamam.':excused(k)?'Mazeretli gün: seriler korundu.':`${T.filter(t=>!isWeekly(t)&&isDone(t,k)).length} / ${T.filter(t=>!isWeekly(t)).length} görev yapıldı.`}</p>
+    ${past?'<p class="muted" style="font-size:13px;margin-bottom:6px">Unuttuğun bir görevi işaretleyebilir ya da yanlış işaretlediğini kaldırabilirsin.</p>':''}
+    ${T.map(row).join('')||'<p class="muted">Bu gün planlı görev yoktu.</p>'}
+    ${past?`<label class="ck" style="margin-top:12px"><input type="checkbox" data-f="dex" data-id="${k}" ${excused(k)?'checked':''}> Bu günü mazeretli say <span class="muted">(bu ay ${Math.max(0,excuseLeft(k))} hak)</span></label>`:''}
     <h4 class="sub">Not</h4><textarea data-f="note" data-id="${k}" rows="3" placeholder="Bu gün için bir not yaz">${esc(noteOf(k))}</textarea>`);
+}
+function dayToggle(k,id,n){
+  const t=S.tasks.find(x=>x.id===id); if(!t||k>dk()) return; const r=rec(k);
+  if(n===undefined){ if(r.done[id]){ delete r.done[id]; if(r.prog) delete r.prog[id]; } else r.done[id]={n:1,late:true}; }
+  else if(n>0) r.done[id]={n,late:true}; else { delete r.done[id]; }
+  save(); render(); openDay(k);
 }
 
 /* ---------- ayarlar ---------- */
@@ -1047,7 +1178,7 @@ function vAyarlar(){
       <p class="muted" style="font-size:13px;margin-top:10px">Günlerini, hatırlatma saatini ya da sırasını değiştirmek için göreve dokun.</p>`;
   } else if(setTab==='hatirlatma'){
     const withTime=S.tasks.filter(t=>t.remind||(t.rv&&t.rv.v));
-    body=`<div class="panel first"><h3>Hatırlatmalar</h3><p class="muted" style="font-size:14px;line-height:1.5">Hatırlatmalar telefonunun takvimine eklenir. Görevlere saat vermek için Görevler sekmesinde göreve dokun.</p>
+    body=pushHtml()+`<div class="panel"><h3>Takvim hatırlatmaları</h3><p class="muted" style="font-size:14px;line-height:1.5">Bildirim kullanamıyorsan hatırlatmaları telefonunun takvimine de ekleyebilirsin. Görevlere saat vermek için Görevler sekmesinde göreve dokun.</p>
       <label class="switch"><span><b>Günlük özet hatırlatması</b><small>Her gün bu saatte tüm görevler için bir hatırlatma</small></span><input type="time" id="rmt" value="${esc(S.remindAll||'')}" data-f="remindAll" style="max-width:130px"></label>
       <div class="rlist2">${withTime.length?withTime.map(t=>`<div class="log"><span>${esc(t.name)} <span class="muted">(${esc(isWeekly(t)?'her gün':dayTxt(t))})</span></span><b>${esc(t.remind||rvTxt(t))}</b></div>`).join(''):'<p class="muted" style="font-size:14px">Henüz saat verilmiş görev yok.</p>'}</div>
       <button class="btn" style="margin-top:14px" data-act="ics">${ico('bell')} Takvimime ekle</button>
@@ -1102,6 +1233,9 @@ const ACT={
   treset:()=>{ if(!TM) return; TM.left=TM.total; TM.running=false; clearInterval(tmInt); saveTM(); renderTimer(); render(); },
   pg:d=>{ const i=$('pgn'); i.value=Math.max(1,Math.round(+i.value||1)+(+d)); },
   hsave:id=>saveHatim(id),
+  pon:()=>enablePush(), poff:()=>disablePush(),
+  ptest:async()=>{ const ok=await pushSync({at:new Date(Date.now()+60000).toISOString(),title:'SEFER',body:'Bildirimler çalışıyor. Allah kolaylık versin.',tag:'deneme'}); toast(ok?'Deneme bildirimi 1-2 dakika içinde gelecek.':'Gönderilemedi. Girişini ve kurulumu kontrol et.'); },
+  dtog:v=>{ const [k,id]=v.split('|'); dayToggle(k,id); },
   vcopy:id=>{ const t=S.tasks.find(x=>x.id===id); if(!t) return; let n=0, i=S.tasks.indexOf(t);
     NAMAZ.forEach(([v])=>{ if(v===t.vakit || S.tasks.some(x=>x.name===t.name&&x.vakit===v)) return;
       const c=JSON.parse(JSON.stringify(t)); c.id='t'+Date.now()+v; c.vakit=v; c.since=dk(); if(c.rv&&c.rv.v) c.rv={...c.rv,v}; delete c.hist; S.tasks.splice(++i,0,c); n++; });
@@ -1172,6 +1306,10 @@ document.addEventListener('change',e=>{
   if(f==='uiVib'||f==='uiSound'){ S.ui[f==='uiVib'?'vib':'sound']=el.checked; save(); return; }
   if(f==='remindAll'){ S.remindAll=el.value; save(); render(); return; }
   if(f==='cityId'){ S.cityId=el.value; save(); if(S.cityId) loadVakit(true); else render(); return; }
+  if(f==='dpg'){ const [k,id]=el.dataset.id.split('|'); return dayToggle(k,id,Math.max(0,Math.round(+el.value||0))); }
+  if(f==='dex'){ const k=el.dataset.id; if(el.checked&&excuseLeft(k)<=0){ el.checked=false; return toast('Bu ayki mazeret hakların bitti.'); } rec(k).excused=el.checked; save(); render(); return openDay(k); }
+  if(f==='riskTime'){ S.riskTime=el.value||'21:00'; save(); return; }
+  if(f==='riskOn'){ S.riskOn=el.checked; save(); return; }
   if(f==='note'){ rec(el.dataset.id).note=el.value; save(); return; }
   const t=S.tasks.find(x=>x.id===el.dataset.id); if(!t) return;
   if(f==='dini'){ t.dini=el.checked; }
@@ -1195,7 +1333,7 @@ if('serviceWorker' in navigator && location.protocol==='https:' && !/claude/.tes
   window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
 }
 window.addEventListener('hashchange',()=>{ readHash(); render(); });
-document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'){ tick(); if(cloudOn()&&Date.now()-lastPull>20000) pullCloud(); if(!(document.activeElement&&document.activeElement.tagName==='TEXTAREA')) render(); } });
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'){ tick(); if(cloudOn()&&Date.now()-lastPull>20000) pullCloud(); else schedulePush(); if(!(document.activeElement&&document.activeElement.tagName==='TEXTAREA')) render(); } });
 function addHatim(){ if(!S.tasks.some(t=>t.type==='hatim') && !S.hatimAdded){ S.hatimAdded=true; const i=S.tasks.findIndex(t=>t.id==='kuran');
   S.tasks.splice(i>=0?i+1:0,0,{id:'hatim',name:'Hatim',hint:'',icon:'huzur',type:'hatim',goal:0,dini:true,days:[...ALL],remind:'',since:dk(),total:604,start:0,proj:'1. hatim',projStart:dk(),hist:[],quran:true}); } }
 if(S.city&&!S.cityId){ const m={istanbul:'16741','i̇stanbul':'16741',ankara:'16709',izmir:'16742','i̇zmir':'16742',bursa:'16724',kayseri:'16748'}[S.city.trim().toLocaleLowerCase('tr')]; if(m) S.cityId=m; }
