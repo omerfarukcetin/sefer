@@ -227,6 +227,17 @@ button.zikr:active{transform:scale(.97)}
 .celebrate blockquote cite{display:block;margin-top:8px;font-style:normal;font-size:13px;font-weight:700}
 .celebrate blockquote cite a{color:#7a5a34}
 
+/* ---------- sonsuz ilerleme ---------- */
+.sefer-head{display:flex;align-items:baseline;gap:10px;margin:4px 0 6px}
+.sefer-head b{font-size:13px;font-weight:800;color:var(--ink);background:var(--saffron);padding:3px 10px;border-radius:99px}
+.sefer-head span{font-size:18px;font-weight:800}
+.bwrap{position:relative;display:block;width:58px;margin:0 auto 4px}
+.bwrap svg{margin:0}
+.btier{position:absolute;right:-4px;bottom:0;font-size:10px;font-weight:800;color:var(--ink);background:var(--saffron);border-radius:99px;padding:1px 5px;border:2px solid var(--lapis)}
+.lvtag{font-size:13px;font-weight:800;color:var(--ink);background:var(--saffron);padding:2px 9px;border-radius:99px;vertical-align:4px;margin-left:4px}
+h4.sub{margin-top:18px;font-size:16px;font-weight:800}
+.cel-next{margin-top:8px;color:var(--saffron);font-weight:700}
+
 /* ---------- ayarlar ---------- */
 .setwrap{max-width:680px}
 .seg{display:flex;flex-wrap:wrap;gap:4px;background:var(--lapis2);border:1px solid var(--lapis3);border-radius:14px;padding:4px}
@@ -497,7 +508,7 @@ function bestStreak(){ const ks=Object.keys(S.days).filter(okDay).sort(); let b=
   for(const k of ks){ c=(p&&addDays(p,1)===k)?c:0; if(qualified(k)) c++; b=Math.max(b,c); p=k; } return b; }
 function taskDays(id){ return Object.values(S.days).filter(r=>r.done&&r.done[id]).length; }
 const level = () => 1+Math.floor(Math.sqrt(S.xp/50));
-const title = l => TITLES[Math.min(l-1,TITLES.length-1)];
+const title = l => titleOf(l);
 const transferred = () => S.transfers.reduce((a,t)=>a+t.a,0);
 const balance = () => Math.max(0, S.tlEarned-transferred());
 function lastActive(res){ const ks=Object.keys(S.days).sort().reverse();
@@ -522,6 +533,11 @@ const BLD = {
   iskele:`<rect x="-22" y="-4" width="34" height="4" fill="#a0723f" ${SW}/><path d="M-18 0v6M-8 0v6M2 0v6M10 0v6" ${SW}/><circle cx="16" cy="-6" r="3" fill="none" ${SW}/>`,
   yelkenli:`<path d="M-14-4h28l-5 7h-18z" fill="#a0723f" ${SW}/><path d="M0-4v-26" ${SW}/><path d="M1-29c9 6 10 16 9 23H1z" fill="#f6eedb" ${SW}/><path d="M-1-26c-6 5-8 13-8 20h8z" fill="#f6eedb" ${SW}/>`,
   kalyon:`<path d="M-24-6h48l-7 10h-34z" fill="#7d5530" ${SW}/><rect x="14" y="-12" width="10" height="6" fill="#a0723f" ${SW}/><path d="M-8-6v-30M8-6v-24" ${SW}/><path d="M-7-34c8 4 9 13 8 22h-8z" fill="#f6eedb" ${SW}/><path d="M9-28c6 4 7 10 6 16H9z" fill="#f6eedb" ${SW}/><path d="M-8-36l8-3-8-3z" fill="#d4413a" ${SW}/>`,
+  selvi:`<path d="M0 0v-4" ${SW}/><path d="M0-4c-6-6-5-18 0-30 5 12 6 24 0 30z" fill="#3f7a46" ${SW}/>`,
+  ev:`<rect x="-9" y="-10" width="18" height="10" fill="#f6eedb" ${SW}/><path d="M-11-10L0-18l11 8z" fill="#d0553f" ${SW}/><rect x="-2.5" y="-6" width="5" height="6" fill="#1d4f8a"/>`,
+  fener:`<circle cx="0" cy="-23" r="7" fill="#f1d48a" opacity=".5"/><path d="M0 0v-20" ${SW}/><path d="M-4-20h8l-1-6h-6z" fill="#e8b03c" ${SW}/>`,
+  kule:`<path d="M-5 0l2-26h6l2 26z" fill="#f6eedb" ${SW}/><path d="M-3.6-14h7.2M-4.3-7h8.6" stroke="#d0553f" stroke-width="2"/><rect x="-4" y="-31" width="8" height="5" fill="#e8b03c" ${SW}/><path d="M-4-31l4-5 4 5z" fill="#d0553f" ${SW}/>`,
+  bayrak:`<path d="M0 0v-24" ${SW}/><path d="M0-24l12 4-12 4z" fill="#2bb3b1" ${SW}/>`,
   kup:`<path d="M-6-22h12l-2 4c5 3 7 8 6 12-1 5-5 6-10 6s-9-1-10-6c-1-4 1-9 6-12z" fill="#c9733b" ${SW}/><path d="M-7-10h14" stroke="#f1d48a" stroke-width="2"/>`,
   sandik:`<rect x="-14" y="-14" width="28" height="14" fill="#8a5a2b" ${SW}/><path d="M-14-14a14 8 0 0 1 28 0z" fill="#a8703a" ${SW}/><path d="M-14-9h28" stroke="#e8b03c" stroke-width="2"/><rect x="-3" y="-12" width="6" height="7" fill="#e8b03c" ${SW}/>`,
   hazineodasi:`<g fill="#e8b03c" ${SW}><ellipse cx="-14" cy="-3" rx="6" ry="2.5"/><ellipse cx="-14" cy="-6" rx="6" ry="2.5"/><ellipse cx="14" cy="-3" rx="6" ry="2.5"/></g><rect x="-10" y="-18" width="20" height="18" fill="#8a5a2b" ${SW}/><path d="M-10-18a10 7 0 0 1 20 0z" fill="#e8b03c" ${SW}/><circle cx="0" cy="-26" r="10" fill="#f1d48a" opacity=".45"/>`
@@ -559,7 +575,9 @@ function mapSvg(){
       if(i<b) g+=`<g transform="translate(${x} ${y})">${BLD[R.builds[i].k]}</g>`;
       else if(i===b && !locked) g+=`<g transform="translate(${x} ${y})" opacity=".8"><path d="M0 0v-14" stroke="${K}" stroke-width="1.2"/><path d="M0-14l8 2.5-8 2.5z" fill="#e8b03c" stroke="${K}" stroke-width="1"/><ellipse cx="0" cy="1" rx="9" ry="2.5" fill="none" stroke="${K}" stroke-dasharray="2 2"/></g>`;
     }
-    const label = `<g transform="translate(${R.x} ${R.y+38})"><path d="M-46-10h92l-6 10 6 10h-92l6-10z" fill="#f6eedb" stroke="${K}" stroke-width="1.2"/><text text-anchor="middle" y="4.5" font-family="Plus Jakarta Sans,sans-serif" font-weight="800" font-size="11.5" fill="${K}">${R.name}</text></g>`;
+    for(let j=0;j<Math.min(XSPOTS.length,Math.max(0,b-3));j++){ const [dx,dy]=XSPOTS[j]; g=`<g transform="translate(${R.x+dx} ${R.y+dy}) scale(.72)">${BLD[bAt(R,j+3).k]}</g>`+g; }
+    if(b>=3 && b-3<XSPOTS.length && !locked){ const [dx,dy]=XSPOTS[b-3]; g+=`<g transform="translate(${R.x+dx} ${R.y+dy})" opacity=".75"><path d="M0 0v-12" stroke="${K}" stroke-width="1.2"/><path d="M0-12l7 2-7 2z" fill="#e8b03c" stroke="${K}" stroke-width="1"/></g>`; }
+    const label = `<g transform="translate(${R.x} ${R.y+38})"><path d="M-46-10h92l-6 10 6 10h-92l6-10z" fill="#f6eedb" stroke="${K}" stroke-width="1.2"/><text text-anchor="middle" y="4.5" font-family="Plus Jakarta Sans,sans-serif" font-weight="800" font-size="11.5" fill="${K}">${R.name}</text>${b>0?`<g transform="translate(48 -9)"><circle r="9" fill="#e8b03c" stroke="${K}" stroke-width="1.2"/><text text-anchor="middle" y="3.5" font-family="Plus Jakarta Sans,sans-serif" font-weight="800" font-size="10" fill="${K}">${b}</text></g>`:''}</g>`;
     const fog = locked ? `<g><g fill="#e9edf3" opacity=".96"><circle cx="${R.x-34}" cy="${R.y+6}" r="28"/><circle cx="${R.x}" cy="${R.y-10}" r="36"/><circle cx="${R.x+34}" cy="${R.y+8}" r="28"/><circle cx="${R.x-8}" cy="${R.y+26}" r="30"/><circle cx="${R.x+18}" cy="${R.y+30}" r="26"/></g>
       <g transform="translate(${R.x-10} ${R.y-8}) scale(.85)" fill="none" stroke="#5c6a80" stroke-width="2">${IC.lock}</g>
       <text x="${R.x}" y="${R.y+28}" text-anchor="middle" font-family="Plus Jakarta Sans,sans-serif" font-weight="700" font-size="12" fill="#5c6a80">Seviye ${R.unlock}'de açılır</text></g>` : '';
@@ -604,21 +622,20 @@ function mapSvg(){
 }
 
 function routeSvg(q){
-  const k=Math.floor(q/7), into=q%7, gap=96, top=40, W=360;
-  const pts = KONAK.map((_,i)=>[i%2?250:110, top+i*gap]);
+  const k=Math.floor(q/7), into=q%7, gap=96, top=40, W=360, sf=Math.floor(k/12), base=sf*12, lq=q-base*7;
+  const pts = Array.from({length:12},(_,i)=>[i%2?250:110, top+i*gap]);
   let d=`M${pts[0][0]} ${pts[0][1]}`;
   for(let i=1;i<pts.length;i++){ const [x0,y0]=pts[i-1],[x1,y1]=pts[i]; d+=` C${x0} ${y0+gap/2} ${x1} ${y1-gap/2} ${x1} ${y1}`; }
   const H = top+(pts.length-1)*gap+50;
-  // ilerleme yolu: tamamlanan konaklar + şimdiki arada kısmi
-  const nodes = KONAK.map((K2,i)=>{ const [x,y]=pts[i], ok=i<k, cur=i===k; const left = x>W/2;
+  const nodes = pts.map(([x,y],i)=>{ const gi=base+i, K2=konak(gi), ok=gi<k, cur=gi===k, left=x>W/2;
     const tx = left? x-26 : x+26, anchor = left?'end':'start';
     return `<g><circle cx="${x}" cy="${y}" r="${cur?17:14}" fill="${ok?'#e8b03c':cur?'#2bb3b1':TC.node}" stroke="${ok?'#f1d48a':cur?'#bff0ee':TC.nodeS}" stroke-width="2"/>
       <text x="${x}" y="${y+5}" text-anchor="middle" font-family="Plus Jakarta Sans,sans-serif" font-weight="800" font-size="14" fill="${ok||cur?'#13294b':TC.numDim}">${i+1}</text>
-      <text x="${tx}" y="${y-2}" text-anchor="${anchor}" font-family="Plus Jakarta Sans,sans-serif" font-weight="800" font-size="17" fill="${ok||cur?TC.name:TC.nameDim}">${K2.n}</text>
+      <text x="${tx}" y="${y-2}" text-anchor="${anchor}" font-family="Plus Jakarta Sans,sans-serif" font-weight="800" font-size="17" fill="${ok||cur?TC.name:TC.nameDim}">${esc(K2.n)}</text>
       <text x="${tx}" y="${y+16}" text-anchor="${anchor}" font-family="Plus Jakarta Sans,sans-serif" font-size="12.5" fill="${ok?TC.sub:cur?TC.subCur:TC.subDim}">${ok?wrapShort(K2.p):cur?`${7-into} gün kaldı`:''}</text></g>`; }).join('');
-  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Sefer yolu">
+  return `<div class="sefer-head"><b>Sefer ${sf+1}</b><span>${esc(seferName(sf))}</span></div><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Sefer yolu">
     <path d="${d}" fill="none" stroke="${TC.track}" stroke-width="5" stroke-linecap="round"/>
-    <path d="${d}" fill="none" stroke="#e8b03c" stroke-width="5" stroke-linecap="round" pathLength="${(KONAK.length-1)*7}" stroke-dasharray="${Math.min(q,(KONAK.length-1)*7)} 9999"/>
+    <path d="${d}" fill="none" stroke="#e8b03c" stroke-width="5" stroke-linecap="round" pathLength="${11*7}" stroke-dasharray="${Math.min(lq,11*7)} 9999"/>
     ${nodes}</svg>`;
 }
 function wrapShort(s){ return esc(s.length>30? s.slice(0,29)+'…' : s); }
@@ -646,6 +663,67 @@ const STORY = [ // konak metinleri: kullanıcının vereceği kaynaklarla deği�
   "Gül bahçesine vardın. Yolun dikenlerinden geçtin; şimdi emeğinin çiçek açtığını görüyorsun.",
   "Bu seferin son konağındasın. Neredeyse bir yıl her gün yürüdün. Yeni bir sefere hazırsın."
 ];
+/* ================= SONSUZ İLERLEME ================= */
+const roman = n => { const m=[[10,'X'],[9,'IX'],[5,'V'],[4,'IV'],[1,'I']]; let s=''; for(const [v,r] of m) while(n>=v){ s+=r; n-=v; } return s; };
+const SEFERS = [
+  {n:'Çöl Seferi', k:KONAK},
+  {n:'İpek Yolu Seferi', k:['Semerkant Kapısı','Buhara Hanı','Pamuk Tarlaları','Ceylan Vadisi','Taş Kervansaray','İpek Çarşısı','Kaşgar Yolu','Rüzgâr Geçidi','Çay Konağı','Yıldız Rasathanesi','Çini Atölyesi','Semerkant Meydanı']},
+  {n:'Deniz Seferi', k:['İlk İskele','Martı Burnu','Fener Adası','Mercan Koyu','Rüzgârlı Liman','Usta Tersanesi','Fırtına Burnu','Sakin Körfez','Balıkçı Köyü','İnci Adası','Kaptan Hanı','Büyük Liman']},
+  {n:'Dağ Seferi', k:['Yayla Yolu','Çam Ormanı','Kartal Kayası','Pınar Başı','Çoban Kulübesi','Sedir Geçidi','Bulut Tepesi','Kar Köprüsü','Dağ Köyü','Kayalık Patika','Gözcü Kulesi','Zirve']}
+];
+const GENP = [
+  'Yeni bir konak, yeni bir başlangıç. Dünkü adımın bugünkü yolunu kolaylaştırdı.',
+  'Yorgunluk geçer, attığın adım kalır.',
+  'Yol uzun ama artık yolun nasıl yüründüğünü biliyorsun.',
+  'Küçük ama her gün atılan adımlar en uzun yolları bitirir.',
+  'Bu konakta dinlen; yarın yine yoldasın.',
+  'Geride bıraktığın her gün, önündeki yolu aydınlatıyor.',
+  'Sebat eden yolcu, hızlı ama yarı yolda kalandan önce varır.',
+  'Yeni manzaralar, aynı niyet.',
+  'Bugün de vazgeçmedin. Bu konak bunun hatırası.',
+  'Kervan yürür; sen de onunla birlikte büyürsün.',
+  'Her konak, olmak istediğin kişiye bir adım daha yakın.',
+  'Seferin sonu yeni bir seferin başıdır.'
+];
+function seferName(s){ const th=SEFERS[s%SEFERS.length], round=Math.floor(s/SEFERS.length); return th.n+(round?' '+roman(round+1):''); }
+function konak(i){
+  const s=Math.floor(i/12), th=SEFERS[s%SEFERS.length], K=th.k[i%12];
+  return {n: typeof K==='string'?K:K.n, p: (typeof K==='object'&&s===0)?K.p:GENP[i%12], story: s===0?STORY[i%12]:GENP[i%12], sefer:s, seferName:seferName(s), local:i%12};
+}
+const TITLES2 = ['Yolcu','Talebe','Sebatkâr','Kâşif','Rehber','Sefer ustası','Bilge','Pîr'];
+function titleOf(l){ return l<=TITLES2.length ? TITLES2[l-1] : `Pîr ${roman(l-TITLES2.length+1)}`; }
+
+/* bölgeler: ilk üç yapıdan sonra sonsuz gelişim */
+const DECO = {
+  gonul:[['Selvi','selvi'],['Şadırvan','cesme'],['Çiçek bahçesi','gul'],['Misafirhane','ev'],['Kandil yolu','fener']],
+  ilim:[['Okuma köşkü','ev'],['Selvi','selvi'],['Yazı atölyesi','kitapevi'],['Kandil yolu','fener'],['Bahçe','gul']],
+  kuvvet:[['Çam','selvi'],['Gözcü kulesi','kule'],['Kamp','ev'],['Bayrak','bayrak'],['Meşale','fener']],
+  liman:[['Balıkçı evi','ev'],['Deniz feneri','kule'],['Kayık','yelkenli'],['Meşale','fener'],['Rıhtım','iskele']]
+};
+function bAt(R,i){ if(i<3) return R.builds[i]; const L=DECO[R.id], j=(i-3)%L.length, round=Math.floor((i-3)/L.length);
+  return {n:L[j][0]+(round?' '+roman(round+1):''), k:L[j][1], c:160+60*(i-2), deco:true}; }
+const XSPOTS=[[-50,-12],[48,-16],[-44,26],[44,30],[-16,-36],[20,-42],[-60,8],[60,6],[-26,42],[28,46]];
+
+/* kademeli, bitmeyen rozetler */
+function tiers(base,step){ return i => i<base.length ? base[i] : base[base.length-1]+step*(i-base.length+1); }
+function badgeDefs(){
+  const q=qualifiedCount(), bs=bestStreak(), built=Object.values(S.builds).reduce((a,b)=>a+b,0), wk=Object.values(S.weeks||{}).filter(w=>w.claimed).length;
+  return [
+    ['route','#e8b03c','Yol',q,tiers([1,30,100,365],365),g=>`${g} gün yol`],
+    ['flame','#e0674f','Seri',bs,tiers([7,30,100,365],365),g=>`${g} gün seri`],
+    ['huzur','#2bb3b1',"Kur'an",taskDays('kuran'),tiers([40,100,365],365),g=>`${g} gün Kur'an`],
+    ['huzur','#4fd1c5','Tesbihat',taskDays('tesbih'),tiers([40,100,365],365),g=>`${g} gün tesbihat`],
+    ['ilim','#8fa8ff','Dini kitap',taskDays('dinikitap'),tiers([30,100,365],365),g=>`${g} gün dini kitap`],
+    ['ilim','#a99bff','Kitap',taskDays('kitap'),tiers([30,100,365],365),g=>`${g} gün kitap`],
+    ['guc','#e0674f','Spor',taskDays('spor'),tiers([30,100,365],365),g=>`${g} gün spor`],
+    ['lisan','#6cc28a','İngilizce',taskDays('ing'),tiers([30,100,365],365),g=>`${g} gün İngilizce`],
+    ['map','#e8b03c','Mimar',built,tiers([1,10,25,50],25),g=>`${g} yapı`],
+    ['pin','#d4413a','Konak',Math.floor(q/7),tiers([1,12,24,48],24),g=>`${g} konak`],
+    ['route','#2bb3b1','Haftalık',wk,tiers([1,4,12,52],52),g=>`${g} haftalık hedef`],
+    ['tl','#e8b03c','Hazine',transferred(),tiers([1,1000,5000,10000],10000),g=>g===1?'İlk aktarım':`${tl(g)} birikim`]
+  ];
+}
+
 const weekStart = k => { const [y,m,d]=k.split('-').map(Number), dt=new Date(y,m-1,d); return addDays(k,-((dt.getDay()+6)%7)); };
 function weekCount(k=dk()){ const s=weekStart(k); let n=0; for(let i=0;i<7;i++) if(qualified(addDays(s,i))) n++; return n; }
 const WEEK_BONUS = {xp:100, each:15};
@@ -656,35 +734,29 @@ function checkWeek(){ // haftalık hedef ödülünü verir ya da geri alır; ver
   return false;
 }
 function badgeList(){
-  const q=qualifiedCount(), bs=bestStreak(), built=Object.values(S.builds).reduce((a,b)=>a+b,0);
-  return [
-    ['flame','#e8b03c','İlk adım',q,1],['flame','#e0674f','7 gün seri',bs,7],['flame','#d4413a','30 gün seri',bs,30],['flame','#ff9a3d','100 gün seri',bs,100],
-    ['huzur','#2bb3b1',"40 gün Kur'an",taskDays('kuran'),40],['huzur','#4fd1c5','40 gün tesbihat',taskDays('tesbih'),40],
-    ['guc','#e0674f','30 gün spor',taskDays('spor'),30],['lisan','#6cc28a','30 gün İngilizce',taskDays('ing'),30],
-    ['ilim','#8fa8ff','30 gün kitap',taskDays('kitap'),30],['map','#e8b03c','İlk yapı',built,1],
-    ['tl','#e8b03c','İlk aktarım',S.transfers.length,1],['huzur','#2bb3b1','Vadi tamam',S.builds.gonul,3]
-  ].map(([i,c,n,cur,goal])=>({i,c,n,cur:Math.min(cur,goal),goal,ok:cur>=goal}));
+  return badgeDefs().map(([i,c,n,val,T,lab])=>{ let t=0; while(val>=T(t)) t++; const goal=T(t), prev=t?T(t-1):0;
+    return {i,c,n:t?lab(prev):lab(goal),cur:val,goal,ok:t>0,tier:t,next:lab(goal)}; });
 }
 function nextBuild(){ // en yakın inşa hedefi
   const lv=level(); let best=null;
-  for(const R of REGIONS){ if(lv<R.unlock) continue; const b=S.builds[R.id], B=R.builds[b]; if(!B) continue;
+  for(const R of REGIONS){ if(lv<R.unlock) continue; const b=S.builds[R.id], B=bAt(R,b);
     const left=Math.max(0,B.c-S.res[R.res]); if(!best||left/B.c<best.left/best.B.c) best={R,B,left}; }
   return best;
 }
-const canBuildAny = () => { const nb=nextBuild(); return REGIONS.some(R=>level()>=R.unlock && R.builds[S.builds[R.id]] && S.res[R.res]>=R.builds[S.builds[R.id]].c); };
+const canBuildAny = () => { const nb=nextBuild(); return REGIONS.some(R=>level()>=R.unlock && S.res[R.res]>=bAt(R,S.builds[R.id]).c); };
 function multGoal(){ const s=streak(); if(s>=30) return {txt:'En yüksek çarpandasın: ×2',cur:1,goal:1};
   const g=s>=7?30:7, m=s>=7?'×2':'×1,5'; return {txt:`${g-s} gün daha devam edersen birikim hakların ${m} olur`,cur:s,goal:g}; }
 function goalsPanel(){
   const wk=weekCount(), wg=+S.weekGoal||5, claimed=(S.weeks||{})[weekStart(dk())]?.claimed;
   const mg=multGoal(), nb=nextBuild();
-  const bad=badgeList().filter(b=>!b.ok).sort((a,b)=>b.cur/b.goal-a.cur/a.goal)[0];
+  const bad=badgeList().sort((a,b)=>b.cur/b.goal-a.cur/a.goal)[0];
   const row=(icon,color,title,sub,cur,goal,act,id)=>`<button class="grow" ${act?`data-act="${act}" data-id="${id||''}"`:''}><span class="medal sm" style="--c:${color}">${ico(icon)}</span>
     <span class="tx"><b>${title}</b><small>${sub}</small><span class="mbar"><i style="width:${Math.round(Math.min(1,cur/(goal||1))*100)}%;background:${color}"></i></span></span></button>`;
   let h='';
   h+=row('route','#e8b03c','Haftalık hedef', claimed?`Tamamlandı. Bonus alındı: +${WEEK_BONUS.xp} XP ve her kaynaktan +${WEEK_BONUS.each}`:`Bu hafta ${wk} / ${wg} konak günü. Ödül: +${WEEK_BONUS.xp} XP, her kaynaktan +${WEEK_BONUS.each}`, wk, wg);
   h+=row('flame','#e0674f','Seri bonusu', mg.txt, mg.cur, mg.goal);
   if(nb) h+=row(nb.R.res, RES[nb.R.res].color, nb.left?`${nb.B.n} için ${nb.left} ${RES[nb.R.res].name} kaldı`:`${nb.B.n} inşa edilebilir`, nb.left?nb.R.name:`${nb.R.name} bölgesine git ve inşa et`, S.res[nb.R.res], nb.B.c, 'tab','harita');
-  if(bad) h+=row(bad.i, bad.c, `${bad.n} rozeti`, `${bad.cur} / ${bad.goal}`, bad.cur, bad.goal, 'tab','sefer');
+  if(bad) h+=row(bad.i, bad.c, `${bad.next} rozeti`, `${bad.cur} / ${bad.goal}`, bad.cur, bad.goal, 'tab','sefer');
   return `<div class="panel goals"><h3>Yakın hedefler</h3>${h}</div>`;
 }
 function celebrate(ev){
@@ -697,15 +769,16 @@ function celebrate(ev){
   if(ev.level){ const op=REGIONS.filter(x=>x.unlock===ev.level).map(x=>x.name);
     top=`<div class="cel-lv"><b>${ev.level}</b></div>`; title=`Seviye ${ev.level}: ${title_(ev.level)}`;
     body=op.length?`<p>${op.join(', ')} haritada sisten çıktı. Biriken kaynaklarınla orada da inşa edebilirsin.</p>`:`<p>Yolculuğunda yeni bir unvan kazandın.</p>`; }
-  else if(ev.konak!=null){ const K2=KONAK[ev.konak];
-    top=`<div class="cel-konak"><span></span><b>${ev.konak+1}</b></div>`; title=`Yeni konak: ${K2.n}`;
+  else if(ev.konak!=null){ const K2=konak(ev.konak), done=K2.local===11;
+    top=`<div class="cel-konak"><span></span><b>${K2.local+1}</b></div>`; title= done ? `${K2.seferName} tamamlandı` : `Yeni konak: ${K2.n}`;
+    if(done) top+=`<p class="cel-next">Yeni sefer başlıyor: <b>${seferName(K2.sefer+1)}</b></p>`;
     const a=abhFor(ev.konak);
-    body = a ? `<blockquote>${esc(a.x)}<cite><a href="${esc(a.l)}" target="_blank" rel="noopener">${esc(a.t)}, huzurpinari.com</a></cite></blockquote>` : `<blockquote>${esc(STORY[ev.konak]||K2.p)}</blockquote>`; }
+    body = a ? `<blockquote>${esc(a.x)}<cite><a href="${esc(a.l)}" target="_blank" rel="noopener">${esc(a.t)}, huzurpinari.com</a></cite></blockquote>` : `<blockquote>${esc(K2.story)}</blockquote>`; }
   else { top=`<div class="cel-lantern">${lanternSvg(1)}</div>`; title='Bugünün konağına vardın'; body=`<p>Kandilin tam yandı, kervanın bir adım ilerledi.</p>`; }
   const week = ev.week ? `<div class="cel-note">${ico('route')} Haftalık hedef tamam: +${WEEK_BONUS.xp} XP ve her kaynaktan +${WEEK_BONUS.each}</div>` : '';
   modal(`<div class="celebrate">${top}<h3>${title}</h3>${body}
     <div class="reslist" style="justify-content:center">${gains}</div>${week}
-    <div class="cel-stats"><div><b>${s}</b><small>günlük seri</small></div><div><b>${into}/7</b><small>${KONAK[k]?KONAK[k].n+' konağına':'sonraki konağa'}</small></div><div><b>${lv}</b><small>seviye</small></div></div>
+    <div class="cel-stats"><div><b>${s}</b><small>günlük seri</small></div><div><b>${into}/7</b><small>${konak(k).n} konağına</small></div><div><b>${lv}</b><small>seviye</small></div></div>
     <p class="muted" style="font-size:14px">${multGoal().txt}.</p></div>`);
   if(S.ui.fx!==false) setTimeout(()=>{ const el=document.querySelector('.celebrate h3'); if(el){ burst(el,'#e8b03c'); burst(el,'#2bb3b1'); } },250);
 }
@@ -765,7 +838,7 @@ function closeModal(){ $('modal').classList.remove('open'); }
 function applyEarn(e,s){ S.res[e.res]=Math.max(0,(S.res[e.res]||0)+s*e.amt); S.tlEarned=Math.max(0,S.tlEarned+s*e.tl); S.xp=Math.max(0,S.xp+s*e.xp); }
 function afterGain(before){
   const week=checkWeek(), lv=level(), q=qualifiedCount();
-  const ev={level: lv>before.lv?lv:null, konak: (q>before.q && q%7===0 && KONAK[q/7-1]) ? q/7-1 : null, week};
+  const ev={level: lv>before.lv?lv:null, konak: (q>before.q && q%7===0) ? q/7-1 : null, week};
   if(ev.level||ev.konak!=null||q>before.q){ save(); celebrateAt=Date.now(); setTimeout(()=>celebrate(ev),60); }
   else if(week) toast(`Haftalık hedef tamam: +${WEEK_BONUS.xp} XP ve her kaynaktan +${WEEK_BONUS.each}`);
 }
@@ -948,7 +1021,7 @@ function vHarita(){
   const lv=level();
   const list=REGIONS.map(R=>{ const lk=lv<R.unlock, rc=RES[R.res];
     return `<button class="rrow" data-act="${lk?'locked':'region'}" data-id="${R.id}"><span class="medal" style="--c:${rc.color}">${ico(lk?'lock':R.res)}</span>
-      <span class="tx"><b>${R.name}</b><small>${lk?`Seviye ${R.unlock}'de açılır`:`${S.builds[R.id]} / 3 yapı`}</small></span>
+      <span class="tx"><b>${R.name}</b><small>${lk?`Seviye ${R.unlock}'de açılır`:S.builds[R.id]<3?`${S.builds[R.id]} / 3 ana yapı`:`Seviye ${S.builds[R.id]}, ${S.builds[R.id]-3} ek yapı`}</small></span>
       <span class="rpips">${[0,1,2].map(i=>`<i class="${i<S.builds[R.id]?'on':''}"></i>`).join('')}</span></button>`; }).join('');
   return `<header class="phead"><h1>Dünyan</h1><p>Kazandığın kaynaklarla bölgelerine yapı inşa et.</p></header><div class="cols v-harita"><div class="a-map"><div class="mapwrap">${mapSvg()}</div></div><div class="a-side">
     <div class="reslist">${Object.entries(RES).map(([k,v])=>`<span class="res" style="--c:${v.color}">${ico(k)}<em>${S.res[k]}</em> ${v.name}</span>`).join('')}</div>
@@ -994,8 +1067,8 @@ function vSefer(){
     <div class="weekbar"><div class="between"><b>Bu hafta</b><span class="muted">${wk} / ${wg} konak günü</span></div><div class="wdots">${[0,1,2,3,4,5,6].map(i=>{ const k2=addDays(weekStart(dk()),i); return `<i class="${qualified(k2)?'on':excused(k2)?'ex':''} ${k2===dk()?'today':''}">${['Pt','Sa','Ça','Pe','Cu','Ct','Pz'][i]}</i>`; }).join('')}</div></div></div>
     <div class="a-cal">${vCal()}</div>
     <div class="a-route route">${routeSvg(q)}</div>
-    <div class="a-badges group"><div class="ghead"><h3>Rozetler</h3><small>${B.filter(b=>b.ok).length} / ${B.length}</small></div>
-    <div class="badges">${B.map(b=>`<div class="badge ${b.ok?'':'no'}">${badgeSvg(b.i,b.c,b.ok)}${b.n}${b.ok?'':`<span class="bprog"><span class="mbar"><i style="width:${Math.round(b.cur/b.goal*100)}%;background:${b.c}"></i></span>${b.cur}/${b.goal}</span>`}</div>`).join('')}</div></div></div>`;
+    <div class="a-badges group"><div class="ghead"><h3>Rozetler</h3><small>${B.reduce((a,b)=>a+b.tier,0)} kademe</small></div>
+    <div class="badges">${B.map(b=>`<div class="badge ${b.ok?'':'no'}"><span class="bwrap">${badgeSvg(b.i,b.c,b.ok)}${b.tier>1?`<span class="btier">${roman(b.tier)}</span>`:''}</span>${b.n}<span class="bprog"><span class="mbar"><i style="width:${Math.round(Math.min(1,b.cur/b.goal)*100)}%;background:${b.c}"></i></span>${b.ok?'Sonraki: ':''}${b.cur>9999?tl(b.cur):b.cur}/${b.goal>9999?tl(b.goal):b.goal}</span></div>`).join('')}</div></div></div>`;
 }
 function vHazine(){
   const T=transferred(), bal=balance(), g=S.goal, pct=Math.min(100,Math.round(T/(g.amt||1)*100)), m=mult();
@@ -1128,11 +1201,14 @@ const ACT={
     const rows=R.builds.map((B,i)=>{ const st=i<b?'built':i===b?'next':'lock';
       return `<div class="brow ${st}">${bldSvg(B.k)}<div class="tx"><b>${B.n}</b><small style="color:${st==='built'?'var(--turq)':'var(--mist)'}">${st==='built'?ico('check')+' İnşa edildi':`${B.c} ${rc.name}`}</small></div>
         ${st==='next'?`<button class="btn" data-act="build" data-id="${id}" ${have<B.c?'disabled':''}>İnşa et</button>`:''}</div>`; }).join('');
-    modal(`<h3>${R.name}</h3><p class="muted" style="margin-top:4px">${R.desc}</p>
-      <p style="margin-top:12px;display:flex;align-items:center;gap:6px;color:${rc.color};font-weight:700">${ico(R.res)} <span style="color:var(--white)">Elinde ${have} ${rc.name}</span></p>${rows}
-      ${b>=3?'<p class="muted" style="margin-top:12px">Bu bölgeyi tamamladın. Yeni yapılar sonraki sürümde geliyor.</p>':''}`);
+    let more='';
+    if(b>=3){ const N=bAt(R,b);
+      more=`<h4 class="sub">Bölgeyi geliştir</h4><p class="muted" style="font-size:14px">Ana yapılar tamam. Bundan sonra bölgen sonsuza kadar büyür. Şu an ${b-3} ek yapı var.</p>
+      <div class="brow next">${bldSvg(N.k)}<div class="tx"><b>${N.n}</b><small style="color:var(--mist)">${N.c} ${rc.name}</small></div><button class="btn" data-act="build" data-id="${id}" ${have<N.c?'disabled':''}>İnşa et</button></div>`; }
+    modal(`<h3>${R.name} <span class="lvtag">Sv. ${b}</span></h3><p class="muted" style="margin-top:4px">${R.desc}</p>
+      <p style="margin-top:12px;display:flex;align-items:center;gap:6px;color:${rc.color};font-weight:700">${ico(R.res)} <span style="color:var(--white)">Elinde ${have} ${rc.name}</span></p>${rows}${more}`);
   },
-  build:(id,el)=>{ const R=REG[id], B=R.builds[S.builds[id]]; if(!B||S.res[R.res]<B.c) return;
+  build:(id,el)=>{ const R=REG[id], B=bAt(R,S.builds[id]); if(!B||S.res[R.res]<B.c) return;
     S.res[R.res]-=B.c; S.builds[id]++; save(); burst(el,RES[R.res].color); toast(`${B.n} inşa edildi.`); render(); ACT.region(id); },
   transfer:()=>{ const a=Math.round(+$('tamt').value||0), bal=balance();
     if(a<=0) return toast('Aktardığın tutarı yaz.');
