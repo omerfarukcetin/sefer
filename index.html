@@ -249,6 +249,17 @@ button.zikr:active{transform:scale(.97)}
 .cd.link:before{content:"";position:absolute;left:-8px;top:50%;width:10px;height:4px;margin-top:-2px;background:var(--saffron);border-radius:2px}
 .cal .cd.full{background:var(--saffron);border-color:var(--saffron);color:var(--ink)}
 .calleg i.full{background:var(--saffron)!important}
+.hsec{margin-top:18px}.hsec h3{font-size:18px;margin:0 2px 10px}
+.hgrid{display:grid;gap:10px}
+.hcard{background:var(--lapis2);border:1px solid var(--lapis3);border-radius:var(--r-lg);padding:16px}
+.sheet .hcard{margin-top:12px;background:var(--lapis)}
+.hname{display:flex;align-items:center;gap:10px}.hname b{display:block;font-size:16px}.hname small{display:block;color:var(--mist);font-size:13px;font-weight:600}
+.hpct{font-size:26px;font-weight:800;color:var(--saffron)}
+.hmeta{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:10px;font-size:14px;color:var(--mist);font-weight:600}.hmeta b{color:var(--white)}
+.heta{margin-top:8px;font-size:14px;line-height:1.45}.heta b{color:var(--saffron)}
+.hedit{display:grid;gap:12px;padding:12px;border-radius:var(--r-md);background:var(--lapis);border:1px solid var(--lapis3)}
+.task .tx .mbar{margin-top:6px;max-width:220px}
+@media (min-width:700px){ .hgrid{grid-template-columns:1fr 1fr} }
 .fold{margin-top:16px;background:var(--lapis2);border:1px solid var(--lapis3);border-radius:var(--r-lg)}
 .fold summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:16px;font-weight:800;font-size:16px}
 .fold summary::-webkit-details-marker{display:none}
@@ -459,7 +470,7 @@ const EXCUSES = 2;
 const KEY='sefer-v1';
 function defaults(){ return {v:2, tasks:JSON.parse(JSON.stringify(DEF_TASKS)).map(t=>({...t,days:[...ALL],remind:''})), days:{}, remindAll:'21:00',
   ui:{theme:'dark',font:1,vib:true,sound:true}}; }
-function merge(o){ const d=defaults(); return {...o, v:2, tasks:o.tasks||d.tasks, days:o.days||{}, remindAll:o.remindAll||d.remindAll, ui:{...d.ui,...(o.ui||{})}}; }
+function merge(o){ const d=defaults(); return {...o, v:2, hatimAdded:o.hatimAdded, tasks:o.tasks||d.tasks, days:o.days||{}, remindAll:o.remindAll||d.remindAll, ui:{...d.ui,...(o.ui||{})}}; }
 function load(){ try{ const r=localStorage.getItem(KEY); if(r) return merge(JSON.parse(r)); }catch(e){} return defaults(); }
 function save(){ try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} }
 let S=load();
@@ -558,10 +569,12 @@ function completeTask(id,n=1){
 function undoTask(id){ const r=rec(); if(!r.done[id]) return; delete r.done[id]; if(r.prog) delete r.prog[id]; save(); render(); }
 function toggleTask(id){
   const t=S.tasks.find(x=>x.id===id); if(!t) return;
+  if(rec().done[id] && t.type==='hatim') return openHatim(id);
   if(rec().done[id]) return undoTask(id);
   if(t.type==='count') return openCounter(id);
   if(t.type==='timer') return openTimer(id);
   if(t.type==='pages') return openPages(id);
+  if(t.type==='hatim') return openHatim(id);
   completeTask(id);
 }
 
@@ -634,6 +647,63 @@ function savePages(id,n){
   closeModal(); completeTask(id,total); toast(goal?`${total} sayfa, günlük hedef tamam.`:`${total} sayfa kaydedildi.`);
 }
 
+/* ================= HATİM / KİTAP TAKİBİ ================= */
+const pagesOn = (t,k) => { const r=S.days[k]; if(!r) return 0; const e=r.done&&r.done[t.id]; return e ? (e.n||0) : ((r.prog&&r.prog[t.id])||0); };
+function hProg(t){ // projenin durumu
+  const total=Math.max(1,+t.total||604), ps=t.projStart||dk(); let read=0;
+  Object.keys(S.days).forEach(k=>{ if(k>=ps) read+=pagesOn(t,k); });
+  const cur=Math.min(total,(+t.start||0)+read);
+  // hız: son 14 gün (proje başlangıcından eski değil); bugün henüz okunmadıysa bugün sayılmaz
+  const today=dk(), ws=[addDays(today,-13),ps].sort()[1]; let wp=0, days=0;
+  for(let k=ws;k<=today;k=addDays(k,1)){ const p=pagesOn(t,k); if(k===today && !p) break; wp+=p; days++; }
+  const pace = days ? wp/days : 0, left=total-cur;
+  const etaDays = pace>0 ? Math.ceil(left/pace) : null;
+  return {total,cur,left,pct:Math.floor(cur/total*100),pace,etaDays,eta: etaDays!=null ? addDays(today,etaDays) : null, juz: t.quran ? Math.min(30,Math.floor(Math.max(0,cur-1)/20)+1) : null, read};
+}
+const fmtDate = k => kDate(k).toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'});
+const fmt1 = n => (Math.round(n*10)/10).toLocaleString('tr-TR');
+function etaText(h){
+  if(h.left<=0) return 'Tamamlandı.';
+  if(!h.pace) return 'Bitiş tahmini için birkaç gün okuman gerekiyor.';
+  return `Bu hızla (günde ${fmt1(h.pace)} sayfa) <b>${fmtDate(h.eta)}</b> tarihinde biter, ${h.etaDays} gün sonra.`;
+}
+function hatimCard(t,compact){
+  const h=hProg(t), n=(t.hist||[]).length;
+  return `<div class="hcard"><div class="between"><span class="hname"><span class="medal sm" style="--c:${col(t)}">${ico(t.icon)}</span><span><b>${esc(t.name)}</b><small>${esc(t.proj||'')}</small></span></span><span class="hpct">%${h.pct}</span></div>
+    <div class="bar big" style="margin-top:12px"><i style="width:${h.pct}%"></i></div>
+    <div class="hmeta"><span>Sayfa <b>${h.cur}</b> / ${h.total}</span>${h.juz?`<span><b>${h.juz}.</b> cüz</span>`:''}<span>Kalan <b>${h.left}</b> sayfa</span></div>
+    <p class="heta">${etaText(h)}</p>
+    ${compact?'':`<p class="muted" style="font-size:13px;margin-top:6px">${h.left>0?`30 günde bitirmek için günde ${Math.ceil(h.left/30)} sayfa okuman yeterli.`:''}${n?` Tamamlanan: ${n} ${t.quran?'hatim':'kitap'}.`:''}</p>`}</div>`;
+}
+let pgMode='count';
+function openHatim(id){
+  const t=S.tasks.find(x=>x.id===id), h=hProg(t), r=rec(), goal=+t.goal||0, have=(r.prog&&r.prog[id])||0, def=goal?Math.max(1,goal-have):1;
+  modal(`<h3>${esc(t.name)}</h3>${hatimCard(t,true)}
+    ${goal?`<p class="muted" style="margin-top:10px;font-size:14px">Bugünkü hedef ${goal} sayfa. ${have?`${have} sayfa okudun.`:''}</p>`:''}
+    <div style="margin-top:14px">${seg(pgMode,[['count','Okuduğum sayfa sayısı'],['page','Kaldığım sayfa']],'pgMode')}</div>
+    <div class="stepper">${pgMode==='count'?`<button class="btn ghost" data-act="pg" data-id="-1" aria-label="Azalt">−</button>`:''}
+      <input id="pgn" type="number" inputmode="numeric" min="1" value="${pgMode==='count'?def:Math.min(h.total,h.cur+def)}" aria-label="${pgMode==='count'?'Sayfa sayısı':'Kaldığın sayfa'}">${pgMode==='count'?`<button class="btn ghost" data-act="pg" data-id="1" aria-label="Artır">+</button>`:''}</div>
+    <p class="muted" style="text-align:center;font-size:13px">${pgMode==='count'?'Bugün okuduğun sayfa sayısını yaz.':`Şu an ${h.cur}. sayfadasın. Okumayı bıraktığın sayfanın numarasını yaz.`}</p>
+    <button class="btn turq" style="width:100%;margin-top:12px" data-act="hsave" data-id="${esc(id)}">Kaydet</button>
+    ${(r.done[id]||have)?`<button class="btn ghost" style="width:100%;margin-top:8px" data-act="hundo" data-id="${esc(id)}">Bugünkü kaydı sil (${r.done[id]?r.done[id].n:have} sayfa)</button>`:''}`);
+  $('pgn').dataset.task=id;
+}
+function saveHatim(id){
+  const t=S.tasks.find(x=>x.id===id), h=hProg(t); let v=Math.round(+$('pgn').value||0);
+  const n = pgMode==='count' ? v : v-h.cur;
+  if(n<=0) return toast(pgMode==='count'?'Bir sayfa sayısı yaz.':`Kaldığın sayfa ${h.cur}'den büyük olmalı.`);
+  const r=rec(), goal=+t.goal||0; r.prog=r.prog||{};
+  const already = r.done[id] ? r.done[id].n||0 : (r.prog[id]||0);
+  const total = already + Math.min(n, h.left);
+  if(r.done[id]){ r.done[id].n=total; } else { r.prog[id]=total; if(!goal || total>=goal){ r.done[id]={n:total}; vib(12); } }
+  const after=hProg(t);
+  if(after.left<=0){ (t.hist=t.hist||[]).push({name:t.proj||'',start:t.projStart||'',end:dk(),pages:after.total});
+    const num=t.hist.length+1; t.proj = t.quran ? `${num}. hatim` : `${num}. kitap`; t.start=0; t.projStart=addDays(dk(),1);
+    save(); closeModal(); render(); return toast(t.quran?`Hatim tamamlandı. Allah kabul etsin. Yarın ${t.proj} başlıyor.`:'Kitap bitti. Yeni kitabın adını Ayarlar\'dan yazabilirsin.'); }
+  save(); closeModal(); render();
+  toast(r.done[id] ? `${n} sayfa kaydedildi. Sayfa ${after.cur} / ${after.total}.` : `${n} sayfa eklendi. Bugünkü hedefe ${goal-total} sayfa kaldı.`);
+}
+
 /* ================= GÖRÜNÜMLER ================= */
 function vHeader(){
   const T=todays(), d=T.filter(t=>isDone(t,dk())).length;
@@ -642,16 +712,18 @@ function vHeader(){
     <div class="pills"><span class="pill" style="color:var(--saffron)" title="Zincir">${ico('chain')}<span style="color:var(--white)">${chainNow()} gün</span></span><span class="pill" style="color:var(--turq)">${ico('check')}<span style="color:var(--white)">${d} / ${T.length}</span></span></div></div>`;
 }
 function taskRow(t,k=dk()){
-  const r=S.days[k]||{done:{}}, e=(r.done||{})[t.id], d=!!e, ty=t.type||'check', tool={count:'beads',timer:'timer',pages:'page'}[ty]||'';
+  const r=S.days[k]||{done:{}}, e=(r.done||{})[t.id], d=!!e, ty=t.type||'check', tool={count:'beads',timer:'timer',pages:'page',hatim:'ilim'}[ty]||'';
   const run=!d&&TM&&TM.id===t.id, prog=r.prog&&r.prog[t.id], st=streakOf(t);
   let hint=esc(t.hint);
   if(d&&ty==='pages') hint=`${e.n} sayfa okundu`;
   else if(run) hint=`${mmss(tmLeft())} ${TM.running?'kaldı':'duraklatıldı'}`;
   else if(!d&&ty==='count'&&prog) hint=`${prog} / ${t.goal} çekildi`;
   else if(!d&&ty==='pages'&&+t.goal&&prog) hint=`${prog} / ${t.goal} sayfa okundu`;
+  let hbar='';
+  if(ty==='hatim'){ const h=hProg(t); hint = `${d?`Bugün ${e.n} sayfa, `:prog?`Bugün ${prog} sayfa, `:''}sayfa ${h.cur} / ${h.total}${h.juz?`, ${h.juz}. cüz`:''}`; hbar=`<span class="mbar"><i style="width:${h.pct}%;background:${col(t)}"></i></span>`; }
   return `<button class="task ${d?'done':''}" data-act="toggle" data-id="${esc(t.id)}" aria-pressed="${d}">
     <span class="medal" style="--c:${col(t)}">${ico(t.icon)}</span>
-    <span class="tx"><b>${esc(t.name)}</b><small ${run?`id="tmh-${esc(t.id)}" style="color:var(--turq)"`:''}>${hint}</small></span>
+    <span class="tx"><b>${esc(t.name)}</b><small ${run?`id="tmh-${esc(t.id)}" style="color:var(--turq)"`:''}>${hint}</small>${hbar}</span>
     ${st?`<span class="streak" title="${st} günlük seri">${ico('flame')}${st}</span>`:''}
     <span class="tick ${d?'':'tool'}">${d||!tool?ico('check'):ico(tool)}</span></button>`;
 }
@@ -710,7 +782,7 @@ function vCal(){
 let foldOpen=false;
 function vTakip(){
   const cards=S.tasks.map(t=>{ const st=streakOf(t), b=bestOf(t), r=rate(t);
-    let extra=''; if(t.type==='pages'){ const m=dk().slice(0,7); let p=0; Object.entries(S.days).forEach(([k,r2])=>{ if(k.startsWith(m)&&r2.done&&r2.done[t.id]) p+=r2.done[t.id].n||0; }); extra=`<span>${p} sayfa bu ay</span>`; }
+    let extra=''; if(t.type==='hatim'){ const h=hProg(t); extra=`<span>Sayfa ${h.cur}/${h.total}</span>`; } if(t.type==='pages'){ const m=dk().slice(0,7); let p=0; Object.entries(S.days).forEach(([k,r2])=>{ if(k.startsWith(m)&&r2.done&&r2.done[t.id]) p+=r2.done[t.id].n||0; }); extra=`<span>${p} sayfa bu ay</span>`; }
     return `<div class="scard2"><div class="sh"><span class="medal sm" style="--c:${col(t)}">${ico(t.icon)}</span><b>${esc(t.name)}</b></div>
       <div class="snum"><b>${st}</b><small>gün seri</small></div>
       <div class="smeta"><span>En uzun ${b} gün</span><span>Son 30 gün %${r.p}</span>${extra}</div>
@@ -720,6 +792,7 @@ function vTakip(){
     <div class="tk-top"><div class="chainhero panel first"><div class="cstat"><b>${ch}</b><small>günlük zincir</small></div><div class="cstat"><b>${best}</b><small>en uzun zincir</small></div>${chainSvg(14)}
       <p class="muted" style="grid-column:1/-1;font-size:13px;line-height:1.45">Altın halkalar tüm görevlerin yapıldığı günler. Kesik turkuaz halkalar mazeretli günler. Kırmızı kopukluk zincirin kırıldığı gün.</p></div>
     ${vCal()}</div>
+ ${S.tasks.some(t=>t.type==='hatim')?`<div class="hsec"><h3>Hatim ve kitaplar</h3><div class="hgrid">${S.tasks.filter(t=>t.type==='hatim').map(t=>hatimCard(t)).join('')}</div></div>`:''}
     <details class="fold" ${foldOpen?'open':''} id="fold"><summary><span>Görev görev seriler</span><small>${S.tasks.length} görev</small></summary><div class="sgrid">${cards}</div></details>`;
 }
 function openDay(k){
@@ -731,11 +804,11 @@ function openDay(k){
 
 /* ---------- ayarlar ---------- */
 let setTab='gorevler';
-const TYPES=[['check','Tek dokunuş'],['count','Sayaçla (zikirmatik)'],['timer','Zamanlayıcıyla'],['pages','Sayfa sayısıyla']];
+const TYPES=[['check','Tek dokunuş'],['count','Sayaçla (zikirmatik)'],['timer','Zamanlayıcıyla'],['pages','Sayfa sayısıyla'],['hatim','Hatim / kitap takibi']];
 function seg(cur,items,act){ return `<div class="seg" role="tablist">${items.map(([v,l])=>`<button role="tab" aria-selected="${cur===v}" class="${cur===v?'on':''}" data-act="${act}" data-id="${esc(v)}">${esc(l)}</button>`).join('')}</div>`; }
 function dayTxt(t){ const d=t.days||ALL; if(d.length===7) return 'Her gün'; if(d.join()==='0,1,2,3,4') return 'Hafta içi'; if(d.join()==='5,6') return 'Hafta sonu'; return d.map(i=>WD[i]).join(', '); }
 function taskSummary(t){ const g=+t.goal||0;
-  const how = t.type==='count'?`Sayaçla, ${g} kez`: t.type==='timer'?`${g} dakika`: t.type==='pages'?(g?`Günde ${g} sayfa`:'Sayfa sayısıyla'):'Tek dokunuş';
+  const how = t.type==='hatim'?`${t.proj||'Takip'}, sayfa ${hProg(t).cur} / ${+t.total||604}`: t.type==='count'?`Sayaçla, ${g} kez`: t.type==='timer'?`${g} dakika`: t.type==='pages'?(g?`Günde ${g} sayfa`:'Sayfa sayısıyla'):'Tek dokunuş';
   return `${dayTxt(t)}, ${how}${t.remind?`, ${t.remind}`:''}`; }
 function editTask(id){
   const t=S.tasks.find(x=>x.id===id); if(!t) return; const i=S.tasks.indexOf(t), dd=t.days||ALL;
@@ -743,7 +816,13 @@ function editTask(id){
     <label><span class="lab">Görev adı</span><input value="${esc(t.name)}" data-f="name" data-id="${esc(t.id)}"></label>
     <label><span class="lab">Açıklama</span><input value="${esc(t.hint)}" data-f="hint" data-id="${esc(t.id)}" placeholder="Örneğin 20 dakika"></label>
     <div class="g2"><label><span class="lab">Nasıl tamamlanır</span><select data-f="type" data-id="${esc(t.id)}">${TYPES.map(([v,l])=>`<option value="${v}" ${(t.type||'check')===v?'selected':''}>${l}</option>`).join('')}</select></label>
-      <label><span class="lab">${t.type==='timer'?'Süre (dakika)':t.type==='count'?'Hedef sayı':t.type==='pages'?'Günlük sayfa (0 = serbest)':'Hedef'}</span><input type="number" value="${esc(t.goal||'')}" data-f="goal" data-id="${esc(t.id)}" ${t.type==='check'||!t.type?'disabled':''}></label></div>
+      <label><span class="lab">${t.type==='timer'?'Süre (dakika)':t.type==='count'?'Hedef sayı':(t.type==='pages'||t.type==='hatim')?'Günlük sayfa (0 = serbest)':'Hedef'}</span><input type="number" value="${esc(t.goal||'')}" data-f="goal" data-id="${esc(t.id)}" ${t.type==='check'||!t.type?'disabled':''}></label></div>
+    ${t.type==='hatim'?`<div class="hedit"><div class="g2"><label><span class="lab">${t.quran?'Hatim adı':'Kitap adı'}</span><input value="${esc(t.proj||'')}" data-f="proj" data-id="${esc(t.id)}"></label>
+        <label><span class="lab">Toplam sayfa</span><input type="number" min="1" value="${esc(t.total||604)}" data-f="total" data-id="${esc(t.id)}"></label></div>
+      <label><span class="lab">Şu an kaldığın sayfa</span><input type="number" min="0" value="${hProg(t).cur}" data-f="curpage" data-id="${esc(t.id)}"></label>
+      <label class="ck"><input type="checkbox" data-f="quran" data-id="${esc(t.id)}" ${t.quran?'checked':''}> Kur'an-ı Kerim (cüz göster, 604 sayfa)</label>
+      ${(t.hist||[]).length?`<div><span class="lab">Tamamlananlar</span>${t.hist.map(x=>`<div class="log"><span>${esc(x.name)}</span><span class="muted">${x.end?fmtDate(x.end):''}</span></div>`).join('')}</div>`:''}
+      <button class="btn ghost" data-act="hnew" data-id="${esc(t.id)}">${t.quran?'Yeni hatme baştan başla':'Yeni kitaba başla'}</button></div>`:''}
     <div><span class="lab">Hangi günler</span><div class="daypick">${WD.map((w,j)=>`<button class="${dd.includes(j)?'on':''}" data-act="tday" data-id="${esc(t.id)}:${j}" aria-pressed="${dd.includes(j)}">${w}</button>`).join('')}</div></div>
     <div class="g2"><label><span class="lab">Simge</span><select data-f="icon" data-id="${esc(t.id)}">${ICONS.map(([v,l])=>`<option value="${v}" ${t.icon===v?'selected':''}>${l}</option>`).join('')}</select></label>
       <label><span class="lab">Hatırlatma saati</span><input type="time" value="${esc(t.remind||'')}" data-f="remind" data-id="${esc(t.id)}"></label></div>
@@ -815,6 +894,12 @@ const ACT={
   tpause:()=>{ if(!TM) return; TM.left=Math.max(0,TM.endAt-Date.now()); TM.running=false; clearInterval(tmInt); saveTM(); renderTimer(); render(); },
   treset:()=>{ if(!TM) return; TM.left=TM.total; TM.running=false; clearInterval(tmInt); saveTM(); renderTimer(); render(); },
   pg:d=>{ const i=$('pgn'); i.value=Math.max(1,Math.round(+i.value||1)+(+d)); },
+  hsave:id=>saveHatim(id),
+  hundo:id=>{ const r=rec(); if(r.done) delete r.done[id]; if(r.prog) delete r.prog[id]; save(); closeModal(); render(); toast('Bugünkü kayıt silindi.'); },
+  pgMode:v=>{ pgMode=v; const id=$('pgn')&&$('pgn').dataset.task; if(id) openHatim(id); },
+  hnew:id=>{ const t=S.tasks.find(x=>x.id===id); if(!t) return; const b=document.querySelector('[data-act="hnew"]'); if(b&&!b.dataset.arm){ b.dataset.arm=1; b.textContent='Emin misin? Tekrar bas'; return; }
+    const n=(t.hist||[]).length+1; t.proj=t.quran?`${n}. hatim`:'Yeni kitap'; t.start=0; t.projStart=dk(); t.hist=t.hist||[];
+    const r=S.days[dk()]; if(r){ if(r.prog) delete r.prog[id]; if(r.done) delete r.done[id]; } save(); render(); editTask(id); toast('Baştan başlandı.'); },
   pgsave:id=>savePages(id,Math.max(1,Math.round(+$('pgn').value||1))),
   excuse:k=>{ if(excuseLeft(k)<=0) return toast('Bu ayki mazeret hakların bitti.'); rec(k).excused=true; save(); toast(k===dk()?'Bugün mazeretli sayıldı. Serilerin korunuyor.':'Dün mazeretli sayıldı. Serilerin kurtarıldı.'); render(); },
   unexcuse:k=>{ if(S.days[k]) S.days[k].excused=false; save(); render(); },
@@ -847,7 +932,7 @@ const ACT={
   import:()=>{ try{ const o=JSON.parse($('bk').value); if(!o||typeof o!=='object'||!o.days) throw 0; S=merge(o); S.tasks.forEach(t=>{ if(!t.icon) t.icon=t.res||'star'; if(!Array.isArray(t.days)) t.days=[...ALL]; if(t.remind==null) t.remind=''; }); save(); toast('Yedek yüklendi.'); render(); }
     catch(e){ toast('Bu metin bir SEFER yedeği değil. Kopyaladığın metnin tamamını yapıştır.'); } },
   reset:()=>{ if(!resetArm){ resetArm=true; $('rst').textContent='Emin misin? Tekrar bas'; setTimeout(()=>{ resetArm=false; const b=$('rst'); if(b) b.textContent='Sıfırla'; },3000); return; }
-    resetArm=false; S=defaults(); save(); toast('Her şey sıfırlandı.'); go('bugun'); }
+    resetArm=false; S=defaults(); addHatim(); save(); toast('Her şey sıfırlandı.'); go('bugun'); }
 };
 document.addEventListener('click',e=>{
   if(e.target===$('modal')) return closeModal();
@@ -862,8 +947,11 @@ document.addEventListener('change',e=>{
   if(f==='remindAll'){ S.remindAll=el.value; save(); render(); return; }
   const t=S.tasks.find(x=>x.id===el.dataset.id); if(!t) return;
   if(f==='dini'){ t.dini=el.checked; }
-  else if(f==='type'){ t.type=el.value; if(t.type==='count'&&!t.goal) t.goal=33; if(t.type==='timer'&&!t.goal) t.goal=10; save(); render(); return editTask(t.id); }
+  else if(f==='type'){ t.type=el.value; if(t.type==='count'&&!t.goal) t.goal=33; if(t.type==='timer'&&!t.goal) t.goal=10; if(t.type==='hatim'){ t.total=t.total||604; t.start=t.start||0; t.proj=t.proj||'1. hatim'; t.projStart=t.projStart||dk(); t.hist=t.hist||[]; } save(); render(); return editTask(t.id); }
   else if(f==='goal'){ t.goal=Math.max(0,+el.value||0); }
+  else if(f==='total'){ t.total=Math.max(1,Math.round(+el.value||604)); }
+  else if(f==='curpage'){ const h=hProg(t), want=Math.max(0,Math.min(+t.total||604,Math.round(+el.value||0))); t.start=(+t.start||0)+(want-h.cur); save(); render(); return editTask(t.id); }
+  else if(f==='quran'){ t.quran=el.checked; if(t.quran){ t.total=604; } save(); render(); return editTask(t.id); }
   else t[f]=el.value;
   save(); render();
 });
@@ -875,7 +963,9 @@ if('serviceWorker' in navigator && location.protocol==='https:' && !/claude/.tes
 }
 window.addEventListener('hashchange',()=>{ readHash(); render(); });
 document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'){ tick(); render(); } });
-readHash(); tmRestore(); applyUI(); save(); render();
+function addHatim(){ if(!S.tasks.some(t=>t.type==='hatim') && !S.hatimAdded){ S.hatimAdded=true; const i=S.tasks.findIndex(t=>t.id==='kuran');
+  S.tasks.splice(i>=0?i+1:0,0,{id:'hatim',name:'Hatim',hint:'',icon:'huzur',type:'hatim',goal:0,dini:true,days:[...ALL],remind:'',since:dk(),total:604,start:0,proj:'1. hatim',projStart:dk(),hist:[],quran:true}); } }
+addHatim(); readHash(); tmRestore(); applyUI(); save(); render();
 try{ localStorage.removeItem('sefer-abh'); }catch(e){}
 </script>
 </body>
