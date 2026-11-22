@@ -753,7 +753,7 @@ function savePages(id,n){
 }
 
 /* ================= BULUT EŞİTLEME (Supabase, Emanet ile aynı hesap) ================= */
-const CFG=window.SEFER_CONFIG||{};
+const CFG=window.SEFER_CONFIG||{}, VER='38';
 let sb=null, sbUser=null, cloudMsg='', saveT=null, saving=false, pendingSave=false, lastPull=0, authMode='in';
 const cloudOn = () => !!(sb&&sbUser);
 function mergeDays(older,newer){
@@ -818,7 +818,7 @@ function accountHtml(){
   if(sbUser) return `<div class="panel first"><h3>Eşitleme</h3><p style="font-size:var(--t-item);margin-top:4px">Giriş yapıldı: <b>${esc(sbUser.email||'')}</b></p>
       <p class="muted" style="font-size:var(--t-body);margin-top:6px" id="cloudmsg">${esc(cloudMsg||'Eşitleniyor…')}</p>
       <p class="muted" style="font-size:var(--t-meta);margin-top:8px;line-height:1.45">Bu hesapla giriş yaptığın her cihazda görevlerin, geçmişin ve notların aynı olur. İnternet yokken de çalışır, bağlantı gelince eşitlenir.</p>
-      <div style="display:flex;gap:8px;margin-top:12px"><button class="btn" data-act="cpull">Şimdi eşitle</button><button class="btn ghost" data-act="cout">Çıkış yap</button></div></div>`;
+      <div style="display:flex;gap:8px;margin-top:12px"><button class="btn" data-act="cpull">Şimdi eşitle</button><button class="btn ghost" data-act="cout">Çıkış yap</button></div><p class="muted" style="font-size:var(--t-tiny);margin-top:10px">Sürüm ${VER}</p></div>`;
   return `<div class="panel first"><h3>Eşitleme</h3><p class="muted" style="font-size:var(--t-body);line-height:1.5">Emanet'teki hesabınla giriş yap; verilerin tüm cihazlarında aynı olsun.</p>
     <form class="form" id="authf" autocomplete="on"><label><span class="lab">E-posta</span><input id="aem" type="email" autocomplete="email" required></label>
       <label><span class="lab">Şifre</span><input id="apw" type="password" autocomplete="${authMode==='up'?'new-password':'current-password'}" required minlength="6"></label>
@@ -1463,7 +1463,7 @@ const ACT={
   nmztest:async()=>{ if(!pushOn()) return toast('Önce yukarıdan bildirimleri aç.'); const c=nmz(), id=c.list[0]||'ogle', at=new Date(), hm=String(at.getHours()).padStart(2,'0')+':'+String(at.getMinutes()).padStart(2,'0'), nm=(NAMAZ.find(x=>x[0]===id)||[])[1];
     const ok=await testPush({title:`${nm.replace(' namazı','')} vakti`,body:`${dot(hm)} ${nm} vakti girdi. (Deneme)`,tag:`n-${id}-test`});
     toast(ok?'Deneme bildirimi birkaç saniye içinde gelecek. Kıldım düğmesini de deneyebilirsin.':'Gönderilemedi. Girişini ve kurulumu kontrol et.'); },
-  cpull:()=>{ setCloud('Eşitleniyor…'); pullCloud(); },
+  cpull:async()=>{ setCloud('Eşitleniyor…'); await pullCloud(); await pushCloud(); const r=S.days[dk()]||{}; setCloud(`Eşitlendi. Bugün ${Object.keys(r.done||{}).length} görev işaretli, toplam ${S.tasks.length} görev.`); },
   cout:async()=>{ try{ await sb.auth.signOut(); }catch(e){} sbUser=null; setCloud(''); render(); toast('Çıkış yapıldı. Veriler bu cihazda duruyor.'); },
   amode:()=>{ authMode=authMode==='up'?'in':'up'; render(); },
   areset:async()=>{ const em=($('aem')||{}).value; if(!em) return toast('Önce e-posta adresini yaz.'); const {error}=await sb.auth.resetPasswordForEmail(em.trim(),{redirectTo:location.href.split('#')[0]}); toast(error?'Gönderilemedi: '+error.message:'Şifre yenileme bağlantısı e-postana gönderildi.'); },
