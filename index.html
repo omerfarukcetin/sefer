@@ -559,8 +559,23 @@ function defaults(){ return {v:2, tasks:JSON.parse(JSON.stringify(DEF_TASKS)).ma
 function merge(o){ const d=defaults(); return {...o, v:2, hatimAdded:o.hatimAdded, kitapConv:o.kitapConv, cumaAdded:o.cumaAdded, updatedAt:+o.updatedAt||0, tasks:o.tasks||d.tasks, days:o.days||{}, remindAll:o.remindAll||d.remindAll, ui:{...d.ui,...(o.ui||{})}}; }
 function load(){ try{ const r=localStorage.getItem(KEY); if(r) return merge(JSON.parse(r)); }catch(e){} return defaults(); }
 function persist(){ try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} }
-function save(touch=true){ if(touch) S.updatedAt=Date.now(); persist(); if(touch&&typeof scheduleSave==='function'){ scheduleSave(); schedulePush(); } }
-let S=load();
+/* her günün ve her kaydın en son ne zaman değiştiğini tutar; cihazlar arası birleştirmede kullanılır */
+let daySnap={};
+const dayJson = d => d ? JSON.stringify(d) : '';
+function snapDays(){ daySnap={}; for(const [k,d] of Object.entries(S.days||{})) daySnap[k]=dayJson(d); }
+function stampDays(){
+  const now=Date.now();
+  for(const [k,d] of Object.entries(S.days||{})){
+    if(daySnap[k]===dayJson(d)) continue;
+    const prev=daySnap[k]?JSON.parse(daySnap[k]):{}, pd=prev.done||{}, cd=d.done=d.done||{};
+    for(const id of Object.keys(pd)) if(!cd[id]){ (d.del=d.del||{})[id]=now; }
+    for(const [id,e] of Object.entries(cd)){ const {s:_a,...x}=e, {s:_b,...y}=pd[id]||{}; if(!pd[id]||JSON.stringify(x)!==JSON.stringify(y)) e.s=now; }
+    const pp=prev.prog||{}, cp=d.prog||{}; for(const id of Object.keys(pp)) if(cp[id]==null&&!cd[id]){ (d.del=d.del||{})[id]=now; }
+    d.u=now; daySnap[k]=dayJson(d);
+  }
+}
+function save(touch=true){ if(touch){ S.updatedAt=Date.now(); stampDays(); } persist(); if(touch&&typeof scheduleSave==='function'){ scheduleSave(); schedulePush(); } }
+let S=load(); snapDays();
 // eski sürümden geçiş
 S.tasks.forEach(t=>{ if(!t.icon) t.icon=t.res||'star'; if(!Array.isArray(t.days)) t.days=[...ALL]; if(t.remind==null) t.remind='';
   if(!t.type){ const d=DEF_TASKS.find(x=>x.id===t.id); t.type=d?d.type:'check'; t.goal=d?d.goal:0; }
@@ -744,9 +759,19 @@ const cloudOn = () => !!(sb&&sbUser);
 function mergeDays(older,newer){
   const out={...(older||{})};
   for(const [k,v] of Object.entries(newer||{})){ const x=out[k]; if(!x){ out[k]=v; continue; }
-    const done={...(x.done||{})}; for(const [id,e] of Object.entries(v.done||{})){ const c=done[id]; done[id]=!c?e:((e.n||0)>=(c.n||0)?e:c); }
-    const prog={...(x.prog||{})}; for(const [id,n] of Object.entries(v.prog||{})) prog[id]=Math.max(prog[id]||0,n||0);
-    out[k]={...x,...v,done,prog,screen:v.screen!=null?v.screen:x.screen,excused:!!(x.excused||v.excused),note:v.note||x.note||'',nmz:{...(x.nmz||{}),...(v.nmz||{})}};
+    const [a,b] = (+x.u||0) > (+v.u||0) ? [v,x] : [x,v];   // b: en son değişen gün
+    const del={...(a.del||{})}; for(const [id,t] of Object.entries(b.del||{})) del[id]=Math.max(del[id]||0,t);
+    const st = e => +(e&&(e.s||e.t))||0, done={};
+    for(const id of new Set([...Object.keys(a.done||{}),...Object.keys(b.done||{})])){
+      const ea=(a.done||{})[id], eb=(b.done||{})[id];
+      let e = !ea?eb : !eb?ea : st(eb)>st(ea)?eb : st(ea)>st(eb)?ea : ((eb.n||0)>=(ea.n||0)?eb:ea);
+      if(del[id] && del[id]>=st(e) && (st(e)||del[id]>Math.min(+a.u||0,+b.u||0))) continue;
+      done[id]=e; }
+    const prog={};
+    for(const id of new Set([...Object.keys(a.prog||{}),...Object.keys(b.prog||{})])){
+      const pa=(a.prog||{})[id], pb=(b.prog||{})[id], n=Math.max(pa||0,pb||0), src=Math.max(pa!=null?(+a.u||0):0, pb!=null?(+b.u||0):0);
+      if(del[id] && del[id]>=src) continue; prog[id]=n; }
+    out[k]={...a,...b,done,prog,del,screen:b.screen!=null?b.screen:a.screen,excused:b.u?!!b.excused:!!(a.excused||b.excused),note:b.u?(b.note||''):(b.note||a.note||''),nmz:{...(a.nmz||{}),...(b.nmz||{})},u:Math.max(+a.u||0,+b.u||0)||undefined};
   }
   return out;
 }
@@ -755,11 +780,16 @@ function mergeState(local,remote){
   return merge({...newer, days:mergeDays(older.days,newer.days), updatedAt:Math.max(lAt,rAt)});
 }
 function setCloud(m){ cloudMsg=m; if(tab==='ayarlar'&&setTab==='hesap'){ const el=$('cloudmsg'); if(el) el.textContent=m; } }
-function scheduleSave(){ if(!cloudOn()) return; clearTimeout(saveT); saveT=setTimeout(pushCloud,1200); }
+function scheduleSave(){ if(!cloudOn()) return; clearTimeout(saveT); saveT=setTimeout(()=>{ saveT=null; pushCloud(); },1200); }
 async function pushCloud(){
   if(!cloudOn()) return; if(saving){ pendingSave=true; return; }
   saving=true; setCloud('Kaydediliyor…'); let err=null;
-  try{ const r=await sb.from('sefer_state').upsert({user_id:sbUser.id,data:S,updated_at:+S.updatedAt||Date.now()}); err=r.error; }catch(e){ err=e; }
+  try{
+    const g=await sb.from('sefer_state').select('data,updated_at').eq('user_id',sbUser.id).maybeSingle();
+    if(g.error) throw g.error;
+    if(g.data&&g.data.data){ const before=JSON.stringify(S.days); S=mergeState(S,{...g.data.data,updatedAt:+g.data.updated_at||+g.data.data.updatedAt||0}); S.owner=sbUser.id; persist(); snapDays(); lastPull=Date.now();
+      if(JSON.stringify(S.days)!==before && !(document.activeElement&&/TEXTAREA|INPUT/.test(document.activeElement.tagName)) && !$('modal').classList.contains('open')) render(); }
+    const r=await sb.from('sefer_state').upsert({user_id:sbUser.id,data:S,updated_at:+S.updatedAt||Date.now()}); err=r.error; }catch(e){ err=e; }
   saving=false; setCloud(err ? cloudErr(err) : 'Eşitlendi');
   if(pendingSave){ pendingSave=false; pushCloud(); }
 }
@@ -771,7 +801,7 @@ async function pullCloud(){
   if(S.owner && S.owner!==sbUser.id){ S = data&&data.data ? merge(data.data) : defaults(); }
   else if(data&&data.data){ const before=JSON.stringify(data.data); S=mergeState(S,{...data.data,updatedAt:+data.updated_at||+data.data.updatedAt||0}); if(JSON.stringify(S)!==before) scheduleSave(); }
   else scheduleSave();
-  S.owner=sbUser.id; persist(); applyUI(); setCloud('Eşitlendi'); schedulePush();
+  S.owner=sbUser.id; persist(); snapDays(); applyUI(); setCloud('Eşitlendi'); schedulePush();
   if(!(document.activeElement&&document.activeElement.tagName==='TEXTAREA')) render();
 }
 async function initCloud(){
@@ -1531,6 +1561,8 @@ if('serviceWorker' in navigator && location.protocol==='https:' && !/claude/.tes
   window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
 }
 window.addEventListener('hashchange',()=>{ readHash(); render(); });
+setInterval(()=>{ if(document.visibilityState==='visible'&&cloudOn()&&!saving&&!saveT&&Date.now()-lastPull>25000&&!$('modal').classList.contains('open')) pullCloud(); },10000);
+window.addEventListener('focus',()=>{ if(cloudOn()&&!saving&&Date.now()-lastPull>5000) pullCloud(); });
 document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'){ tick(); if(cloudOn()&&Date.now()-lastPull>20000) pullCloud(); else schedulePush(); if(!(document.activeElement&&document.activeElement.tagName==='TEXTAREA')) render(); } });
 function convKitap(){ if(S.kitapConv) return; S.kitapConv=true; const t=S.tasks.find(x=>x.id==='kitap'&&x.type==='check'); if(t){ Object.assign(t,{type:'hatim',quran:false,total:0,proj:'',start:0,projStart:'',hist:[],goal:0,due:''}); } }
 function addCuma(){ if(S.cumaAdded) return; S.cumaAdded=true;
