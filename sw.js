@@ -1,6 +1,6 @@
 // SEFER service worker: uygulamayı internetsiz de açar.
 // Yeni sürüm yayınlarken CACHE adındaki numarayı artır.
-const CACHE = 'sefer-v39';
+const CACHE = 'sefer-v40';
 const SHELL = ['./', './index.html', './manifest.webmanifest',
   './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png', './icons/apple-touch-icon.png', './js/config.js', './js/vendor/supabase.js', './js/vendor/591.supabase.js'];
 
@@ -32,7 +32,7 @@ self.addEventListener('fetch', e => {
 self.addEventListener('push', e => {
   let d = {}; try { d = e.data ? e.data.json() : {}; } catch (_) { d = { body: e.data && e.data.text() }; }
   const m = /^nc?-([a-z]+)-(\d{4}-\d\d-\d\d|test)$/.exec(d.tag || '');
-  const opt = { body: d.body || '', tag: d.tag || undefined, icon: 'icons/icon-192.png', badge: 'icons/icon-192.png', data: { url: d.url || './', kildim: m ? { id: m[1], k: m[2] } : null } };
+  const opt = { body: d.body || '', tag: d.tag || undefined, icon: 'icons/icon-192.png', badge: 'icons/icon-192.png', data: { url: d.url || (/^rapor/.test(d.tag || '') ? './?rapor=1' : './'), kildim: m ? { id: m[1], k: m[2] } : null } };
   if (m) opt.actions = [{ action: 'kildim', title: 'Kıldım' }];
   e.waitUntil(self.registration.showNotification(d.title || 'SEFER', opt));
 });
@@ -40,7 +40,7 @@ self.addEventListener('notificationclick', e => {
   e.notification.close();
   const data = e.notification.data || {}, kl = e.action === 'kildim' && data.kildim;
   e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
-    for (const c of list) { if ('focus' in c) { if (kl) c.postMessage({ type: 'kildim', id: kl.id, k: kl.k }); return c.focus(); } }
+    for (const c of list) { if ('focus' in c) { if (kl) c.postMessage({ type: 'kildim', id: kl.id, k: kl.k }); else if (/rapor=1/.test(data.url || '')) c.postMessage({ type: 'rapor' }); return c.focus(); } }
     return self.clients.openWindow(kl ? `./?kildim=${kl.id}_${kl.k}` : (data.url || './'));
   }));
 });
