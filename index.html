@@ -479,6 +479,8 @@ nav button.on:before{content:"";position:absolute;top:0;width:28px;height:3px;bo
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
 .chip{padding:7px 12px;border-radius:999px;border:1px solid var(--lapis3);background:var(--lapis2);font-size:var(--t-meta);font-weight:700;color:var(--mist)}
 .chip.on{border-color:var(--turq);color:var(--white);background:color-mix(in srgb,var(--turq) 22%,var(--lapis2))}
+.surebox{margin-top:16px;padding-top:14px;border-top:1px solid var(--lapis3)}
+.sureadd{display:grid;grid-template-columns:1fr 64px auto;gap:8px;margin-top:4px}.sureadd input{text-align:center}
 /* ---- tutarlılık: tek kutu ve yazı ölçüsü ---- */
 .panel,.hcard,.fold,.chainbox,.weekbar,.scard2,.stat,.hedit,.trow{border-radius:var(--r-lg);padding:var(--pad)}
 .fold{padding:0}.fold summary{padding:var(--pad)}.fold .sgrid,.ybox{padding:0 var(--pad) var(--pad)}
@@ -679,6 +681,7 @@ function undoTask(id){ const r=rec(); if(!r.done[id]) return; delete r.done[id];
 function toggleTask(id){
   const t=S.tasks.find(x=>x.id===id); if(!t) return;
   if(rec().done[id] && t.type==='hatim') return openHatim(id);
+  if(rec().done[id] && t.type==='pages') return openPages(id);
   if(rec().done[id]) return undoTask(id);
   if(t.type==='count') return openCounter(id);
   if(t.type==='timer') return openTimer(id);
@@ -747,18 +750,37 @@ function openPages(id){
     ${goal?`<div class="bar" style="margin-top:14px"><i style="width:${Math.min(100,have/goal*100)}%"></i></div>`:''}
     <div class="stepper"><button class="btn ghost" data-act="pg" data-id="-1" aria-label="Azalt">−</button>
       <input id="pgn" type="number" inputmode="numeric" min="1" value="${def}" aria-label="Sayfa sayısı"><button class="btn ghost" data-act="pg" data-id="1" aria-label="Artır">+</button></div>
-    <button class="btn turq" style="width:100%;margin-top:12px" data-act="pgsave" data-id="${esc(id)}">Kaydet</button>`);
+    <button class="btn turq" style="width:100%;margin-top:12px" data-act="pgsave" data-id="${esc(id)}">Sayfaları kaydet</button>${isQuranRead(t)?sureBox(t):''}${r.done[id]?`<button class="linkb" style="margin-top:14px;font-size:var(--t-meta)" data-act="hundo" data-id="${esc(id)}">Bugünkü kaydı sil</button>`:''}`);
   $('pgn').dataset.task=id;
 }
+/* ---------- sure kaydı: Kur'an okumasını sayfa yerine sure olarak da yazabilirsin ---------- */
+const SURELER='Fâtiha,Bakara,Âl-i İmrân,Nisâ,Mâide,En\'âm,A\'râf,Enfâl,Tevbe,Yûnus,Hûd,Yûsuf,Ra\'d,İbrâhim,Hicr,Nahl,İsrâ,Kehf,Meryem,Tâhâ,Enbiyâ,Hac,Mü\'minûn,Nûr,Furkân,Şuarâ,Neml,Kasas,Ankebût,Rûm,Lokmân,Secde,Ahzâb,Sebe\',Fâtır,Yâsîn,Sâffât,Sâd,Zümer,Mü\'min,Fussilet,Şûrâ,Zuhruf,Duhân,Câsiye,Ahkâf,Muhammed,Fetih,Hucurât,Kâf,Zâriyât,Tûr,Necm,Kamer,Rahmân,Vâkıa,Hadîd,Mücâdele,Haşr,Mümtehine,Saff,Cuma,Münâfikûn,Teğâbün,Talâk,Tahrîm,Mülk,Kalem,Hâkka,Meâric,Nûh,Cin,Müzzemmil,Müddessir,Kıyâme,İnsân,Mürselât,Nebe\',Nâziât,Abese,Tekvîr,İnfitâr,Mutaffifîn,İnşikâk,Bürûc,Târık,A\'lâ,Gâşiye,Fecr,Beled,Şems,Leyl,Duhâ,İnşirâh,Tîn,Alak,Kadr,Beyyine,Zilzâl,Âdiyât,Kâria,Tekâsür,Asr,Hümeze,Fîl,Kureyş,Mâûn,Kevser,Kâfirûn,Nasr,Tebbet,İhlâs,Felak,Nâs'.split(',');
+const isQuranRead = t => t && t.type==='pages' && (t.id==='kuran' || /kur.?[aâ]n/i.test(t.name));
+const suresOn = (t,k) => ((S.days[k]||{}).sure||{})[t.id] || [];
+const sureTxt = list => list.map(x=>`${x.s}${x.n>1?` ×${x.n}`:''}`).join(', ');
+function sureBox(t){
+  const list=suresOn(t,dk());
+  return `<div class="surebox"><span class="lab">Sure okudum</span>
+    <div class="sureadd"><select id="sr_s">${SURELER.map((n,i)=>`<option value="${esc(n)}" ${n==="Yâsîn"?'selected':''}>${i+1}. ${esc(n)}</option>`).join('')}</select>
+      <input id="sr_n" type="number" inputmode="numeric" min="1" value="1" aria-label="Kaç kez"><button class="btn" data-act="sradd" data-id="${esc(t.id)}">Ekle</button></div>
+    ${list.length?`<div class="chips" style="margin-top:8px">${list.map((x,i)=>`<button class="chip on" data-act="srdel" data-id="${esc(t.id)}|${i}" aria-label="${esc(x.s)} kaldır">${esc(x.s)}${x.n>1?` ×${x.n}`:''} ✕</button>`).join('')}</div>`:''}</div>`;
+}
+function addSure(id){
+  const t=S.tasks.find(x=>x.id===id), s0=$('sr_s').value, n=Math.max(1,Math.round(+$('sr_n').value||1)), r=rec();
+  r.sure=r.sure||{}; const list=r.sure[id]=r.sure[id]||[]; const f=list.find(x=>x.s===s0); if(f) f.n+=n; else list.push({s:s0,n});
+  if(!r.done[id]) r.done[id]={n:(r.prog&&r.prog[id])||0,t:Date.now()};
+  save(); render(); openPages(id); toast(`${s0} suresi eklendi.`);
+}
 function savePages(id,n){
-  const t=S.tasks.find(x=>x.id===id), r=rec(), goal=effGoal(t); r.prog=r.prog||{}; const total=(r.prog[id]||0)+n; r.prog[id]=total;
+  const t=S.tasks.find(x=>x.id===id), r=rec(), goal=effGoal(t); r.prog=r.prog||{}; const total=Math.max(r.prog[id]||0,(r.done[id]&&r.done[id].n)||0)+n; r.prog[id]=total;
+  if(r.done[id]){ r.done[id].n=total; save(); closeModal(); render(); return toast(`${n} sayfa eklendi. Bugün toplam ${total} sayfa.`); }
   if(hasBook(t)&&hProg(t).left<=0){ const fin=finishBook(t); if(!goal||total>=goal){ closeModal(); completeTask(id,total); } else { save(); closeModal(); render(); } return toast(`${fin} bitti. Yeni kitap eklemek istersen göreve dokun.`); }
   if(goal && total<goal){ save(); closeModal(); render(); return toast(`${n} sayfa eklendi. Hedefe ${goal-total} sayfa kaldı.`); }
   closeModal(); completeTask(id,total); toast(goal?`${total} sayfa, günlük hedef tamam.`:`${total} sayfa kaydedildi.`);
 }
 
 /* ================= BULUT EŞİTLEME (Supabase, Emanet ile aynı hesap) ================= */
-const CFG=window.SEFER_CONFIG||{}, VER='40';
+const CFG=window.SEFER_CONFIG||{}, VER='41';
 let sb=null, sbUser=null, cloudMsg='', saveT=null, saving=false, pendingSave=false, lastPull=0, authMode='in';
 const cloudOn = () => !!(sb&&sbUser);
 function mergeDays(older,newer){
@@ -1043,21 +1065,23 @@ function rapRange(end=dk()){ const c=rap(); let st=addDays(end,-1); while(wd(st)
 function rapItems(end){
   const [a,b]=rapRange(end), ids=rapIds(), groups=new Map();
   S.tasks.filter(t=>ids.includes(t.id)).forEach(t=>{
-    let v=0, days=0;
+    let v=0, days=0; const sures={};
     for(let k=a;k<=b;k=addDays(k,1)){ const r=S.days[k]||{}, e=(r.done||{})[t.id], pr=(r.prog||{})[t.id]||0;
       if(t.type==='count'){ v+= e?(+e.n||0):pr; }
-      else if(t.type==='pages'||t.type==='hatim'){ v+=pagesOn(t,k); }
+      else if(t.type==='pages'||t.type==='hatim'){ v+=pagesOn(t,k); if(isQuranRead(t)) suresOn(t,k).forEach(x=>{ sures[x.s]=(sures[x.s]||0)+x.n; }); }
       else if(e) v+=1; }
     const key=t.name.trim().toLowerCase()+'|'+(t.type==='hatim'?'pages':t.type), unit=t.type==='count'?'':(t.type==='pages'||t.type==='hatim')?'sayfa':t.vakit?'vakit':'gün';
     const g=groups.get(key)||{name:t.name.trim(),unit,v:0,extra:''}; g.v+=v;
     if(t.type==='hatim'&&t.quran){ const h=hProg(t); g.extra=`${t.proj||'hatim'}: sayfa ${h.cur} / ${h.total}`; }
+    g.sures=g.sures||{}; for(const [n,c] of Object.entries(sures)) g.sures[n]=(g.sures[n]||0)+c;
     groups.set(key,g); });
-  return {a,b,items:[...groups.values()].filter(g=>g.v>0||rap().zero)};
+  return {a,b,items:[...groups.values()].filter(g=>g.v>0||Object.keys(g.sures||{}).length||rap().zero)};
 }
+const gLine = g => { const sl=Object.entries(g.sures||{}).map(([n,c])=>`${n} ${c} kez`); const pg=g.v>0||!sl.length?`${g.v.toLocaleString('tr-TR')}${g.unit?' '+g.unit:''}`:''; return [pg, sl.length?`${sl.length>0&&pg?'':''}${sl.join(', ')}`:''].filter(Boolean).join('; '); };
 const trDate = k => kDate(k).toLocaleDateString('tr-TR',{day:'numeric',month:'long'});
 function rapText(end){
   const {a,b,items}=rapItems(end), c=rap();
-  const lines=items.map(g=>`• ${g.name}: ${g.v.toLocaleString('tr-TR')}${g.unit?' '+g.unit:''}${g.extra?` (${g.extra})`:''}`);
+  const lines=items.map(g=>`• ${g.name}: ${gLine(g)}${g.extra?` (${g.extra})`:''}`);
   return `${c.title} (${trDate(a)} – ${trDate(b)})\n${lines.length?lines.join('\n'):'Bu hafta kayıt yok.'}`;
 }
 function openRapor(){
@@ -1070,7 +1094,7 @@ function openRapor(){
 function rapQueue(today,now){
   const c=rap(), out=[]; if(!c.on) return out;
   for(let i=0;i<7;i++){ const k=addDays(today,i); if(wd(k)!==c.wd) continue; const at=atOf(k,c.time); if(at<=now) continue;
-    const {items}=rapItems(i===0?k:today); const body=items.length?items.map(g=>`${g.name}: ${g.v}${g.unit?' '+g.unit:''}`).join('\n'):'Bu haftanın okumaları hazır.';
+    const {items}=rapItems(i===0?k:today); const body=items.length?items.map(g=>`${g.name}: ${gLine(g)}`).join('\n'):'Bu haftanın okumaları hazır.';
     out.push({at:new Date(at).toISOString(), title:'Dua grubu raporun hazır', body:`${body}\nDokun, kopyala ve gruba gönder.`, tag:`rapor-${k}`}); }
   return out;
 }
@@ -1277,7 +1301,7 @@ function taskRow(t,k=dk()){
   const r=S.days[k]||{done:{}}, e=(r.done||{})[t.id], d=!!e, ty=t.type||'check', tool={count:'beads',timer:'timer',pages:'page',hatim:'ilim'}[ty]||'';
   const run=!d&&TM&&TM.id===t.id, prog=r.prog&&r.prog[t.id], st=isWeekly(t)?weekStreak(t):streakOf(t);
   let hint=esc(t.hint);
-  if(d&&ty==='pages') hint=`${e.n} sayfa okundu`;
+  if(d&&ty==='pages'){ const sl=isQuranRead(t)?suresOn(t,dk()):[]; hint=[e.n?`${e.n} sayfa`:'', sureTxt(sl)].filter(Boolean).join(', ')||'Okundu'; }
   else if(run) hint=`${mmss(tmLeft())} ${TM.running?'kaldı':'duraklatıldı'}`;
   else if(ty==='count'){ const g=+t.goal||0, extra=t.hint&&t.hint.trim()!==String(g)?`, ${esc(t.hint)}`:'';
     hint = d ? `${e.n} kez çekildi` : prog ? `${prog}${g?' / '+g:''} çekildi` : g ? `Hedef ${g}${extra}` : esc(t.hint); }
@@ -1519,6 +1543,8 @@ const ACT={
   nmzv:v=>{ const c=nmz(), l=c.list.includes(v)?c.list.filter(x=>x!==v):[...c.list,v]; S.nmz={...c,list:NAMAZ.map(x=>x[0]).filter(x=>l.includes(x))}; save(); render(); },
   nmzpr:v=>markPrayed(v),
   rapor:()=>openRapor(),
+  sradd:id=>addSure(id),
+  srdel:v=>{ const [id,i]=v.split('|'), r=rec(), l=(r.sure||{})[id]||[]; l.splice(+i,1); if(!l.length&&r.done[id]&&!r.done[id].n&&!((r.prog||{})[id])) delete r.done[id]; save(); render(); openPages(id); },
   rapt:v=>{ const ids=new Set(rapIds()), same=S.tasks.filter(t=>t.name.trim().toLowerCase()===v), on=same.some(t=>ids.has(t.id)); same.forEach(t=>on?ids.delete(t.id):ids.add(t.id)); S.rapor={...rap(),ids:[...ids]}; save(); render(); },
   rapcopy:async()=>{ const t=$('raptxt').value; try{ await navigator.clipboard.writeText(t); toast('Kopyalandı. Gruba yapıştırabilirsin.'); }catch(e){ $('raptxt').select(); document.execCommand('copy'); toast('Kopyalandı.'); } },
   rapshare:async()=>{ const t=$('raptxt').value; if(navigator.share){ try{ await navigator.share({text:t}); }catch(e){} } else window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank'); },
@@ -1533,7 +1559,7 @@ const ACT={
   wsum:ws=>modal(weekSummary(ws)),
   yr:d=>{ yearV=(yearV||+dk().slice(0,4))+(+d); yfoldOpen=true; render(); },
   cityset:()=>{ const v=($('cityid').value||'').replace(/\D/g,''); if(!v) return toast('Şehir kodunu yaz.'); S.cityId=v; save(); loadVakit(true); },
-  hundo:id=>{ const r=rec(); if(r.done) delete r.done[id]; if(r.prog) delete r.prog[id]; save(); closeModal(); render(); toast('Bugünkü kayıt silindi.'); },
+  hundo:id=>{ const r=rec(); if(r.done) delete r.done[id]; if(r.prog) delete r.prog[id]; if(r.sure) delete r.sure[id]; save(); closeModal(); render(); toast('Bugünkü kayıt silindi.'); },
   pgMode:v=>{ pgMode=v; const id=$('pgn')&&$('pgn').dataset.task; if(id) openHatim(id); },
   hnew:id=>{ const t=S.tasks.find(x=>x.id===id); if(!t) return; const b=document.querySelector('[data-act="hnew"]'); if(b&&!b.dataset.arm){ b.dataset.arm=1; b.textContent='Emin misin? Tekrar bas'; return; }
     const n=(t.hist||[]).length+1; t.proj=t.quran?`${n}. hatim`:'Yeni kitap'; t.start=0; t.projStart=dk(); t.hist=t.hist||[];
