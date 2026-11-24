@@ -753,7 +753,7 @@ function savePages(id,n){
 }
 
 /* ================= BULUT EŞİTLEME (Supabase, Emanet ile aynı hesap) ================= */
-const CFG=window.SEFER_CONFIG||{}, VER='38';
+const CFG=window.SEFER_CONFIG||{}, VER='39';
 let sb=null, sbUser=null, cloudMsg='', saveT=null, saving=false, pendingSave=false, lastPull=0, authMode='in';
 const cloudOn = () => !!(sb&&sbUser);
 function mergeDays(older,newer){
@@ -1224,7 +1224,8 @@ function taskRow(t,k=dk()){
   let hint=esc(t.hint);
   if(d&&ty==='pages') hint=`${e.n} sayfa okundu`;
   else if(run) hint=`${mmss(tmLeft())} ${TM.running?'kaldı':'duraklatıldı'}`;
-  else if(!d&&ty==='count'&&prog) hint=`${prog} / ${t.goal} çekildi`;
+  else if(ty==='count'){ const g=+t.goal||0, extra=t.hint&&t.hint.trim()!==String(g)?`, ${esc(t.hint)}`:'';
+    hint = d ? `${e.n} kez çekildi` : prog ? `${prog}${g?' / '+g:''} çekildi` : g ? `Hedef ${g}${extra}` : esc(t.hint); }
   else if(!d&&ty==='pages'&&+t.goal&&prog) hint=`${prog} / ${t.goal} sayfa okundu`;
   if(ty==='pages'&&hasBook(t)){ const h=hProg(t), g=effGoal(t); hint = `${esc(t.proj)}, ${d?`bugün ${e.n} sayfa`:prog?`bugün ${prog}${g?' / '+g:''} sayfa`:g?`bugün ${g} sayfa hedef`:'bugün okumadın'}, sayfa ${h.cur} / ${h.total}`; }
   let hbar='';
