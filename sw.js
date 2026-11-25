@@ -1,6 +1,6 @@
 // SEFER service worker: uygulamayı internetsiz de açar.
 // Yeni sürüm yayınlarken CACHE adındaki numarayı artır.
-const CACHE = 'sefer-v47';
+const CACHE = 'sefer-v48';
 const SHELL = ['./', './index.html', './manifest.webmanifest',
   './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png', './icons/apple-touch-icon.png', './js/config.js', './js/vendor/supabase.js', './js/vendor/591.supabase.js'];
 
@@ -19,6 +19,12 @@ self.addEventListener('fetch', e => {
     e.respondWith(fetch(req).then(res => {
       const copy = res.clone(); caches.open(CACHE).then(c => c.put('./index.html', copy)); return res;
     }).catch(() => caches.match('./index.html')));
+    return;
+  }
+  // Satır İzi köprüsü (Kitaplar sekmesi): önce internet ki Satır İzi güncellenince eskisi kalmasın, yoksa önbellek.
+  if (new URL(req.url).pathname.includes('/satir-izi/')) {
+    e.respondWith(fetch(req).then(res => { if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(req, copy)); } return res; })
+      .catch(() => caches.match(req)));
     return;
   }
   // Diğer dosyalar ve yazı tipleri: önce önbellek, yoksa internet.

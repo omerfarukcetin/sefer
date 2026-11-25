@@ -352,6 +352,14 @@ nav button .ico{width:23px;height:23px}
 nav button.on{color:var(--saffron)}
 nav button.on:before{content:"";position:absolute;top:0;width:28px;height:3px;border-radius:0 0 4px 4px;background:var(--saffron)}
 
+/* ---------- Kitaplar (Satır İzi) ---------- */
+#siWrap{position:fixed;left:0;right:0;top:0;z-index:5;background:var(--lapis)}
+#siWrap iframe{display:block;width:100%;height:100%;border:0;background:#f6f3ea}
+.siq{margin-top:12px;cursor:pointer;text-align:left;width:100%}
+.siq blockquote{margin:6px 0 8px;font-size:var(--t-item);line-height:1.55;color:var(--white);display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;overflow:hidden}
+.siq small{color:var(--mist);font-size:var(--t-meta)}
+.silink{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0 2px}
+
 /* ---------- modal / toast / particles ---------- */
 #modal{position:fixed;inset:0;background:rgba(8,16,30,.6);display:none;align-items:flex-end;justify-content:center;z-index:20}
 #modal.open{display:flex}
@@ -540,6 +548,7 @@ p,.muted,.heta,.ins,.excuse p,.hero .txt p,.phead p,.log,.ck,input,select,textar
 </head>
 <body>
 <nav id="side"><div class="brand"><svg viewBox="0 0 24 24" class="ico" style="color:var(--saffron);width:26px;height:26px"><path d="M15.5 3.5a8.5 8.5 0 1 0 5 13.4A7 7 0 0 1 15.5 3.5z" fill="none" stroke="currentColor" stroke-width="2"/></svg>SEFER</div><div class="in" id="nav"></div><p class="side-foot">Her gün bir adım.</p></nav>
+<div id="siWrap" hidden></div>
 <div class="wrap">
   <header id="hdr"></header>
   <main id="view"></main>
@@ -617,7 +626,7 @@ function stampDays(){
     d.u=now; daySnap[k]=dayJson(d);
   }
 }
-function save(touch=true){ if(touch){ S.updatedAt=Date.now(); stampDays(); } persist(); if(touch&&typeof scheduleSave==='function'){ scheduleSave(); schedulePush(); } }
+function save(touch=true){ if(touch){ S.updatedAt=Date.now(); stampDays(); } persist(); if(touch&&typeof scheduleSave==='function'){ scheduleSave(); schedulePush(); } if(touch&&typeof siSchedule==='function') siSchedule(); }
 let S=load(); snapDays();
 // eski sürümden geçiş
 S.tasks.forEach(t=>{ if(!t.icon) t.icon=t.res||'star'; if(!Array.isArray(t.days)) t.days=[...ALL]; if(t.remind==null) t.remind='';
@@ -808,7 +817,7 @@ function openSure(id){
 function openPages(id){
   if(isQuranRead(S.tasks.find(x=>x.id===id))) return openSure(id);
   const t=S.tasks.find(x=>x.id===id), r=rec(), goal=effGoal(t), have=(r.prog&&r.prog[id])||0, def=goal?Math.max(1,goal-have):1, bk=hasBook(t);
-  modal(`<h3>${esc(t.name)}</h3>${bk?hatimCard(t,true):''}${bookable(t)?`<button class="linkb" style="margin:6px 0 4px;font-size:var(--t-meta)" data-act="bedit" data-id="${esc(id)}">${bk?'Kitabı ya da hedefi değiştir':'Kitap ekle (isteğe bağlı)'}</button>`:''}<p class="muted" style="margin-top:2px;line-height:1.45">${goal?`Günlük hedefin ${goal} sayfa. ${have?`Bugün ${have} sayfa okudun, ${Math.max(0,goal-have)} sayfa kaldı.`:'Gün içinde parça parça da girebilirsin.'}`:'Bugün kaç sayfa okudun?'}</p>
+  modal(`<h3>${esc(t.name)}</h3>${bk?hatimCard(t,true):''}${siLinkRow(t)}${bookable(t)?`<button class="linkb" style="margin:6px 0 4px;font-size:var(--t-meta)" data-act="bedit" data-id="${esc(id)}">${bk?'Kitabı ya da hedefi değiştir':'Kitap ekle (isteğe bağlı)'}</button>`:''}<p class="muted" style="margin-top:2px;line-height:1.45">${goal?`Günlük hedefin ${goal} sayfa. ${have?`Bugün ${have} sayfa okudun, ${Math.max(0,goal-have)} sayfa kaldı.`:'Gün içinde parça parça da girebilirsin.'}`:'Bugün kaç sayfa okudun?'}</p>
     ${goal?`<div class="bar" style="margin-top:14px"><i style="width:${Math.min(100,have/goal*100)}%"></i></div>`:''}
     <div class="stepper"><button class="btn ghost" data-act="pg" data-id="-1" aria-label="Azalt">−</button>
       <input id="pgn" type="number" inputmode="numeric" min="1" value="${def}" aria-label="Sayfa sayısı"><button class="btn ghost" data-act="pg" data-id="1" aria-label="Artır">+</button></div>
@@ -842,7 +851,7 @@ function savePages(id,n){
 }
 
 /* ================= BULUT EŞİTLEME (Supabase, Emanet ile aynı hesap) ================= */
-const CFG=window.SEFER_CONFIG||{}, VER='47';
+const CFG=window.SEFER_CONFIG||{}, VER='48';
 let sb=null, sbUser=null, cloudMsg='', saveT=null, saving=false, pendingSave=false, lastPull=0, authMode='in';
 const cloudOn = () => !!(sb&&sbUser);
 function mergeDays(older,newer){
@@ -1255,7 +1264,7 @@ function planOf(t){ // bugünün başındaki duruma göre plan
 }
 const effGoal = t => { if(t.type==='hatim'){ const p=planOf(t); return p?p.daily:0; } if(t.type==='pages'&&hasBook(t)){ const p=planOf(t); if(p) return p.daily; } return +t.goal||0; };
 const bookable = t => t.type==='hatim'||(t.type==='pages'&&t.id!=='kuran');
-function finishBook(t){ const h=hProg(t); (t.hist=t.hist||[]).push({name:t.proj||'',start:t.projStart||'',end:dk(),pages:h.total}); const fin=t.proj; Object.assign(t,{proj:'',total:0,start:0,projStart:'',due:''}); return fin||'Kitap'; }
+function finishBook(t){ const h=hProg(t); siFinish(t,h); (t.hist=t.hist||[]).push({name:t.proj||'',start:t.projStart||'',end:dk(),pages:h.total,...(t.siBook?{siBook:t.siBook}:{})}); delete t.siBook; const fin=t.proj; Object.assign(t,{proj:'',total:0,start:0,projStart:'',due:''}); return fin||'Kitap'; }
 function planText(t){
   const p=planOf(t), h=hProg(t); if(!p||h.left<=0) return '';
   if(p.mode==='due'){ const ok=h.pace>=p.daily; return `Hedef: <b>${fmtDate(p.due)}</b>. Bunun için günde <b>${p.daily}</b> sayfa okuman gerekiyor${h.pace?`, şu anki hızın günde ${fmt1(h.pace)} sayfa. ${ok?'Hedefe yetişiyorsun.':'Biraz hızlanman gerekiyor.'}`:'.'}`; }
@@ -1265,7 +1274,7 @@ function openBook(id){
   const t=S.tasks.find(x=>x.id===id); if(!t) return; const h=hasBook(t)?hProg(t):null; window._bkT=t;
   modal(`<h3>${t.quran?'Hatim':'Kitabını gir'}</h3><p class="muted" style="margin-top:2px;font-size:var(--t-body)">Sayfa sayısını ve hedefini yaz; günlük okuman gereken sayfa kendiliğinden hesaplanır.</p>
     <div class="form">
-      ${t.quran?'':`<label><span class="lab">Kitabın adı</span><input id="bk_n" value="${esc(t.proj||'')}" placeholder="Örneğin Saadet-i Ebediyye"></label>`}
+      ${t.quran?'':`<div id="bk_si"></div><label><span class="lab">Kitabın adı</span><input id="bk_n" value="${esc(t.proj||'')}" placeholder="Örneğin Saadet-i Ebediyye"></label>`}
       <div class="g2"><label><span class="lab">Toplam sayfa</span><input id="bk_t" type="number" inputmode="numeric" min="1" value="${t.quran?604:(+t.total||'')}" ${t.quran?'disabled':''}></label>
         <label><span class="lab">Şu an kaldığın sayfa</span><input id="bk_c" type="number" inputmode="numeric" min="0" value="${h?h.cur:0}"></label></div>
       <div><span class="lab">Hedef</span>${seg(t.due||!(+t.goal)?'due':'daily',[['due','Bitiş tarihi'],['daily','Günlük sayfa']],'bkmode')}</div>
@@ -1275,6 +1284,7 @@ function openBook(id){
       <button class="btn turq" data-act="bsave" data-id="${esc(id)}">Kaydet</button>
       ${t.type==='pages'&&hasBook(t)?`<button class="btn ghost" data-act="bdel" data-id="${esc(id)}">Kitabı kaldır, sadece sayfa say</button>`:''}</div>`);
   ['bk_t','bk_c','bk_d','bk_g'].forEach(i=>{ const el=$(i); if(el) el.addEventListener('input',bookInfo); }); bookInfo();
+  if(!t.quran) siPicker(t);
 }
 function bookInfo(){
   const tot=+($('bk_t')||{}).value||0, cur=+($('bk_c')||{}).value||0, left=Math.max(0,tot-cur)+(window._bkT?todayPages(window._bkT):0), dueMode=!$('bk_due').hidden, info=$('bk_info'); if(!info) return;
@@ -1289,6 +1299,7 @@ function saveBook(id){
   if(dueMode&&!d) return toast('Bitiş tarihini seç.'); if(!dueMode&&!g) return toast('Günlük sayfa sayısını yaz.');
   const newBook = !t.quran && $('bk_n') && ($('bk_n').value.trim()!==(t.proj||'') || +t.total!==tot);
   if(!t.quran){ t.proj=$('bk_n').value.trim()||'Kitap'; t.total=tot; }
+  if($('bk_sel')){ const nb=$('bk_sel').value; if(t.siBook&&t.siBook!==nb) siCall('unlink',t.siBook); if(nb) t.siBook=nb; else delete t.siBook; }
   if(newBook || !t.projStart){ t.projStart = dk(); t.start = cur - todayPages(t); }
   else { const h=hProg(t); t.start=(+t.start||0)+(cur-h.cur); }
   if(dueMode){ t.due=d; if(t.type!=='pages') t.goal=0; } else { t.due=''; t.goal=g; }
@@ -1298,7 +1309,7 @@ function saveBook(id){
 let pgMode='count';
 function openHatim(id){
   const t=S.tasks.find(x=>x.id===id); if(!t.quran&&!hasBook(t)) return openBook(id); const h=hProg(t), r=rec(), goal=effGoal(t), have=(r.prog&&r.prog[id])||0, def=goal?Math.max(1,goal-have):1;
-  modal(`<h3>${esc(t.name)}</h3>${hatimCard(t,true)}<button class="linkb" style="margin-top:8px;font-size:var(--t-meta)" data-act="bedit" data-id="${esc(id)}">${t.quran?'Hedefi değiştir':'Kitabı ya da hedefi değiştir'}</button>
+  modal(`<h3>${esc(t.name)}</h3>${hatimCard(t,true)}${siLinkRow(t)}<button class="linkb" style="margin-top:8px;font-size:var(--t-meta)" data-act="bedit" data-id="${esc(id)}">${t.quran?'Hedefi değiştir':'Kitabı ya da hedefi değiştir'}</button>
     ${goal?`<p class="muted" style="margin-top:10px;font-size:var(--t-body)">Bugünkü hedef ${goal} sayfa. ${have?`${have} sayfa okudun.`:''}</p>`:''}
     <div style="margin-top:14px">${seg(pgMode,[['count','Okuduğum sayfa sayısı'],['page','Kaldığım sayfa']],'pgMode')}</div>
     <div class="stepper">${pgMode==='count'?`<button class="btn ghost" data-act="pg" data-id="-1" aria-label="Azalt">−</button>`:''}
@@ -1317,7 +1328,7 @@ function saveHatim(id){
   const total = already + Math.min(n, h.left);
   if(r.done[id]){ r.done[id].n=total; } else { r.prog[id]=total; if(!goal || total>=goal){ r.done[id]={n:total}; vib(12); } }
   const after=hProg(t);
-  if(after.left<=0){ (t.hist=t.hist||[]).push({name:t.proj||'',start:t.projStart||'',end:dk(),pages:after.total});
+  if(after.left<=0){ siFinish(t,after); (t.hist=t.hist||[]).push({name:t.proj||'',start:t.projStart||'',end:dk(),pages:after.total,...(t.siBook?{siBook:t.siBook}:{})}); delete t.siBook;
     const num=t.hist.length+1; t.start=0; t.projStart=addDays(dk(),1); t.due='';
     if(t.quran){ t.proj=`${num}. hatim`; save(); closeModal(); render(); return toast(`Hatim tamamlandı. Yarın ${t.proj} başlıyor.`); }
     const fin=t.proj; t.proj=''; t.total=0; save(); render(); openBook(id); return toast(`${fin||'Kitap'} bitti. Sıradaki kitabını gir.`); }
@@ -1389,7 +1400,7 @@ function vBugun(){
   const doneItems=[...vitems,...asIt(dini),...asIt(diger)].filter(it=>it.done);
   const ex=excuseBox(), left2=excuseLeft(), barP=need?Math.min(100,n/need*100):100;
   return `<div class="cols v-bugun"><div class="a-hero"><section class="chainline ${ev&&!linked&&T.length?'risk':''} ${linked?'ok':''}"><span class="clico">${ico('chain')}</span><div class="cltx"><b>${head}</b><small>${sub}</small><div class="clbar"><i style="width:${barP.toFixed(0)}%"></i></div></div></section>
-    ${vakitStrip()}${ex.includes('warn')?ex:''}</div><div class="a-tasks">
+    ${vakitStrip()}${ex.includes('warn')?ex:''}<div id="siq">${siQuoteHtml()}</div></div><div class="a-tasks">
     ${gV}${gD}${gG}
     ${!gV&&!gD&&!gG&&T.length?`<div class="group first"><div class="ghead"><h3>Bugünkü görevlerin tamam</h3></div></div>`:''}
     ${W.length?`<div class="group"><div class="ghead"><h3>Bu hafta</h3><small>${W.filter(t=>weekMet(t,wkStart(k))).length} / ${W.length} hedef tamam</small></div>${W.map(t=>taskRow(t)).join('')}</div>`:''}
@@ -1551,8 +1562,72 @@ function vAyarlar(){
     <div class="setwrap">${seg(setTab,[['gorevler','Görevler'],['hatirlatma','Hatırlatma'],['gorunum','Görünüm'],['hesap','Hesap']],'setTab')}<div class="setbody">${body}</div></div>`;
 }
 
+/* ================= SATIR İZİ (Kitaplar sekmesi ve kitap bağlantısı) =================
+   Satır İzi ayrı bir uygulamadır (../satir-izi/). Kitaplar sekmesinde SEFER'in içinde açılır.
+   Okuma görevi bir Satır İzi kitabına bağlanabilir (t.siBook). Sayfa ilerlemesinin kaynağı SEFER'in
+   günlük kayıtlarıdır: kaydedilen her değişiklikte okunan sayfa Satır İzi kitabına mutlak değer olarak yazılır.
+   Satır İzi'de girilen "bugün okudum" kayıtları gelen kutusundan alınıp bugünün kaydına eklenir. */
+const SI_URL='../satir-izi/';
+let SI=null, siTimer=null, siLast={}, siQ={day:'',q:null};
+async function siBridge(){ if(SI===false) return null; if(SI) return SI;
+  try{ SI=await import(SI_URL+'js/bridge.js'); }catch(e){ SI=false; return null; } return SI; }
+async function siCall(fn,...a){ const b=await siBridge(); if(!b) return null; try{ return await b[fn](...a); }catch(e){ return null; } }
+const siLinkable = t => bookable(t) && !t.quran;
+function siShow(on){
+  const w=$('siWrap'); if(!w) return;
+  document.querySelector('.wrap').hidden=on; w.hidden=!on;
+  if(!on) return;
+  if(!w.firstChild){ const f=document.createElement('iframe'); f.title='Satır İzi'; f.allow='clipboard-write; camera; screen-wake-lock'; f.src=SI_URL+'?embed=sefer#/'+(siPending||''); siPending=''; w.appendChild(f); }
+  siSize();
+}
+let siPending='';
+function siOpen(h){ // h: Satır İzi içindeki yol, örn. "kitap/ID" veya "tara?kitap=ID"
+  const f=$('siWrap')&&$('siWrap').querySelector('iframe');
+  if(f){ try{ f.contentWindow.location.hash='#/'+h; }catch(e){ f.src=SI_URL+'?embed=sefer#/'+h; } } else siPending=h;
+  go('kitaplar');
+}
+function siSize(){ const w=$('siWrap'); if(!w||w.hidden) return; const desk=innerWidth>=1000, nav=$('side');
+  w.style.left=desk?nav.offsetWidth+'px':'0'; w.style.bottom=desk?'0':nav.offsetHeight+'px'; }
+window.addEventListener('resize',siSize);
+function siLinkRow(t){ if(!t.siBook) return '';
+  return `<div class="silink"><button class="btn ghost" data-act="siopen" data-id="tara?kitap=${esc(t.siBook)}">${ico('page')} Alıntı tara</button><button class="linkb" style="font-size:var(--t-meta)" data-act="siopen" data-id="kitap/${esc(t.siBook)}">Satır İzi’nde aç</button></div>`; }
+function siSchedule(){ clearTimeout(siTimer); siTimer=setTimeout(siPush,800); }
+async function siPush(){
+  const L=S.tasks.filter(t=>t.siBook&&hasBook(t)); if(!L.length) return;
+  for(const t of L){ const h=hProg(t), p={readPages:h.cur,totalPages:h.total,finished:false,link:{task:t.name,goal:effGoal(t),due:t.due||'',streak:streakOf(t)}};
+    const j=JSON.stringify(p); if(siLast[t.siBook]===j) continue; const ok=await siCall('setProgress',t.siBook,p); if(ok) siLast[t.siBook]=j; }
+}
+function siFinish(t,h){ if(!t.siBook) return; const id=t.siBook; siCall('setProgress',id,{readPages:h.total,totalPages:h.total,finished:true,link:{task:t.name,goal:0,due:'',streak:streakOf(t)}}); delete siLast[id]; }
+function siAddPages(t,n){ // Satır İzi'den gelen sayfayı bugünün kaydına ekler (arayüz açmadan)
+  const h=hProg(t); n=Math.min(Math.round(n),Math.max(0,h.left)); if(n<=0) return 0;
+  const r=rec(), goal=effGoal(t), id=t.id; r.prog=r.prog||{};
+  const total=(r.done[id]?(r.done[id].n||0):(r.prog[id]||0))+n; r.prog[id]=total;
+  if(r.done[id]) r.done[id].n=total; else if(!goal||total>=goal) r.done[id]={n:total,t:Date.now()};
+  if(hProg(t).left<=0) finishBook(t);
+  return n;
+}
+async function siInbox(){
+  const b=await siBridge(); if(!b) return; const box=b.takeInbox(); if(!box.length) return; let n=0, miss=0;
+  for(const it of box){ const t=S.tasks.find(x=>x.siBook===it.bookId&&hasBook(x)); if(t) n+=siAddPages(t,+it.pages); else miss++; }
+  if(n){ save(); render(); toast(`Satır İzi’nden ${n} sayfa eklendi.`); } else if(miss) toast('Satır İzi’nden gelen sayfa kaydı bağlı bir göreve eşleşmedi.');
+}
+window.addEventListener('storage',e=>{ if(e.key==='satir-izi-sefer-inbox'&&e.newValue&&e.newValue!=='[]') siInbox(); });
+async function siPicker(t){
+  const box=$('bk_si'); if(!box) return; const b=await siBridge(); if(!b||!$('bk_si')) return;
+  const books=(await siCall('listBooks'))||[]; if(!$('bk_si')) return;
+  if(!books.length){ box.innerHTML=`<p class="muted" style="font-size:var(--t-meta);margin:0 0 4px">Kitaplar sekmesinde (Satır İzi) kitap eklersen buradan seçip bağlayabilirsin; sayfa ilerlemen iki tarafta da görünür.</p>`; return; }
+  box.innerHTML=`<label><span class="lab">Satır İzi’nden seç</span><select id="bk_sel"><option value="">Bağlama, kitabı elle gir</option>${books.map(x=>`<option value="${esc(x.id)}" ${x.id===t.siBook?'selected':''}>${esc(x.title)}${x.author?' — '+esc(x.author):''}${x.linked&&x.id!==t.siBook?' (başka göreve bağlı)':''}</option>`).join('')}</select></label>`;
+  $('bk_sel').addEventListener('change',()=>{ const x=books.find(k=>k.id===$('bk_sel').value); if(!x) return;
+    $('bk_n').value=x.title; if(x.totalPages) $('bk_t').value=x.totalPages; if(x.readPages!=null) $('bk_c').value=x.readPages; bookInfo(); });
+}
+function siQuoteHtml(){ const q=siQ.q; if(!q||siQ.day!==dk()) return '';
+  return `<button class="panel siq" data-act="siopen" data-id="kitap/${esc(q.bookId)}"><span class="lab">Günün satırı</span><blockquote>“${esc(q.text)}”</blockquote><small>${esc(q.author)}${q.author&&q.title?', ':''}${esc(q.title)}${q.page?', s. '+esc(q.page):''}</small></button>`; }
+async function siLoadQuote(){ if(siQ.day===dk()) return; const q=await siCall('quoteOfDay',dk()); siQ={day:dk(),q}; const el=$('siq'); if(el) el.innerHTML=siQuoteHtml(); }
+async function siInit(){ if(!(await siCall('available'))) return; await siInbox(); siLoadQuote(); siPush(); }
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'){ siInbox(); siLoadQuote(); } });
+
 /* ================= YÖNLENDİRME ================= */
-const TABS=[['bugun','sun','Bugün',vBugun],['takip','cal','Takip',vTakip],['ayarlar','sliders','Ayarlar',vAyarlar]];
+const TABS=[['bugun','sun','Bugün',vBugun],['takip','cal','Takip',vTakip],['kitaplar','ilim','Kitaplar',()=>''],['ayarlar','sliders','Ayarlar',vAyarlar]];
 let tab='bugun';
 function dropScreen(){ // ekran süresi özelliği kaldırıldı: eski kayıtları ve gelen adresi temizle
   const q=new URLSearchParams(location.search); if(q.has('ekran')){ q.delete('ekran'); q.delete('k'); history.replaceState(null,'',location.pathname+(q.toString()?'?'+q:'')+location.hash); }
@@ -1565,6 +1640,7 @@ function render(){
   $('hdr').innerHTML=vHeader();
   $('view').innerHTML=TABS.find(t=>t[0]===tab)[3]();
   $('nav').innerHTML=TABS.map(t=>`<button class="${t[0]===tab?'on':''}" data-act="tab" data-id="${t[0]}" aria-current="${t[0]===tab?'page':'false'}"><span class="nico">${ico(t[1])}</span>${t[2]}</button>`).join('');
+  siShow(tab==='kitaplar');
 }
 function go(id){ tab=id; try{ history.replaceState(null,'','#'+id); }catch(e){} render(); window.scrollTo(0,0); }
 
@@ -1584,7 +1660,8 @@ const ACT={
   pg:d=>{ const i=$('pgn'); i.value=Math.max(1,Math.round(+i.value||1)+(+d)); },
   hsave:id=>saveHatim(id),
   bedit:id=>openBook(id), bsave:id=>saveBook(id),
-  bdel:id=>{ const t=S.tasks.find(x=>x.id===id); Object.assign(t,{proj:'',total:0,start:0,projStart:'',due:''}); save(); closeModal(); render(); toast('Kitap kaldırıldı. Günlük sayfa hedefin aynen duruyor.'); },
+  siopen:h=>{ closeModal(); siOpen(h); },
+  bdel:id=>{ const t=S.tasks.find(x=>x.id===id); if(t.siBook){ siCall('unlink',t.siBook); delete t.siBook; } Object.assign(t,{proj:'',total:0,start:0,projStart:'',due:''}); save(); closeModal(); render(); toast('Kitap kaldırıldı. Günlük sayfa hedefin aynen duruyor.'); },
   bkmode:v=>{ const due=v==='due'; $('bk_due').hidden=!due; $('bk_day').hidden=due; document.querySelectorAll('#sheet [data-act="bkmode"]').forEach(b=>b.classList.toggle('on',b.dataset.id===v)); bookInfo(); },
   pon:()=>enablePush(), poff:()=>disablePush(),
   ptest:async()=>{ const ok=await testPush({title:'SEFER',body:'Bildirimler çalışıyor.',tag:'deneme'}); toast(ok?'Deneme bildirimi birkaç saniye içinde gelecek.':'Gönderilemedi. Girişini ve kurulumu kontrol et.'); },
@@ -1719,6 +1796,7 @@ if(S.city&&!S.cityId){ const m={istanbul:'16741','i̇stanbul':'16741',ankara:'16
 if(!S.cityId && !S.cityAuto){ S.cityId='62737'; S.cityAuto=true; }
 addHatim(); convKitap(); addCuma(); readHash(); kildimFromUrl(); dropScreen(); raporFromUrl(); tmRestore(); applyUI(); save(false); render(); maybeWeekSummary(); loadCities(); loadVakit();
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',initCloud); else initCloud();
+siInit();
 try{ localStorage.removeItem('sefer-abh'); }catch(e){}
 </script>
 </body>
