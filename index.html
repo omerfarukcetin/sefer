@@ -355,7 +355,9 @@ nav button.on:before{content:"";position:absolute;top:0;width:28px;height:3px;bo
 /* ---------- Kitaplar (Satır İzi) ---------- */
 #siWrap{position:fixed;left:0;right:0;top:0;z-index:5;background:var(--lapis)}
 #siWrap iframe{display:block;width:100%;height:100%;border:0;background:var(--lapis)}
-.siq{margin-top:12px;cursor:pointer;text-align:left;width:100%}
+.siq{margin-top:12px;text-align:left;width:100%}
+.siqb{display:block;width:100%;text-align:left;cursor:pointer;font:inherit;color:inherit;padding:0}
+.siqn{display:inline-flex;align-items:center;gap:5px;font-size:var(--t-meta)}.siqn .ico{width:14px;height:14px}
 .siq blockquote{margin:6px 0 8px;font-size:var(--t-item);line-height:1.55;color:var(--white);display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;overflow:hidden}
 .siq small{color:var(--mist);font-size:var(--t-meta)}
 .silink{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0 2px}
@@ -557,7 +559,7 @@ p,.muted,.heta,.ins,.excuse p,.hero .txt p,.phead p,.log,.ck,input,select,textar
 <div id="toast" role="status"></div>
 
 <script>
-const IC = {
+const IC = {refresh:'<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/>',
   huzur:'<path d="M15.5 3.5a8.5 8.5 0 1 0 5 13.4A7 7 0 0 1 15.5 3.5z"/><path d="M18 7.5l.6 1.3 1.4.2-1 1 .2 1.4-1.2-.7-1.2.7.2-1.4-1-1 1.4-.2z"/>',
   ilim:'<path d="M12 6.5C10 5 7 4.5 3.5 5v13c3.5-.5 6.5 0 8.5 1.5 2-1.5 5-2 8.5-1.5V5C17 4.5 14 5 12 6.5z"/><path d="M12 6.5v13"/>',
   guc:'<path d="M6.5 7v10M3.5 9.5v5M17.5 7v10M20.5 9.5v5M6.5 12h11"/>',
@@ -851,7 +853,7 @@ function savePages(id,n){
 }
 
 /* ================= BULUT EŞİTLEME (Supabase, Emanet ile aynı hesap) ================= */
-const CFG=window.SEFER_CONFIG||{}, VER='49';
+const CFG=window.SEFER_CONFIG||{}, VER='50';
 let sb=null, sbUser=null, cloudMsg='', saveT=null, saving=false, pendingSave=false, lastPull=0, authMode='in';
 const cloudOn = () => !!(sb&&sbUser);
 function mergeDays(older,newer){
@@ -1568,7 +1570,7 @@ function vAyarlar(){
    günlük kayıtlarıdır: kaydedilen her değişiklikte okunan sayfa Satır İzi kitabına mutlak değer olarak yazılır.
    Satır İzi'de girilen "bugün okudum" kayıtları gelen kutusundan alınıp bugünün kaydına eklenir. */
 const SI_URL='../satir-izi/';
-let SI=null, siTimer=null, siLast={}, siQ={day:'',q:null};
+let SI=null, siTimer=null, siLast={}, siQ={key:'',q:null,rnd:false};
 async function siBridge(){ if(SI===false) return null; if(SI) return SI;
   try{ SI=await import(SI_URL+'js/bridge.js'); }catch(e){ SI=false; return null; } return SI; }
 async function siCall(fn,...a){ const b=await siBridge(); if(!b) return null; try{ return await b[fn](...a); }catch(e){ return null; } }
@@ -1620,9 +1622,19 @@ async function siPicker(t){
   $('bk_sel').addEventListener('change',()=>{ const x=books.find(k=>k.id===$('bk_sel').value); if(!x) return;
     $('bk_n').value=x.title; if(x.totalPages) $('bk_t').value=x.totalPages; if(x.readPages!=null) $('bk_c').value=x.readPages; bookInfo(); });
 }
-function siQuoteHtml(){ const q=siQ.q; if(!q||siQ.day!==dk()) return '';
-  return `<button class="panel siq" data-act="siopen" data-id="kitap/${esc(q.bookId)}"><span class="lab">Günün satırı</span><blockquote>“${esc(q.text)}”</blockquote><small>${esc(q.author)}${q.author&&q.title?', ':''}${esc(q.title)}${q.page?', s. '+esc(q.page):''}</small></button>`; }
-async function siLoadQuote(){ if(siQ.day===dk()) return; const q=await siCall('quoteOfDay',dk()); siQ={day:dk(),q}; const el=$('siq'); if(el) el.innerHTML=siQuoteHtml(); }
+/* Günün satırı: her namaz vaktinde başka bir alıntı; "Başka bir satır" ile rastgele */
+const SIQ_LBL={sabah:'Sabah vaktinin satırı',ogle:'Öğle vaktinin satırı',ikindi:'İkindi vaktinin satırı',aksam:'Akşam vaktinin satırı',yatsi:'Yatsı vaktinin satırı'};
+function siQKey(){ const v=currentVakit(); return dk()+'|'+(v||('s'+Math.floor(new Date().getHours()/4))); }
+function siQuoteHtml(){ const q=siQ.q; if(!q||!siQ.key.startsWith(dk())) return '';
+  const v=siQ.key.split('|')[1], lbl=siQ.rnd?'Rastgele bir satır':(SIQ_LBL[v]||'Günün satırı');
+  return `<div class="panel siq"><div class="between"><span class="lab">${lbl}</span><button class="linkb siqn" data-act="siqnext">${ico('refresh')} Başka bir satır</button></div>
+    <button class="siqb" data-act="siopen" data-id="kitap/${esc(q.bookId)}"><blockquote>“${esc(q.text)}”</blockquote><small>${esc(q.author)}${q.author&&q.title?', ':''}${esc(q.title)}${q.page?', s. '+esc(q.page):''}</small></button></div>`; }
+function siQPaint(){ const el=$('siq'); if(el) el.innerHTML=siQuoteHtml(); }
+async function siLoadQuote(){ const key=siQKey(); if(siQ.key===key) return; const q=await siCall('quoteOfDay',key); siQ={key,q,rnd:false}; siQPaint(); }
+async function siNextQuote(){ const old=siQ.q&&siQ.q.text; let q=null;
+  for(let i=0;i<6;i++){ q=await siCall('quoteOfDay',siQ.key+'|'+Math.random()); if(!q||q.text!==old) break; }
+  if(!q) return; if(q.text===old) return toast('Arşivinde şimdilik başka satır yok.'); siQ={...siQ,q,rnd:true}; siQPaint(); }
+setInterval(()=>{ if(document.visibilityState==='visible') siLoadQuote(); },60000);
 async function siInit(){ if(!(await siCall('available'))) return; await siInbox(); siLoadQuote(); siPush(); }
 document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'){ siInbox(); siLoadQuote(); } });
 
@@ -1659,7 +1671,8 @@ const ACT={
   treset:()=>{ if(!TM) return; TM.left=TM.total; TM.running=false; clearInterval(tmInt); saveTM(); renderTimer(); render(); },
   pg:d=>{ const i=$('pgn'); i.value=Math.max(1,Math.round(+i.value||1)+(+d)); },
   hsave:id=>saveHatim(id),
-  bedit:id=>openBook(id), bsave:id=>saveBook(id),
+  bedit:id=>openBook(id),
+  siqnext:()=>siNextQuote(), bsave:id=>saveBook(id),
   siopen:h=>{ closeModal(); siOpen(h); },
   bdel:id=>{ const t=S.tasks.find(x=>x.id===id); if(t.siBook){ siCall('unlink',t.siBook); delete t.siBook; } Object.assign(t,{proj:'',total:0,start:0,projStart:'',due:''}); save(); closeModal(); render(); toast('Kitap kaldırıldı. Günlük sayfa hedefin aynen duruyor.'); },
   bkmode:v=>{ const due=v==='due'; $('bk_due').hidden=!due; $('bk_day').hidden=due; document.querySelectorAll('#sheet [data-act="bkmode"]').forEach(b=>b.classList.toggle('on',b.dataset.id===v)); bookInfo(); },
