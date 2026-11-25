@@ -737,7 +737,19 @@ function beep(){ try{ if(!actx||S.ui.sound===false) return; [0,.35,.7].forEach(d
   o.start(actx.currentTime+d); o.stop(actx.currentTime+d+.32); }); }catch(e){} }
 
 /* ---------- sayfa girişi ---------- */
+function recentSures(t){ const out=[]; for(let i=0;i<60&&out.length<6;i++){ suresOn(t,addDays(dk(),-i)).forEach(x=>{ if(!out.includes(x.s)&&out.length<6) out.push(x.s); }); } return out; }
+function openSure(id){
+  const t=S.tasks.find(x=>x.id===id), r=rec(), list=suresOn(t,dk()), rec6=recentSures(t), last=rec6[0]||'Yâsîn';
+  modal(`<h3>${esc(t.name)}</h3><p class="muted" style="margin-top:2px">Bugün hangi sureyi okudun?</p>
+    ${rec6.length?`<span class="lab" style="margin-top:12px">Son okudukların, dokun ve ekle</span><div class="chips">${rec6.map(n=>`<button class="chip" data-act="srquick" data-id="${esc(id)}|${esc(n)}">${esc(n)}</button>`).join('')}</div>`:''}
+    <div class="surebox" style="${rec6.length?'':'border:0;margin-top:8px;padding-top:0'}"><span class="lab">Listeden seç</span>
+      <div class="sureadd"><select id="sr_s">${SURELER.map((n,i)=>`<option value="${esc(n)}" ${n===last?'selected':''}>${i+1}. ${esc(n)}</option>`).join('')}</select>
+        <input id="sr_n" type="number" inputmode="numeric" min="1" value="1" aria-label="Kaç kez"><button class="btn turq" data-act="sradd" data-id="${esc(id)}">Ekle</button></div></div>
+    ${list.length?`<span class="lab" style="margin-top:14px">Bugün okudukların</span><div class="chips">${list.map((x,i)=>`<button class="chip on" data-act="srdel" data-id="${esc(id)}|${i}" aria-label="${esc(x.s)} kaldır">${esc(x.s)}${x.n>1?` ×${x.n}`:''} ✕</button>`).join('')}</div>`:''}
+    ${r.done[id]?`<button class="linkb" style="margin-top:14px;font-size:var(--t-meta)" data-act="hundo" data-id="${esc(id)}">Bugünkü kaydı sil</button>`:''}`);
+}
 function openPages(id){
+  if(isQuranRead(S.tasks.find(x=>x.id===id))) return openSure(id);
   const t=S.tasks.find(x=>x.id===id), r=rec(), goal=effGoal(t), have=(r.prog&&r.prog[id])||0, def=goal?Math.max(1,goal-have):1, bk=hasBook(t);
   modal(`<h3>${esc(t.name)}</h3>${bk?hatimCard(t,true):''}${bookable(t)?`<button class="linkb" style="margin:6px 0 4px;font-size:var(--t-meta)" data-act="bedit" data-id="${esc(id)}">${bk?'Kitabı ya da hedefi değiştir':'Kitap ekle (isteğe bağlı)'}</button>`:''}<p class="muted" style="margin-top:2px;line-height:1.45">${goal?`Günlük hedefin ${goal} sayfa. ${have?`Bugün ${have} sayfa okudun, ${Math.max(0,goal-have)} sayfa kaldı.`:'Gün içinde parça parça da girebilirsin.'}`:'Bugün kaç sayfa okudun?'}</p>
     ${goal?`<div class="bar" style="margin-top:14px"><i style="width:${Math.min(100,have/goal*100)}%"></i></div>`:''}
@@ -758,8 +770,8 @@ function sureBox(t){
       <input id="sr_n" type="number" inputmode="numeric" min="1" value="1" aria-label="Kaç kez"><button class="btn" data-act="sradd" data-id="${esc(t.id)}">Ekle</button></div>
     ${list.length?`<div class="chips" style="margin-top:8px">${list.map((x,i)=>`<button class="chip on" data-act="srdel" data-id="${esc(t.id)}|${i}" aria-label="${esc(x.s)} kaldır">${esc(x.s)}${x.n>1?` ×${x.n}`:''} ✕</button>`).join('')}</div>`:''}</div>`;
 }
-function addSure(id){
-  const t=S.tasks.find(x=>x.id===id), s0=$('sr_s').value, n=Math.max(1,Math.round(+$('sr_n').value||1)), r=rec();
+function addSure(id,quick){
+  const t=S.tasks.find(x=>x.id===id), s0=quick||$('sr_s').value, n=quick?1:Math.max(1,Math.round(+$('sr_n').value||1)), r=rec();
   r.sure=r.sure||{}; const list=r.sure[id]=r.sure[id]||[]; const f=list.find(x=>x.s===s0); if(f) f.n+=n; else list.push({s:s0,n});
   if(!r.done[id]) r.done[id]={n:(r.prog&&r.prog[id])||0,t:Date.now()};
   save(); render(); openPages(id); toast(`${s0} suresi eklendi.`);
@@ -773,7 +785,7 @@ function savePages(id,n){
 }
 
 /* ================= BULUT EŞİTLEME (Supabase, Emanet ile aynı hesap) ================= */
-const CFG=window.SEFER_CONFIG||{}, VER='42';
+const CFG=window.SEFER_CONFIG||{}, VER='43';
 let sb=null, sbUser=null, cloudMsg='', saveT=null, saving=false, pendingSave=false, lastPull=0, authMode='in';
 const cloudOn = () => !!(sb&&sbUser);
 function mergeDays(older,newer){
@@ -1031,17 +1043,19 @@ function rapItems(end){
   S.tasks.filter(t=>ids.includes(t.id)).forEach(t=>{
     let v=0, days=0; const sures={};
     for(let k=a;k<=b;k=addDays(k,1)){ const r=S.days[k]||{}, e=(r.done||{})[t.id], pr=(r.prog||{})[t.id]||0;
-      if(t.type==='count'){ v+= e?(+e.n||0):pr; }
+      if(t.type==='count'){ v+= e?Math.max(+e.n||0,+t.goal||0):pr; }
+      else if(isQuranRead(t)){ const sl=suresOn(t,k); sl.forEach(x=>{ sures[x.s]=(sures[x.s]||0)+x.n; }); if(e&&!sl.length) days++; }
       else if(t.type==='pages'||t.type==='hatim'){ v+=pagesOn(t,k); if(isQuranRead(t)) suresOn(t,k).forEach(x=>{ sures[x.s]=(sures[x.s]||0)+x.n; }); }
       else if(e) v+=1; }
-    const key=t.name.trim().toLowerCase()+'|'+(t.type==='hatim'?'pages':t.type), unit=t.type==='count'?'':(t.type==='pages'||t.type==='hatim')?'sayfa':t.vakit?'vakit':'gün';
+    if(isQuranRead(t)) v=days;
+    const key=t.name.trim().toLowerCase()+'|'+(t.type==='hatim'?'pages':t.type), unit=isQuranRead(t)?'gün':t.type==='count'?'':(t.type==='pages'||t.type==='hatim')?'sayfa':t.vakit?'vakit':'gün';
     const g=groups.get(key)||{name:t.name.trim(),unit,v:0,extra:''}; g.v+=v;
     if(t.type==='hatim'&&t.quran){ const h=hProg(t); g.extra=`${t.proj||'hatim'}: sayfa ${h.cur} / ${h.total}`; }
     g.sures=g.sures||{}; for(const [n,c] of Object.entries(sures)) g.sures[n]=(g.sures[n]||0)+c;
     groups.set(key,g); });
   return {a,b,items:[...groups.values()].filter(g=>g.v>0||Object.keys(g.sures||{}).length||rap().zero)};
 }
-const gLine = g => { const sl=Object.entries(g.sures||{}).map(([n,c])=>`${n} ${c} kez`); const pg=g.v>0||!sl.length?`${g.v.toLocaleString('tr-TR')}${g.unit?' '+g.unit:''}`:''; return [pg, sl.length?`${sl.length>0&&pg?'':''}${sl.join(', ')}`:''].filter(Boolean).join('; '); };
+const gLine = g => { const sl=Object.entries(g.sures||{}).map(([n,c])=>`${n} ${c} kez`); const pg=g.v>0||!sl.length?`${g.v.toLocaleString('tr-TR')}${g.unit?' '+g.unit:''}`:''; return [sl.join(', '), pg].filter(Boolean).join('; '); };
 const trDate = k => kDate(k).toLocaleDateString('tr-TR',{day:'numeric',month:'long'});
 function rapText(end){
   const {a,b,items}=rapItems(end), c=rap();
@@ -1265,7 +1279,8 @@ function taskRow(t,k=dk()){
   const r=S.days[k]||{done:{}}, e=(r.done||{})[t.id], d=!!e, ty=t.type||'check', tool={count:'beads',timer:'timer',pages:'page',hatim:'ilim'}[ty]||'';
   const run=!d&&TM&&TM.id===t.id, prog=r.prog&&r.prog[t.id], st=isWeekly(t)?weekStreak(t):streakOf(t);
   let hint=esc(t.hint);
-  if(d&&ty==='pages'){ const sl=isQuranRead(t)?suresOn(t,dk()):[]; hint=[e.n?`${e.n} sayfa`:'', sureTxt(sl)].filter(Boolean).join(', ')||'Okundu'; }
+  if(isQuranRead(t)) hint = d ? (sureTxt(suresOn(t,dk()))||'Okundu') : 'Okuduğun sureyi gir';
+  else if(d&&ty==='pages'){ hint=`${e.n} sayfa okundu`; }
   else if(run) hint=`${mmss(tmLeft())} ${TM.running?'kaldı':'duraklatıldı'}`;
   else if(ty==='count'){ const g=+t.goal||0, extra=t.hint&&t.hint.trim()!==String(g)?`, ${esc(t.hint)}`:'';
     hint = d ? `${e.n} kez çekildi` : prog ? `${prog}${g?' / '+g:''} çekildi` : g ? `Hedef ${g}${extra}` : esc(t.hint); }
@@ -1511,6 +1526,7 @@ const ACT={
   nmzpr:v=>markPrayed(v),
   rapor:()=>openRapor(),
   sradd:id=>addSure(id),
+  srquick:v=>{ const i=v.indexOf('|'); addSure(v.slice(0,i),v.slice(i+1)); },
   srdel:v=>{ const [id,i]=v.split('|'), r=rec(), l=(r.sure||{})[id]||[]; l.splice(+i,1); if(!l.length&&r.done[id]&&!r.done[id].n&&!((r.prog||{})[id])) delete r.done[id]; save(); render(); openPages(id); },
   rapt:v=>{ const ids=new Set(rapIds()), same=S.tasks.filter(t=>t.name.trim().toLowerCase()===v), on=same.some(t=>ids.has(t.id)); same.forEach(t=>on?ids.delete(t.id):ids.add(t.id)); S.rapor={...rap(),ids:[...ids]}; save(); render(); },
   rapcopy:async()=>{ const t=$('raptxt').value; try{ await navigator.clipboard.writeText(t); toast('Kopyalandı. Gruba yapıştırabilirsin.'); }catch(e){ $('raptxt').select(); document.execCommand('copy'); toast('Kopyalandı.'); } },
