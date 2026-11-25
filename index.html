@@ -474,6 +474,23 @@ nav button.on:before{content:"";position:absolute;top:0;width:28px;height:3px;bo
 .chip.on{border-color:var(--turq);color:var(--white);background:color-mix(in srgb,var(--turq) 22%,var(--lapis2))}
 .surebox{margin-top:16px;padding-top:14px;border-top:1px solid var(--lapis3)}
 .sureadd{display:grid;grid-template-columns:1fr 64px auto;gap:8px;margin-top:4px}.sureadd input{text-align:center}
+.chainline{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:var(--r-lg);background:var(--lapis2);border:1px solid var(--lapis3)}
+.chainline .clico{flex:none;display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:color-mix(in srgb,var(--saffron) 18%,transparent);color:var(--saffron)}
+.chainline .clico .ico{width:20px;height:20px}
+.chainline.ok .clico{background:color-mix(in srgb,var(--turq) 20%,transparent);color:var(--turq)}
+.chainline.risk{border-color:color-mix(in srgb,var(--coral) 60%,var(--lapis3))}
+.chainline .cltx{flex:1;min-width:0}.chainline b{display:block;font-size:var(--t-item);font-weight:800}.chainline small{display:block;color:var(--mist);font-size:var(--t-meta);margin-top:1px}
+.clbar{height:5px;border-radius:99px;background:var(--lapis3);margin-top:7px;overflow:hidden}.clbar i{display:block;height:100%;background:var(--saffron);border-radius:99px}
+.chainline.ok .clbar i{background:var(--turq)}
+.task.multi{flex-wrap:wrap;cursor:default}
+.task.multi .vbtns{flex-basis:100%;display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:2px}
+.vb{display:flex;align-items:center;justify-content:center;gap:4px;padding:7px 2px;border-radius:10px;border:1px solid var(--lapis3);background:var(--lapis);font-size:var(--t-meta);font-weight:700;color:var(--mist)}
+.vb .ico{width:14px;height:14px}
+.vb.on{background:var(--turq);border-color:var(--turq);color:var(--lapis)}
+.vb.now{border-color:var(--saffron);color:var(--white)}
+.donegrp .task{padding:6px 12px;opacity:.78}.donegrp .task .medal{width:28px;height:28px;border-radius:8px}.donegrp .task .medal .ico{width:14px;height:14px}
+.donegrp .task .tx b{font-size:var(--t-body)}.donegrp .task .tx small{font-size:var(--t-tiny)}.donegrp .task .tick{width:24px;height:24px}
+.donegrp .streak{display:none}
 /* ---- tutarlılık: tek kutu ve yazı ölçüsü ---- */
 .panel,.hcard,.fold,.chainbox,.weekbar,.scard2,.stat,.hedit,.trow{border-radius:var(--r-lg);padding:var(--pad)}
 .fold{padding:0}.fold summary{padding:var(--pad)}.fold .sgrid,.ybox{padding:0 var(--pad) var(--pad)}
@@ -785,7 +802,7 @@ function savePages(id,n){
 }
 
 /* ================= BULUT EŞİTLEME (Supabase, Emanet ile aynı hesap) ================= */
-const CFG=window.SEFER_CONFIG||{}, VER='43';
+const CFG=window.SEFER_CONFIG||{}, VER='44';
 let sb=null, sbUser=null, cloudMsg='', saveT=null, saving=false, pendingSave=false, lastPull=0, authMode='in';
 const cloudOn = () => !!(sb&&sbUser);
 function mergeDays(older,newer){
@@ -1303,6 +1320,13 @@ function excuseBox(){
     return `<div class="panel excuse warn"><p>Dün yapılmayan görevler yüzünden zincirin ve ${broken.length===1?'bir serin':broken.length+' serin'} kırılmak üzere: ${esc(broken.map(x=>x.name).join(', '))}. Dün hasta ya da yolculukta idiysen mazeret hakkını kullanabilirsin.</p><button class="btn" data-act="excuse" data-id="${y}">Dünü mazeretli say</button></div>`;
   return '';
 }
+function multiRow(L,vnow){
+  const k=dk(), dn=L.filter(t=>isDone(t,k)).length, all=dn===L.length, t0=L[0];
+  return `<div class="task multi ${all?'done':''}"><span class="medal" style="--c:${col(t0)}">${ico(t0.icon)}</span>
+    <span class="tx"><b>${esc(t0.name.trim())}</b><small>${dn} / ${L.length} vakit</small></span>
+    <span class="vbtns">${L.map(t=>{ const d=isDone(t,k), lb=(NAMAZ.find(x=>x[0]===t.vakit)||[,''])[1].replace(' namazı','');
+      return `<button class="vb ${d?'on':''} ${vnow===t.vakit&&!d?'now':''}" data-act="toggle" data-id="${esc(t.id)}" aria-pressed="${d}" aria-label="${esc(t0.name)}, ${lb}">${d?ico('check'):''}<span>${lb}</span></button>`; }).join('')}</span></div>`;
+}
 function vBugun(){
   const T=todays(), k=dk(), n=T.filter(t=>isDone(t,k)).length, p=T.length?n/T.length:0, left=T.filter(t=>!isDone(t,k));
   const ev=new Date().getHours()>=17;
@@ -1311,19 +1335,25 @@ function vBugun(){
   const sub = !T.length ? 'Bugün planlı görev yok, zincirin bozulmaz.' : done ? 'Bugünkü görevlerin tamam.' :
     linked ? `Bugünün halkası eklendi. ${left.length} görev daha var.` :
     `Zincir için ${more} görev daha gerekiyor.`;
-  const strip = `<div class="chainbox"><div class="between"><b>Son 14 gün</b><span class="muted">En uzun zincir: ${chainBest()} gün</span></div>${chainSvg(14)}</div>`;
   const VT=T.filter(t=>t.vakit), rest=T.filter(t=>!t.vakit);
   const dini=rest.filter(t=>t.dini), diger=rest.filter(t=>!t.dini), off=S.tasks.filter(t=>!isWeekly(t)&&!scheduled(t,k)), W=weeklies();
-  const vnow=currentVakit();
-  const vgroups=NAMAZ.map(([id,l])=>{ const L=VT.filter(t=>t.vakit===id); if(!L.length) return ''; const v=vakitOf(k);
-    return `<div class="group vgroup ${vnow===id?'nowv':''}"><div class="ghead"><h3>${l}${v?` <span class="vtime">${v[id]}</span>`:''}</h3><small>${L.filter(t=>isDone(t,k)).length} / ${L.length}</small></div>${L.map(t=>taskRow(t)).join('')}</div>`; }).join('');
-  const ex=excuseBox(), left2=excuseLeft();
-  return `<div class="cols v-bugun"><div class="a-hero"><section class="hero ${ev&&!linked&&T.length?'risk':''}">${lanternSvg(p)}<div class="txt"><h2>${head}</h2><p>${sub}</p></div></section>
-    ${vakitStrip()}${strip}${ex.includes('warn')?ex:''}</div><div class="a-tasks">
-    ${vgroups}
-    ${dini.length?`<div class="group ${vgroups?'':'first'}"><div class="ghead"><h3>${vgroups?'Diğer ibadetler':'İbadet'}</h3><small>${dini.filter(t=>isDone(t,k)).length} / ${dini.length}</small></div>${dini.map(t=>taskRow(t)).join('')}</div>`:''}
-    ${diger.length?`<div class="group ${dini.length||vgroups?'':'first'}"><div class="ghead"><h3>Gelişim</h3><small>${diger.filter(t=>isDone(t,k)).length} / ${diger.length}</small></div>${diger.map(t=>taskRow(t)).join('')}</div>`:''}
+  const vnow=currentVakit(), vord=id=>NAMAZ.findIndex(x=>x[0]===id);
+  // aynı adlı vakit görevleri tek satırda birleşir
+  const byName=new Map(); VT.slice().sort((a,b)=>vord(a.vakit)-vord(b.vakit)).forEach(t=>{ const key=t.name.trim().toLowerCase(); byName.set(key,[...(byName.get(key)||[]),t]); });
+  const vitems=[]; byName.forEach(L=>{ if(L.length>1) vitems.push({multi:L, done:L.every(t=>isDone(t,k))}); else vitems.push({t:L[0], done:isDone(L[0],k)}); });
+  const rowOf = it => it.multi ? multiRow(it.multi,vnow) : taskRow(it.t);
+  const grp = (title,items,first) => { const open=items.filter(it=>!it.done); if(!open.length) return '';
+    return `<div class="group ${first?'first':''}"><div class="ghead"><h3>${title}</h3><small>${open.length} kaldı</small></div>${open.map(rowOf).join('')}</div>`; };
+  const asIt = L => L.map(t=>({t,done:isDone(t,k)}));
+  const gV=grp('Namaz vakitlerinde',vitems,true), gD=grp(vitems.length?'Diğer ibadetler':'İbadet',asIt(dini),!gV), gG=grp('Gelişim',asIt(diger),!gV&&!gD);
+  const doneItems=[...vitems,...asIt(dini),...asIt(diger)].filter(it=>it.done);
+  const ex=excuseBox(), left2=excuseLeft(), barP=need?Math.min(100,n/need*100):100;
+  return `<div class="cols v-bugun"><div class="a-hero"><section class="chainline ${ev&&!linked&&T.length?'risk':''} ${linked?'ok':''}"><span class="clico">${ico('chain')}</span><div class="cltx"><b>${head}</b><small>${sub}</small><div class="clbar"><i style="width:${barP.toFixed(0)}%"></i></div></div></section>
+    ${vakitStrip()}${ex.includes('warn')?ex:''}</div><div class="a-tasks">
+    ${gV}${gD}${gG}
+    ${!gV&&!gD&&!gG&&T.length?`<div class="group first"><div class="ghead"><h3>Bugünkü görevlerin tamam</h3></div></div>`:''}
     ${W.length?`<div class="group"><div class="ghead"><h3>Bu hafta</h3><small>${W.filter(t=>weekMet(t,wkStart(k))).length} / ${W.length} hedef tamam</small></div>${W.map(t=>taskRow(t)).join('')}</div>`:''}
+    ${doneItems.length?`<div class="group donegrp"><div class="ghead"><h3>Tamamlananlar</h3><small>${doneItems.length}</small></div>${doneItems.map(rowOf).join('')}</div>`:''}
     ${off.length?`<p class="offday">Bugün planlı değil: ${esc(off.map(t=>t.name).join(', '))}</p>`:''}
     ${ex.includes('warn')?'':ex||`<div class="excuse-link"><button data-act="excuse" data-id="${k}" ${left2<=0?'disabled':''}>Bugün mazeretliyim</button><span>Hastalık, yolculuk gibi günlerde serilerin bozulmaz. Bu ay ${Math.max(0,left2)} hakkın kaldı.</span></div>`}
     <div class="panel notep"><h3>Günün notu</h3><textarea data-f="note" data-id="${k}" rows="3" placeholder="Bugün neler oldu? Neyi okudun, neyi aksattın?">${esc(noteOf(k))}</textarea></div>
