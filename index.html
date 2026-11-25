@@ -510,6 +510,25 @@ p,.muted,.heta,.ins,.excuse p,.hero .txt p,.phead p,.log,.ck,input,select,textar
 .dense .task,.dense .trow2,.dense .rrow{padding:8px 12px}
 .dense .group{margin-top:14px}
 .dense .task .medal{width:32px;height:32px;border-radius:9px}
+
+/* ---- takip ve masaüstü düzeni ---- */
+.morehead{font-size:var(--t-sec);font-weight:800;margin:22px 0 2px}
+.fold .ybox>.panel{background:none;border:0;padding:0;margin:0;box-shadow:none}.fold .ybox>.panel>h3{display:none}
+.foldbtn{display:flex;align-items:center;width:100%;text-align:left;padding:var(--pad);cursor:pointer;font:inherit;color:inherit}
+.foldbtn span{font-size:var(--t-sec);font-weight:800}.foldbtn small{margin-left:auto;color:var(--mist);font-size:var(--t-meta);margin-right:10px}
+.foldbtn:after{content:"›";color:var(--mist);font-size:22px;line-height:1}
+.fold summary small{margin-left:auto;margin-right:10px}
+@media (min-width:1000px){
+  .wrap{max-width:820px;margin-left:calc(232px + max(0px, (100vw - 232px - 820px) / 2));margin-right:0;padding:0 32px}
+  .cols,.tk-top{display:block}
+  .v-bugun .a-hero{margin-bottom:6px}
+  .tk-top .calbox{margin-top:var(--gap)}
+  .cal .cd,.tk-top .cd{aspect-ratio:auto;height:54px}
+  .hgrid{grid-template-columns:1fr 1fr}
+  .fold .sgrid{grid-template-columns:1fr 1fr}
+  .chainhero .chain{max-height:46px;width:100%}
+  .setwrap{max-width:none}
+}
 </style>
 </head>
 <body>
@@ -816,7 +835,7 @@ function savePages(id,n){
 }
 
 /* ================= BULUT EŞİTLEME (Supabase, Emanet ile aynı hesap) ================= */
-const CFG=window.SEFER_CONFIG||{}, VER='45';
+const CFG=window.SEFER_CONFIG||{}, VER='46';
 let sb=null, sbUser=null, cloudMsg='', saveT=null, saving=false, pendingSave=false, lastPull=0, authMode='in';
 const cloudOn = () => !!(sb&&sbUser);
 function mergeDays(older,newer){
@@ -1407,14 +1426,15 @@ function vTakip(){
       <div class="smeta">${wk?`<span>Bu hafta ${weekDone(t,wkStart(dk()))} / ${+t.perWeek||3}</span><span>En uzun ${b} hafta</span>`:`<span>En uzun ${b} gün</span><span>Son 30 gün %${r.p}</span>`}${extra}</div>
       <div class="d7">${dots7(t)}</div>${t.type==='pages'||t.type==='hatim'?readLog(t):''}</div>`; }).join('');
   const ch=chainNow(), best=chainBest();
-  return `<header class="phead"><h1>Takip</h1><p>Zinciri kırma: planladığın görevlerin ${chainPct()===100?'hepsini':'en az %'+chainPct()+({50:"'sini",75:"'ini",90:"'ını"}[chainPct()]||"'ini")} yaptığın her gün zincire bir halka eklenir.</p></header>
+  return `<header class="phead"><h1>Takip</h1><p>Görevlerinin ${chainPct()===100?'hepsini':'en az %'+chainPct()+({50:"'sini",75:"'ini",90:"'ını"}[chainPct()]||"'ini")} yaptığın her gün zincire bir halka eklenir.</p></header>
     <div class="tk-top"><div class="chainhero panel first"><div class="cstat"><b>${ch}</b><small>günlük zincir</small></div><div class="cstat"><b>${best}</b><small>en uzun zincir</small></div>${chainSvg(14)}
       <p class="muted" style="grid-column:1/-1;font-size:var(--t-meta);line-height:1.45">Altın halkalar zincir hedefinin tutturulduğu günler. Kesik turkuaz halkalar mazeretli günler. Kırmızı kopukluk zincirin kırıldığı gün.</p></div>
     ${vCal()}</div>
  ${S.tasks.some(t=>t.type==='hatim'||(t.type==='pages'&&hasBook(t)))?`<div class="hsec"><h3>Hatim ve kitaplar</h3><div class="hgrid">${S.tasks.filter(t=>t.type==='hatim'||(t.type==='pages'&&hasBook(t))).map(t=>t.quran||hasBook(t)?hatimCard(t):`<button class="hcard hempty" data-act="bedit" data-id="${esc(t.id)}"><b>${esc(t.name)}</b><span>Okuduğun kitabı, sayfa sayısını ve bitirme hedefini gir.</span></button>`).join('')}</div></div>`:''}
     <button class="panel rapbtn" data-act="rapor"><b>Dua grubu raporu</b><span>Son raporundan bugüne kadar okudukların, gruba göndermeye hazır.</span></button>
-    ${insightsHtml()}
-    <button class="btn ghost wsbtn" data-act="wsum" data-id="${addDays(wkStart(dk()),-7)}">${ico('cal')} Geçen haftanın özeti</button>
+    <h3 class="morehead">Daha fazla</h3>
+    <details class="fold" id="ifold"><summary><span>İçgörüler</span><small>Düzenin, en iyi günlerin</small></summary><div class="ybox">${insightsHtml()}</div></details>
+    <button class="fold foldbtn" data-act="wsum" data-id="${addDays(wkStart(dk()),-7)}"><span>Geçen haftanın özeti</span><small>${trDate(addDays(wkStart(dk()),-7))} haftası</small></button>
     <details class="fold" ${yfoldOpen?'open':''} id="yfold"><summary><span>Yıllık görünüm</span><small>${yearV||dk().slice(0,4)}</small></summary><div class="ybox">${vYear()}</div></details>
     <details class="fold" ${foldOpen?'open':''} id="fold"><summary><span>Görev görev seriler</span><small>${S.tasks.length} görev</small></summary><div class="sgrid">${cards}</div></details>`;
 }
