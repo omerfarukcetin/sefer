@@ -1,6 +1,6 @@
 {
-  "name": "SEFER — Günlük takip",
-  "short_name": "SEFER",
+  "name": "Sefer — Günlük takip",
+  "short_name": "Sefer",
   "description": "Günlük ibadet ve gelişim görevlerini takip et: seriler, hatırlatmalar, takvim.",
   "lang": "tr",
   "start_url": "./",

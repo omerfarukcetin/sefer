@@ -1,6 +1,6 @@
-// SEFER service worker: uygulamayı internetsiz de açar.
+// Sefer service worker: uygulamayı internetsiz de açar.
 // Yeni sürüm yayınlarken CACHE adındaki numarayı artır.
-const CACHE = 'sefer-v48';
+const CACHE = 'sefer-v49';
 const SHELL = ['./', './index.html', './manifest.webmanifest',
   './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png', './icons/apple-touch-icon.png', './js/config.js', './js/vendor/supabase.js', './js/vendor/591.supabase.js'];
 
@@ -40,7 +40,7 @@ self.addEventListener('push', e => {
   const m = /^nc?-([a-z]+)-(\d{4}-\d\d-\d\d|test)$/.exec(d.tag || '');
   const opt = { body: d.body || '', tag: d.tag || undefined, icon: 'icons/icon-192.png', badge: 'icons/icon-192.png', data: { url: d.url || (/^rapor/.test(d.tag || '') ? './?rapor=1' : './'), kildim: m ? { id: m[1], k: m[2] } : null } };
   if (m) opt.actions = [{ action: 'kildim', title: 'Kıldım' }];
-  e.waitUntil(self.registration.showNotification(d.title || 'SEFER', opt));
+  e.waitUntil(self.registration.showNotification(d.title || 'Sefer', opt));
 });
 self.addEventListener('notificationclick', e => {
   e.notification.close();

@@ -1,4 +1,4 @@
-/* SEFER bulut ayarları: Emanet ile aynı Supabase projesi.
+/* Sefer bulut ayarları: Emanet ile aynı Supabase projesi.
    anon (publishable) anahtar herkese açık olacak şekilde tasarlanmıştır; verileri satır güvenliği (RLS) korur. */
 window.SEFER_CONFIG = {
   supabaseUrl: "https://clwgjupnigenndbbkcnk.supabase.co",

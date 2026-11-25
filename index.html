@@ -10,9 +10,9 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="SEFER">
+<meta name="apple-mobile-web-app-title" content="Sefer">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>SEFER — Günlük takip</title>
+<title>Sefer — Günlük takip</title>
 <script src="js/config.js"></script>
 <script src="js/vendor/supabase.js" defer></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -547,7 +547,7 @@ p,.muted,.heta,.ins,.excuse p,.hero .txt p,.phead p,.log,.ck,input,select,textar
 </style>
 </head>
 <body>
-<nav id="side"><div class="brand"><svg viewBox="0 0 24 24" class="ico" style="color:var(--saffron);width:26px;height:26px"><path d="M15.5 3.5a8.5 8.5 0 1 0 5 13.4A7 7 0 0 1 15.5 3.5z" fill="none" stroke="currentColor" stroke-width="2"/></svg>SEFER</div><div class="in" id="nav"></div><p class="side-foot">Her gün bir adım.</p></nav>
+<nav id="side"><div class="brand"><svg viewBox="0 0 24 24" class="ico" style="color:var(--saffron);width:26px;height:26px"><path d="M15.5 3.5a8.5 8.5 0 1 0 5 13.4A7 7 0 0 1 15.5 3.5z" fill="none" stroke="currentColor" stroke-width="2"/></svg>Sefer</div><div class="in" id="nav"></div><p class="side-foot">Her gün bir adım.</p></nav>
 <div id="siWrap" hidden></div>
 <div class="wrap">
   <header id="hdr"></header>
@@ -851,7 +851,7 @@ function savePages(id,n){
 }
 
 /* ================= BULUT EŞİTLEME (Supabase, Emanet ile aynı hesap) ================= */
-const CFG=window.SEFER_CONFIG||{}, VER='48';
+const CFG=window.SEFER_CONFIG||{}, VER='49';
 let sb=null, sbUser=null, cloudMsg='', saveT=null, saving=false, pendingSave=false, lastPull=0, authMode='in';
 const cloudOn = () => !!(sb&&sbUser);
 function mergeDays(older,newer){
@@ -891,7 +891,7 @@ async function pushCloud(){
   saving=false; setCloud(err ? cloudErr(err) : 'Eşitlendi');
   if(pendingSave){ pendingSave=false; pushCloud(); }
 }
-function cloudErr(e){ const m=(e&&e.message)||String(e||''); if(/sefer_state|relation|schema cache|not find/i.test(m)) return 'Supabase\'de SEFER tablosu yok. Kurulum adımını uygula.'; if(/fetch|network|Failed/i.test(m)) return 'Buluta ulaşılamadı. Veriler bu cihazda duruyor.'; return 'Eşitlenemedi: '+m; }
+function cloudErr(e){ const m=(e&&e.message)||String(e||''); if(/sefer_state|relation|schema cache|not find/i.test(m)) return 'Supabase\'de Sefer tablosu yok. Kurulum adımını uygula.'; if(/fetch|network|Failed/i.test(m)) return 'Buluta ulaşılamadı. Veriler bu cihazda duruyor.'; return 'Eşitlenemedi: '+m; }
 async function pullCloud(){
   if(!cloudOn()||saving) return; lastPull=Date.now(); let data=null, error=null;
   try{ const r=await sb.from('sefer_state').select('data,updated_at').eq('user_id',sbUser.id).maybeSingle(); data=r.data; error=r.error; }catch(e){ error=e; }
@@ -912,7 +912,7 @@ async function initCloud(){
   if(tab==='ayarlar') render();
 }
 function accountHtml(){
-  if(!sb) return `<div class="panel first"><h3>Eşitleme</h3><p class="muted" style="font-size:var(--t-body);line-height:1.5">Eşitleme bu sayfada kullanılamıyor. GitHub adresindeki SEFER'de Emanet hesabınla giriş yapabilirsin.</p></div>`;
+  if(!sb) return `<div class="panel first"><h3>Eşitleme</h3><p class="muted" style="font-size:var(--t-body);line-height:1.5">Eşitleme bu sayfada kullanılamıyor. GitHub adresindeki Sefer'de Emanet hesabınla giriş yapabilirsin.</p></div>`;
   if(sbUser) return `<div class="panel first"><h3>Eşitleme</h3><p style="font-size:var(--t-item);margin-top:4px">Giriş yapıldı: <b>${esc(sbUser.email||'')}</b></p>
       <p class="muted" style="font-size:var(--t-body);margin-top:6px" id="cloudmsg">${esc(cloudMsg||'Eşitleniyor…')}</p>
       <p class="muted" style="font-size:var(--t-meta);margin-top:8px;line-height:1.45">Bu hesapla giriş yaptığın her cihazda görevlerin, geçmişin ve notların aynı olur. İnternet yokken de çalışır, bağlantı gelince eşitlenir.</p>
@@ -1161,9 +1161,9 @@ function buildQueue(extra){
       if(isDone(t,k)) return; if(isWeekly(t)&&i===0&&weekMet(t,wkStart(k))) return;
       let hm=t.remind||''; if(!hm&&t.rv&&t.rv.v){ const v=vakitOf(k); if(v&&v[t.rv.v]) hm=addMin(v[t.rv.v],+t.rv.off||0); }
       if(!/^\d\d:\d\d$/.test(hm)) return; const at=atOf(k,hm); if(at<=now) return;
-      q.push({at:new Date(at).toISOString(), title:t.vakit?`${vLabel(t)}`:'SEFER', body:`${dot(hm)} ${t.name}${t.hint?`, ${t.hint}`:''}`, tag:`t-${t.id}-${k}`}); });
+      q.push({at:new Date(at).toISOString(), title:t.vakit?`${vLabel(t)}`:'Sefer', body:`${dot(hm)} ${t.name}${t.hint?`, ${t.hint}`:''}`, tag:`t-${t.id}-${k}`}); });
     if(S.remindAll && sc.length){ const at=atOf(k,S.remindAll); if(at>now){ const left=sc.filter(t=>!isDone(t,k)).length;
-      if(i>0||left) q.push({at:new Date(at).toISOString(), title:'SEFER', body:i===0?`Bugün ${left} görev kaldı.`:'Günün görevlerine göz at.', tag:`g-${k}`}); } }
+      if(i>0||left) q.push({at:new Date(at).toISOString(), title:'Sefer', body:i===0?`Bugün ${left} görev kaldı.`:'Günün görevlerine göz at.', tag:`g-${k}`}); } }
     if(S.riskOn!==false && sc.length){ const at=atOf(k,S.riskTime||'21:00'); if(at>now){
       const n=sc.filter(t=>isDone(t,k)).length, need=chainNeed(sc.length);
       if(i>0 || n<need) q.push({at:new Date(at).toISOString(), title:'Zinciri kırma', body:i===0?`Zincir için ${need-n} görev daha gerekiyor.`:`Bugünkü zincir hedefine ulaştın mı? ${need} görev gerekiyor.`, tag:`z-${k}`}); } }
@@ -1204,9 +1204,9 @@ async function disablePush(){
 }
 function pushHtml(){
   let state;
-  if(!pushSupported()) state=/iphone|ipad|ipod/i.test(navigator.userAgent)?'<p class="muted" style="font-size:var(--t-body);line-height:1.5">iPhone\'da bildirim için önce SEFER\'i ana ekrana ekle (Paylaş → Ana Ekrana Ekle), sonra ana ekrandaki simgeden açıp buraya gel.</p>':'<p class="muted" style="font-size:var(--t-body)">Bildirimler bu sayfada kullanılamıyor. GitHub adresindeki SEFER\'den açabilirsin.</p>';
+  if(!pushSupported()) state=/iphone|ipad|ipod/i.test(navigator.userAgent)?'<p class="muted" style="font-size:var(--t-body);line-height:1.5">iPhone\'da bildirim için önce Sefer\'i ana ekrana ekle (Paylaş → Ana Ekrana Ekle), sonra ana ekrandaki simgeden açıp buraya gel.</p>':'<p class="muted" style="font-size:var(--t-body)">Bildirimler bu sayfada kullanılamıyor. GitHub adresindeki Sefer\'den açabilirsin.</p>';
   else if(!cloudOn()) state='<p class="muted" style="font-size:var(--t-body);line-height:1.5">Bildirimler hesabın üzerinden gönderilir. Önce <b>Hesap</b> sekmesinden giriş yap.</p>';
-  else if(Notification.permission==='denied') state='<p class="muted" style="font-size:var(--t-body);line-height:1.5">Bu tarayıcıda bildirim izni kapalı. Tarayıcı ya da telefon ayarlarından SEFER için bildirimlere izin ver.</p>';
+  else if(Notification.permission==='denied') state='<p class="muted" style="font-size:var(--t-body);line-height:1.5">Bu tarayıcıda bildirim izni kapalı. Tarayıcı ya da telefon ayarlarından Sefer için bildirimlere izin ver.</p>';
   else if(pushOn()) state=`<p style="font-size:var(--t-body);margin-top:4px">${ico('check')} Bu cihazda bildirimler açık.</p>
     <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn" data-act="ptest">Deneme bildirimi</button><button class="btn ghost" data-act="poff">Kapat</button></div>`;
   else state='<button class="btn turq" style="margin-top:8px" data-act="pon">Bildirimleri aç</button>';
@@ -1340,7 +1340,7 @@ function saveHatim(id){
 function vHeader(){
   const T=todays(), d=T.filter(t=>isDone(t,dk())).length;
   return `<div class="hrow"><div class="brandm">${ico('huzur')}</div>
-    <div class="who"><strong>SEFER</strong><span>${new Date().toLocaleDateString('tr-TR',{weekday:'long',day:'numeric',month:'long'})}</span></div>
+    <div class="who"><strong>Sefer</strong><span>${new Date().toLocaleDateString('tr-TR',{weekday:'long',day:'numeric',month:'long'})}</span></div>
     <div class="pills"><span class="pill" style="color:var(--saffron)" title="Zincir">${ico('chain')}<span style="color:var(--white)">${chainNow()} gün</span></span><span class="pill" style="color:var(--turq)">${ico('check')}<span style="color:var(--white)">${d} / ${T.length}</span></span></div></div>`;
 }
 function taskRow(t,k=dk()){
@@ -1514,7 +1514,7 @@ function editTask(id){
       <button class="btn red" data-act="del" data-id="${esc(t.id)}" id="delb">Görevi sil</button></div></div>`);
 }
 function installHtml(){
-  if(isStandalone()) return `<p class="muted" style="font-size:var(--t-body)">${ico('check')} SEFER bu cihazda uygulama olarak kurulu.</p>`;
+  if(isStandalone()) return `<p class="muted" style="font-size:var(--t-body)">${ico('check')} Sefer bu cihazda uygulama olarak kurulu.</p>`;
   if(deferredPrompt) return `<p class="muted" style="font-size:var(--t-body);line-height:1.45">Ana ekrana eklenir, internetsiz de açılır.</p><button class="btn turq" style="margin-top:10px" data-act="install">Uygulamayı kur</button>`;
   if(/iphone|ipad|ipod/i.test(navigator.userAgent)) return `<p class="muted" style="font-size:var(--t-body);line-height:1.5">Safari'de alttaki <b>Paylaş</b> düğmesine dokun, sonra <b>Ana Ekrana Ekle</b>'yi seç.</p>`;
   return `<p class="muted" style="font-size:var(--t-body);line-height:1.5">Chrome menüsünden (⋮) <b>Ana ekrana ekle</b> ya da <b>Uygulamayı yükle</b>'yi seç. Bilgisayarda adres çubuğundaki yükle simgesini kullanabilirsin.</p>`;
@@ -1563,8 +1563,8 @@ function vAyarlar(){
 }
 
 /* ================= SATIR İZİ (Kitaplar sekmesi ve kitap bağlantısı) =================
-   Satır İzi ayrı bir uygulamadır (../satir-izi/). Kitaplar sekmesinde SEFER'in içinde açılır.
-   Okuma görevi bir Satır İzi kitabına bağlanabilir (t.siBook). Sayfa ilerlemesinin kaynağı SEFER'in
+   Satır İzi ayrı bir uygulamadır (../satir-izi/). Kitaplar sekmesinde Sefer'in içinde açılır.
+   Okuma görevi bir Satır İzi kitabına bağlanabilir (t.siBook). Sayfa ilerlemesinin kaynağı Sefer'in
    günlük kayıtlarıdır: kaydedilen her değişiklikte okunan sayfa Satır İzi kitabına mutlak değer olarak yazılır.
    Satır İzi'de girilen "bugün okudum" kayıtları gelen kutusundan alınıp bugünün kaydına eklenir. */
 const SI_URL='../satir-izi/';
@@ -1664,7 +1664,7 @@ const ACT={
   bdel:id=>{ const t=S.tasks.find(x=>x.id===id); if(t.siBook){ siCall('unlink',t.siBook); delete t.siBook; } Object.assign(t,{proj:'',total:0,start:0,projStart:'',due:''}); save(); closeModal(); render(); toast('Kitap kaldırıldı. Günlük sayfa hedefin aynen duruyor.'); },
   bkmode:v=>{ const due=v==='due'; $('bk_due').hidden=!due; $('bk_day').hidden=due; document.querySelectorAll('#sheet [data-act="bkmode"]').forEach(b=>b.classList.toggle('on',b.dataset.id===v)); bookInfo(); },
   pon:()=>enablePush(), poff:()=>disablePush(),
-  ptest:async()=>{ const ok=await testPush({title:'SEFER',body:'Bildirimler çalışıyor.',tag:'deneme'}); toast(ok?'Deneme bildirimi birkaç saniye içinde gelecek.':'Gönderilemedi. Girişini ve kurulumu kontrol et.'); },
+  ptest:async()=>{ const ok=await testPush({title:'Sefer',body:'Bildirimler çalışıyor.',tag:'deneme'}); toast(ok?'Deneme bildirimi birkaç saniye içinde gelecek.':'Gönderilemedi. Girişini ve kurulumu kontrol et.'); },
   dtog:v=>{ const [k,id]=v.split('|'); dayToggle(k,id); },
   vcopy:id=>{ const t=S.tasks.find(x=>x.id===id); if(!t) return; let n=0, i=S.tasks.indexOf(t);
     NAMAZ.forEach(([v])=>{ if(v===t.vakit || S.tasks.some(x=>x.name===t.name&&x.vakit===v)) return;
@@ -1713,18 +1713,18 @@ const ACT={
   del:id=>{ const b=$('delb'); if(b&&!b.dataset.arm){ b.dataset.arm=1; b.textContent='Emin misin? Tekrar bas'; return; } S.tasks=S.tasks.filter(t=>t.id!==id); save(); closeModal(); render(); toast('Görev silindi.'); },
   install:async()=>{ if(!deferredPrompt) return; deferredPrompt.prompt(); try{ await deferredPrompt.userChoice; }catch(e){} deferredPrompt=null; render(); },
   ics:()=>{
-    if(/claude/.test(location.hostname)) return toast('Hatırlatıcıyı GitHub adresindeki SEFER\'den ekleyebilirsin.');
+    if(/claude/.test(location.hostname)) return toast('Hatırlatıcıyı GitHub adresindeki Sefer\'den ekleyebilirsin.');
     const ymd=dk().replace(/-/g,''), stamp=new Date().toISOString().replace(/[-:]/g,'').slice(0,15)+'Z', url=location.href.split('#')[0];
     const ev=(uid,time,sum,days)=>{ const [hh,mm]=time.split(':'); return ['BEGIN:VEVENT',`UID:${uid}@omerfarukcetin.github.io`,'DTSTAMP:'+stamp,`DTSTART:${ymd}T${hh}${mm}00`,'DURATION:PT10M',
       days&&days.length<7?`RRULE:FREQ=WEEKLY;BYDAY=${days.map(i=>BYDAY[i]).join(',')}`:'RRULE:FREQ=DAILY',`SUMMARY:${sum}`,'DESCRIPTION:'+url,'URL:'+url,
       'BEGIN:VALARM','ACTION:DISPLAY',`DESCRIPTION:${sum}`,'TRIGGER:PT0M','END:VALARM','END:VEVENT']; };
     let lines=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//SEFER//TR','CALSCALE:GREGORIAN'];
-    if(S.remindAll) lines=lines.concat(ev('sefer-gunluk',S.remindAll,'SEFER: Günün görevleri'));
-    S.tasks.filter(t=>t.remind).forEach(t=>{ lines=lines.concat(ev('sefer-'+t.id,t.remind,'SEFER: '+t.name.replace(/[,;\\]/g,' '),isWeekly(t)?ALL:t.days)); });
+    if(S.remindAll) lines=lines.concat(ev('sefer-gunluk',S.remindAll,'Sefer: Günün görevleri'));
+    S.tasks.filter(t=>t.remind).forEach(t=>{ lines=lines.concat(ev('sefer-'+t.id,t.remind,'Sefer: '+t.name.replace(/[,;\\]/g,' '),isWeekly(t)?ALL:t.days)); });
     const one=(uid,k,time,sum)=>{ const [hh,mm]=time.split(':'); return ['BEGIN:VEVENT',`UID:${uid}@omerfarukcetin.github.io`,'DTSTAMP:'+stamp,`DTSTART:${k.replace(/-/g,'')}T${hh}${mm}00`,'DURATION:PT10M',`SUMMARY:${sum}`,'DESCRIPTION:'+url,'BEGIN:VALARM','ACTION:DISPLAY',`DESCRIPTION:${sum}`,'TRIGGER:PT0M','END:VALARM','END:VEVENT']; };
     let missing=false;
     S.tasks.filter(t=>t.rv&&t.rv.v).forEach(t=>{ for(let i=0;i<30;i++){ const k=addDays(dk(),i); if(!isWeekly(t)&&!scheduled(t,k)&&!(t.since&&k<t.since&&(t.days||ALL).includes(wd(k)))) continue; const v=vakitOf(k); if(!v){ missing=true; continue; }
-      lines=lines.concat(one(`sefer-${t.id}-${k}`,k,addMin(v[t.rv.v],+t.rv.off||0),'SEFER: '+t.name.replace(/[,;\\]/g,' '))); } });
+      lines=lines.concat(one(`sefer-${t.id}-${k}`,k,addMin(v[t.rv.v],+t.rv.off||0),'Sefer: '+t.name.replace(/[,;\\]/g,' '))); } });
     if(missing && S.tasks.some(t=>t.rv&&t.rv.v)) toast('Bazı günlerin vakitleri yok. Önce Ayarlar → Hatırlatma\'dan şehrini seç.');
     if(lines.length===4) return toast('Önce bir hatırlatma saati seç.');
     const ics=lines.concat(['END:VCALENDAR']).join('\r\n');
@@ -1732,7 +1732,7 @@ const ACT={
       toast('Hatırlatma dosyası indirildi. Açınca takvimine eklenir.'); }catch(e){ toast('Bu sayfada dosya indirilemiyor. GitHub adresinden dene.'); } },
   copy:()=>{ const v=$('bk').value, sel=()=>{ $('bk').select(); toast('Metni seçtim, kopyalayabilirsin.'); }; try{ navigator.clipboard.writeText(v).then(()=>toast('Yedek kopyalandı.'),sel); }catch(e){ sel(); } },
   import:()=>{ try{ const o=JSON.parse($('bk').value); if(!o||typeof o!=='object'||!o.days) throw 0; S=merge(o); S.tasks.forEach(t=>{ if(!t.icon) t.icon=t.res||'star'; if(!Array.isArray(t.days)) t.days=[...ALL]; if(t.remind==null) t.remind=''; }); save(); toast('Yedek yüklendi.'); render(); }
-    catch(e){ toast('Bu metin bir SEFER yedeği değil. Kopyaladığın metnin tamamını yapıştır.'); } },
+    catch(e){ toast('Bu metin bir Sefer yedeği değil. Kopyaladığın metnin tamamını yapıştır.'); } },
   reset:()=>{ if(!resetArm){ resetArm=true; $('rst').textContent='Emin misin? Tekrar bas'; setTimeout(()=>{ resetArm=false; const b=$('rst'); if(b) b.textContent='Sıfırla'; },3000); return; }
     resetArm=false; S=defaults(); if(sbUser) S.owner=sbUser.id; addHatim(); save(); toast('Her şey sıfırlandı.'); go('bugun'); }
 };
@@ -1778,7 +1778,7 @@ document.addEventListener('change',e=>{
 });
 let deferredPrompt=null;
 window.addEventListener('beforeinstallprompt',e=>{ e.preventDefault(); deferredPrompt=e; if(tab==='ayarlar') render(); });
-window.addEventListener('appinstalled',()=>{ deferredPrompt=null; toast('SEFER ana ekrana eklendi.'); });
+window.addEventListener('appinstalled',()=>{ deferredPrompt=null; toast('Sefer ana ekrana eklendi.'); });
 if('serviceWorker' in navigator && location.protocol==='https:' && !/claude/.test(location.hostname)){
   window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
 }
