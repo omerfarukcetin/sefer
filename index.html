@@ -692,6 +692,7 @@ function toggleTask(id){
   const t=S.tasks.find(x=>x.id===id); if(!t) return;
   if(rec().done[id] && t.type==='hatim') return openHatim(id);
   if(rec().done[id] && t.type==='pages') return openPages(id);
+  if(rec().done[id] && t.type==='count') return openCounter(id);
   if(rec().done[id]) return undoTask(id);
   if(t.type==='count') return openCounter(id);
   if(t.type==='timer') return openTimer(id);
@@ -707,19 +708,32 @@ function ringSvg(p){ const R=104,C=2*Math.PI*R;
   return `<svg viewBox="0 0 240 240" class="zr"><circle cx="120" cy="120" r="${R}" fill="none" stroke="var(--lapis3)" stroke-width="10"/>
     <circle id="zring" cx="120" cy="120" r="${R}" fill="none" stroke="var(--turq)" stroke-width="10" stroke-linecap="round" stroke-dasharray="${C*Math.min(1,p)} ${C}" transform="rotate(-90 120 120)"/></svg>`; }
 function openCounter(id){
-  const t=S.tasks.find(x=>x.id===id), r=rec(); r.prog=r.prog||{}; const n=r.prog[id]||0, goal=Math.max(1,+t.goal||33);
+  const t=S.tasks.find(x=>x.id===id), r=rec(); r.prog=r.prog||{}; const goal=Math.max(1,+t.goal||33), e=r.done[id];
+  if(e){ const tot=Math.max(+e.n||0,goal);
+    return modal(`<h3>${esc(t.name)}</h3><p class="muted" style="margin-top:2px">Bugün <b>${tot}</b> kez çektin, hedef ${goal}.</p>${countAddBox(id,'Üstüne kaç tane daha çektin?')}
+      <button class="linkb" style="margin-top:14px;font-size:var(--t-meta)" data-act="hundo" data-id="${esc(id)}">Bugünkü kaydı sil</button>`); }
+  const n=r.prog[id]||0;
   modal(`<h3>${esc(t.name)}</h3><p class="muted" style="margin-top:2px">Daireye dokundukça sayılır. ${goal} olunca görev tamamlanır.</p>
     <button class="zikr" data-act="tap" data-id="${esc(id)}" aria-label="Say">${ringSvg(n/goal)}
       <span class="zc"><b id="zn">${n}</b><small>/ ${goal}</small><em id="zp">${zikrPhase(t,n)}</em></span></button>
     <div class="between"><button class="btn ghost" data-act="zreset" data-id="${esc(id)}">Sıfırla</button>
-      <button class="btn ghost" data-act="manual" data-id="${esc(id)}">Saymadan tamamla</button></div>`);
+      <button class="btn ghost" data-act="manual" data-id="${esc(id)}">Saymadan tamamla</button></div>${countAddBox(id,'Zikirmatikle ya da tesbihle çektiysen sayıyı yaz')}`);
+}
+function countAddBox(id,label){ return `<div class="surebox"><span class="lab">${label}</span><div class="sureadd" style="grid-template-columns:1fr auto"><input id="cadd" type="number" inputmode="numeric" min="1" placeholder="Örneğin 300"><button class="btn turq" data-act="cadd" data-id="${esc(id)}">Ekle</button></div></div>`; }
+function countAdd(id){
+  const t=S.tasks.find(x=>x.id===id), r=rec(), add=Math.round(+$('cadd').value||0), goal=Math.max(1,+t.goal||33); if(add<=0) return toast('Bir sayı yaz.');
+  r.prog=r.prog||{}; const e=r.done[id], tot=(e?Math.max(+e.n||0,goal):(r.prog[id]||0))+add;
+  if(e){ e.n=tot; save(); closeModal(); render(); return toast(`Bugün toplam ${tot} kez.`); }
+  r.prog[id]=Math.min(tot,goal);
+  if(tot>=goal){ closeModal(); completeTask(id,tot); return toast(`${t.name} tamamlandı, bugün ${tot} kez.`); }
+  save(); closeModal(); render(); toast(`${tot} / ${goal} oldu.`);
 }
 function tapCounter(id){
   const t=S.tasks.find(x=>x.id===id), r=rec(); if(r.done[id]) return; r.prog=r.prog||{};
   const goal=Math.max(1,+t.goal||33), n=Math.min(goal,(r.prog[id]||0)+1); r.prog[id]=n; save();
   const C=2*Math.PI*104; $('zn').textContent=n; $('zp').textContent=zikrPhase(t,n); $('zring').setAttribute('stroke-dasharray',`${C*n/goal} ${C}`);
   vib(n%33===0?[30,40,30]:8);
-  if(n>=goal) setTimeout(()=>{ closeModal(); completeTask(id); toast(`${t.name} tamamlandı.`); },400);
+  if(n>=goal) setTimeout(()=>{ closeModal(); completeTask(id,goal); toast(`${t.name} tamamlandı.`); },400);
 }
 
 /* ---------- zamanlayıcı ---------- */
@@ -802,7 +816,7 @@ function savePages(id,n){
 }
 
 /* ================= BULUT EŞİTLEME (Supabase, Emanet ile aynı hesap) ================= */
-const CFG=window.SEFER_CONFIG||{}, VER='44';
+const CFG=window.SEFER_CONFIG||{}, VER='45';
 let sb=null, sbUser=null, cloudMsg='', saveT=null, saving=false, pendingSave=false, lastPull=0, authMode='in';
 const cloudOn = () => !!(sb&&sbUser);
 function mergeDays(older,newer){
@@ -1534,7 +1548,8 @@ const ACT={
   toggle:id=>toggleTask(id), tab:id=>{ closeModal(); go(id); }, close:closeModal,
   tap:id=>tapCounter(id),
   zreset:id=>{ const r=rec(); if(r.prog) r.prog[id]=0; save(); openCounter(id); render(); },
-  manual:id=>{ if(TM&&TM.id===id){ TM=null; clearInterval(tmInt); saveTM(); } closeModal(); completeTask(id); },
+  manual:id=>{ if(TM&&TM.id===id){ TM=null; clearInterval(tmInt); saveTM(); } closeModal(); const t=S.tasks.find(x=>x.id===id); completeTask(id, t&&t.type==='count'?Math.max(1,+t.goal||33):1); },
+  cadd:id=>countAdd(id),
   tstart:()=>{ if(!TM) return; try{ actx=actx||new (window.AudioContext||window.webkitAudioContext)(); actx.resume&&actx.resume(); }catch(e){}
     TM.endAt=Date.now()+TM.left; TM.running=true; clearInterval(tmInt); tmInt=setInterval(tick,250); saveTM(); renderTimer(); render(); },
   tpause:()=>{ if(!TM) return; TM.left=Math.max(0,TM.endAt-Date.now()); TM.running=false; clearInterval(tmInt); saveTM(); renderTimer(); render(); },
