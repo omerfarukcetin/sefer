@@ -616,7 +616,14 @@ function persist(){ try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){
 /* her günün ve her kaydın en son ne zaman değiştiğini tutar; cihazlar arası birleştirmede kullanılır */
 let daySnap={};
 const dayJson = d => d ? JSON.stringify(d) : '';
-function snapDays(){ daySnap={}; for(const [k,d] of Object.entries(S.days||{})) daySnap[k]=dayJson(d); }
+let taskSnap={};
+const taskJson = t => { const {u,...r}=t; return JSON.stringify(r); };
+function snapDays(){ daySnap={}; for(const [k,d] of Object.entries(S.days||{})) daySnap[k]=dayJson(d); taskSnap={}; (S.tasks||[]).forEach(t=>taskSnap[t.id]=taskJson(t)); }
+function stampTasks(){ const now=Date.now(), seen=new Set();
+  (S.tasks||[]).forEach(t=>{ seen.add(t.id); const j=taskJson(t); if(taskSnap[t.id]!==j){ t.u=now; taskSnap[t.id]=j; } });
+  for(const id of Object.keys(taskSnap)) if(!seen.has(id)){ (S.tdel=S.tdel||{})[id]=now; delete taskSnap[id]; }
+  if(S.tdel) for(const id of seen) delete S.tdel[id];
+  if(JSON.stringify(S.tasks.map(t=>t.id))!==S.tordS){ S.tordS=JSON.stringify(S.tasks.map(t=>t.id)); S.tordU=now; } }
 function stampDays(){
   const now=Date.now();
   for(const [k,d] of Object.entries(S.days||{})){
@@ -628,7 +635,7 @@ function stampDays(){
     d.u=now; daySnap[k]=dayJson(d);
   }
 }
-function save(touch=true){ if(touch){ S.updatedAt=Date.now(); stampDays(); } persist(); if(touch&&typeof scheduleSave==='function'){ scheduleSave(); schedulePush(); } if(touch&&typeof siSchedule==='function') siSchedule(); }
+function save(touch=true){ if(touch){ S.updatedAt=Date.now(); stampDays(); stampTasks(); } persist(); if(touch&&typeof scheduleSave==='function'){ scheduleSave(); schedulePush(); } if(touch&&typeof siSchedule==='function') siSchedule(); }
 let S=load(); snapDays();
 // eski sürümden geçiş
 S.tasks.forEach(t=>{ if(!t.icon) t.icon=t.res||'star'; if(!Array.isArray(t.days)) t.days=[...ALL]; if(t.remind==null) t.remind='';
@@ -853,7 +860,7 @@ function savePages(id,n){
 }
 
 /* ================= BULUT EŞİTLEME (Supabase, Emanet ile aynı hesap) ================= */
-const CFG=window.SEFER_CONFIG||{}, VER='50';
+const CFG=window.SEFER_CONFIG||{}, VER='51';
 let sb=null, sbUser=null, cloudMsg='', saveT=null, saving=false, pendingSave=false, lastPull=0, authMode='in';
 const cloudOn = () => !!(sb&&sbUser);
 function mergeDays(older,newer){
@@ -877,10 +884,30 @@ function mergeDays(older,newer){
 }
 function mergeState(local,remote){
   const lAt=+local.updatedAt||0, rAt=+remote.updatedAt||0, newer=rAt>=lAt?remote:local, older=newer===remote?local:remote;
-  return merge({...newer, days:mergeDays(older.days,newer.days), updatedAt:Math.max(lAt,rAt)});
+  return merge({...newer, days:mergeDays(older.days,newer.days), ...mergeTasks(older,newer), updatedAt:Math.max(lAt,rAt)});
+}
+/* görevler tek tek birleşir: her görevin son değişme zamanı (u) ve silinenlerin izi (tdel) */
+function mergeTasks(older,newer){
+  const tdel={...(older.tdel||{})}; for(const [id,t] of Object.entries(newer.tdel||{})) tdel[id]=Math.max(tdel[id]||0,t);
+  const A=new Map((older.tasks||[]).map(t=>[t.id,t])), B=new Map((newer.tasks||[]).map(t=>[t.id,t])), out=new Map();
+  for(const id of new Set([...A.keys(),...B.keys()])){
+    const a=A.get(id), b=B.get(id);
+    let t = !a?b : !b?a : (+a.u||0)>(+b.u||0)?a:b;
+    const tu=+t.u||0, lone=!a?'b':!b?'a':'';
+    if(tdel[id] && tdel[id]>=tu) continue;                            // silinmiş
+    if(lone && !tu && (lone==='a'?+newer.updatedAt||0:+older.updatedAt||0)>0 && !t.u){
+      // eski sürümden kalma, iz bırakmadan diğer cihazda silinmiş olabilir: yalnızca yeni taraftaysa tut
+      if(lone==='a') continue; }
+    out.set(id,t);
+  }
+  const ordSrc=(+older.tordU||0)>(+newer.tordU||0)?older:newer, other=ordSrc===older?newer:older;
+  const ids=[...(ordSrc.tasks||[]).map(t=>t.id), ...(other.tasks||[]).map(t=>t.id)].filter((id,i,arr)=>arr.indexOf(id)===i&&out.has(id));
+  return {tasks:ids.map(id=>out.get(id)), tdel, tordU:ordSrc.tordU, tordS:JSON.stringify(ids)};
 }
 function setCloud(m){ cloudMsg=m; if(tab==='ayarlar'&&setTab==='hesap'){ const el=$('cloudmsg'); if(el) el.textContent=m; } }
-function scheduleSave(){ if(!cloudOn()) return; clearTimeout(saveT); saveT=setTimeout(()=>{ saveT=null; pushCloud(); },1200); }
+function scheduleSave(){ if(!cloudOn()) return; clearTimeout(saveT); saveT=setTimeout(()=>{ saveT=null; pushCloud(); },500); }
+function flushSave(){ if(saveT){ clearTimeout(saveT); saveT=null; pushCloud(); } }
+window.addEventListener('pagehide',flushSave);
 async function pushCloud(){
   if(!cloudOn()) return; if(saving){ pendingSave=true; return; }
   saving=true; setCloud('Kaydediliyor…'); let err=null;
@@ -1797,8 +1824,8 @@ if('serviceWorker' in navigator && location.protocol==='https:' && !/claude/.tes
 }
 window.addEventListener('hashchange',()=>{ readHash(); render(); });
 setInterval(()=>{ if(document.visibilityState==='visible'&&cloudOn()&&!saving&&!saveT&&Date.now()-lastPull>25000&&!$('modal').classList.contains('open')) pullCloud(); },10000);
-window.addEventListener('focus',()=>{ if(cloudOn()&&!saving&&Date.now()-lastPull>5000) pullCloud(); });
-document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'){ tick(); if(cloudOn()&&Date.now()-lastPull>20000) pullCloud(); else schedulePush(); if(!(document.activeElement&&document.activeElement.tagName==='TEXTAREA')) render(); } });
+window.addEventListener('focus',()=>{ if(cloudOn()&&!saving&&Date.now()-lastPull>2000) pullCloud(); });
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='hidden') flushSave(); if(document.visibilityState==='visible'){ tick(); if(cloudOn()&&Date.now()-lastPull>20000) pullCloud(); else schedulePush(); if(!(document.activeElement&&document.activeElement.tagName==='TEXTAREA')) render(); } });
 function convKitap(){ if(S.kitapConv) return; S.kitapConv=true; const t=S.tasks.find(x=>x.id==='kitap'&&x.type==='check'); if(t){ Object.assign(t,{type:'hatim',quran:false,total:0,proj:'',start:0,projStart:'',hist:[],goal:0,due:''}); } }
 function addCuma(){ if(S.cumaAdded) return; S.cumaAdded=true;
   if(!S.tasks.some(t=>t.id==='salavat')) S.tasks.push({id:'salavat',name:'Salavat-ı şerife',hint:'Cuma günü',icon:'huzur',type:'count',goal:100,dini:true,days:[4],remind:'',rv:{v:'ogle',off:-90},since:dk()});
