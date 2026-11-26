@@ -860,7 +860,7 @@ function savePages(id,n){
 }
 
 /* ================= BULUT EŞİTLEME (Supabase, Emanet ile aynı hesap) ================= */
-const CFG=window.SEFER_CONFIG||{}, VER='51';
+const CFG=window.SEFER_CONFIG||{}, VER='52';
 let sb=null, sbUser=null, cloudMsg='', saveT=null, saving=false, pendingSave=false, lastPull=0, authMode='in';
 const cloudOn = () => !!(sb&&sbUser);
 function mergeDays(older,newer){
@@ -908,23 +908,28 @@ function setCloud(m){ cloudMsg=m; if(tab==='ayarlar'&&setTab==='hesap'){ const e
 function scheduleSave(){ if(!cloudOn()) return; clearTimeout(saveT); saveT=setTimeout(()=>{ saveT=null; pushCloud(); },500); }
 function flushSave(){ if(saveT){ clearTimeout(saveT); saveT=null; pushCloud(); } }
 window.addEventListener('pagehide',flushSave);
+const SYNC_KEY='sefer-sync';
+function syncLog(k,v){ try{ const o=JSON.parse(localStorage.getItem(SYNC_KEY)||'{}'); o[k]=v; localStorage.setItem(SYNC_KEY,JSON.stringify(o)); }catch(e){} }
+function syncInfo(){ try{ return JSON.parse(localStorage.getItem(SYNC_KEY)||'{}'); }catch(e){ return {}; } }
+const tmo = (p,ms=15000) => Promise.race([p, new Promise((_,rej)=>setTimeout(()=>rej(new Error('Bağlantı zaman aşımına uğradı')),ms))]);
 async function pushCloud(){
   if(!cloudOn()) return; if(saving){ pendingSave=true; return; }
   saving=true; setCloud('Kaydediliyor…'); let err=null;
   try{
-    const g=await sb.from('sefer_state').select('data,updated_at').eq('user_id',sbUser.id).maybeSingle();
+    const g=await tmo(sb.from('sefer_state').select('data,updated_at').eq('user_id',sbUser.id).maybeSingle());
     if(g.error) throw g.error;
     if(g.data&&g.data.data){ const before=JSON.stringify(S.days); S=mergeState(S,{...g.data.data,updatedAt:+g.data.updated_at||+g.data.data.updatedAt||0}); S.owner=sbUser.id; persist(); snapDays(); lastPull=Date.now();
       if(JSON.stringify(S.days)!==before && !(document.activeElement&&/TEXTAREA|INPUT/.test(document.activeElement.tagName)) && !$('modal').classList.contains('open')) render(); }
-    const r=await sb.from('sefer_state').upsert({user_id:sbUser.id,data:S,updated_at:+S.updatedAt||Date.now()}); err=r.error; }catch(e){ err=e; }
-  saving=false; setCloud(err ? cloudErr(err) : 'Eşitlendi');
+    const r=await tmo(sb.from('sefer_state').upsert({user_id:sbUser.id,data:S,updated_at:+S.updatedAt||Date.now()})); err=r.error; }catch(e){ err=e; }
+  saving=false; setCloud(err ? cloudErr(err) : 'Eşitlendi'); if(err) syncLog('err',(err.message||String(err)).slice(0,160)+' ('+new Date().toLocaleTimeString('tr-TR')+')'); else { syncLog('push',Date.now()); syncLog('err',''); }
   if(pendingSave){ pendingSave=false; pushCloud(); }
 }
 function cloudErr(e){ const m=(e&&e.message)||String(e||''); if(/sefer_state|relation|schema cache|not find/i.test(m)) return 'Supabase\'de Sefer tablosu yok. Kurulum adımını uygula.'; if(/fetch|network|Failed/i.test(m)) return 'Buluta ulaşılamadı. Veriler bu cihazda duruyor.'; return 'Eşitlenemedi: '+m; }
 async function pullCloud(){
   if(!cloudOn()||saving) return; lastPull=Date.now(); let data=null, error=null;
-  try{ const r=await sb.from('sefer_state').select('data,updated_at').eq('user_id',sbUser.id).maybeSingle(); data=r.data; error=r.error; }catch(e){ error=e; }
-  if(error){ setCloud(cloudErr(error)); if(tab==='ayarlar') render(); return; }
+  try{ const r=await tmo(sb.from('sefer_state').select('data,updated_at').eq('user_id',sbUser.id).maybeSingle()); data=r.data; error=r.error; }catch(e){ error=e; }
+  if(error){ setCloud(cloudErr(error)); syncLog('err',(error.message||String(error)).slice(0,160)); if(tab==='ayarlar') render(); return; }
+  syncLog('pull',Date.now());
   if(S.owner && S.owner!==sbUser.id){ S = data&&data.data ? merge(data.data) : defaults(); }
   else if(data&&data.data){ const before=JSON.stringify(data.data); S=mergeState(S,{...data.data,updatedAt:+data.updated_at||+data.data.updatedAt||0}); if(JSON.stringify(S)!==before) scheduleSave(); }
   else scheduleSave();
@@ -944,6 +949,7 @@ function accountHtml(){
   if(!sb) return `<div class="panel first"><h3>Eşitleme</h3><p class="muted" style="font-size:var(--t-body);line-height:1.5">Eşitleme bu sayfada kullanılamıyor. GitHub adresindeki Sefer'de Emanet hesabınla giriş yapabilirsin.</p></div>`;
   if(sbUser) return `<div class="panel first"><h3>Eşitleme</h3><p style="font-size:var(--t-item);margin-top:4px">Giriş yapıldı: <b>${esc(sbUser.email||'')}</b></p>
       <p class="muted" style="font-size:var(--t-body);margin-top:6px" id="cloudmsg">${esc(cloudMsg||'Eşitleniyor…')}</p>
+      ${(()=>{ const si=syncInfo(), t=x=>x?new Date(x).toLocaleString('tr-TR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'hiç'; return `<p class="muted" style="font-size:var(--t-meta);margin-top:4px">Son yükleme: ${t(si.push)} · Son çekme: ${t(si.pull)}${si.err?`<br><span style="color:var(--coral)">Son hata: ${esc(si.err)}</span>`:''}</p>`; })()}
       <p class="muted" style="font-size:var(--t-meta);margin-top:8px;line-height:1.45">Bu hesapla giriş yaptığın her cihazda görevlerin, geçmişin ve notların aynı olur. İnternet yokken de çalışır, bağlantı gelince eşitlenir.</p>
       <div style="display:flex;gap:8px;margin-top:12px"><button class="btn" data-act="cpull">Şimdi eşitle</button><button class="btn ghost" data-act="cout">Çıkış yap</button></div><p class="muted" style="font-size:var(--t-tiny);margin-top:10px">Sürüm ${VER}</p></div>`;
   return `<div class="panel first"><h3>Eşitleme</h3><p class="muted" style="font-size:var(--t-body);line-height:1.5">Emanet'teki hesabınla giriş yap; verilerin tüm cihazlarında aynı olsun.</p>
@@ -1723,7 +1729,7 @@ const ACT={
   nmztest:async()=>{ if(!pushOn()) return toast('Önce yukarıdan bildirimleri aç.'); const c=nmz(), id=c.list[0]||'ogle', at=new Date(), hm=String(at.getHours()).padStart(2,'0')+':'+String(at.getMinutes()).padStart(2,'0'), nm=(NAMAZ.find(x=>x[0]===id)||[])[1];
     const ok=await testPush({title:`${nm.replace(' namazı','')} vakti`,body:`${dot(hm)} ${nm} vakti girdi. (Deneme)`,tag:`n-${id}-test`});
     toast(ok?'Deneme bildirimi birkaç saniye içinde gelecek. Kıldım düğmesini de deneyebilirsin.':'Gönderilemedi. Girişini ve kurulumu kontrol et.'); },
-  cpull:async()=>{ setCloud('Eşitleniyor…'); await pullCloud(); await pushCloud(); const r=S.days[dk()]||{}; setCloud(`Eşitlendi. Bugün ${Object.keys(r.done||{}).length} görev işaretli, toplam ${S.tasks.length} görev.`); },
+  cpull:async()=>{ saving=false; setCloud('Eşitleniyor…'); await pullCloud(); await pushCloud(); const si=syncInfo(); if(si.err){ setCloud('Eşitlenemedi: '+si.err); render(); return; } const c=k=>Object.keys((S.days[k]||{}).done||{}).length; setCloud(`Eşitlendi. Dün ${c(addDays(dk(),-1))}, bugün ${c(dk())} görev işaretli; toplam ${S.tasks.length} görev.`); render(); },
   cout:async()=>{ try{ await sb.auth.signOut(); }catch(e){} sbUser=null; setCloud(''); render(); toast('Çıkış yapıldı. Veriler bu cihazda duruyor.'); },
   amode:()=>{ authMode=authMode==='up'?'in':'up'; render(); },
   areset:async()=>{ const em=($('aem')||{}).value; if(!em) return toast('Önce e-posta adresini yaz.'); const {error}=await sb.auth.resetPasswordForEmail(em.trim(),{redirectTo:location.href.split('#')[0]}); toast(error?'Gönderilemedi: '+error.message:'Şifre yenileme bağlantısı e-postana gönderildi.'); },
