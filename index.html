@@ -546,18 +546,19 @@ button.chainline{width:100%;text-align:left;font:inherit;color:inherit;cursor:po
 .donegrp>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:6px;color:var(--turq);font-weight:700;font-size:var(--t-body);padding:6px 2px}.donegrp>summary::-webkit-details-marker{display:none}.donegrp>summary .ico{width:16px;height:16px}
 .donegrp[open]>summary{margin-bottom:6px}
 .chainhero2{padding:16px var(--pad) 14px}
-.ch-top{display:flex;align-items:center;gap:12px}
-.ch-main{display:flex;align-items:center;gap:12px}
-.ch-ico{display:grid;place-items:center;width:52px;height:52px;border-radius:16px;background:color-mix(in srgb,var(--saffron) 16%,var(--lapis2));border:1px solid color-mix(in srgb,var(--saffron) 35%,transparent)}
-.ch-ico .ico{width:26px;height:26px;color:var(--saffron)!important;stroke:var(--saffron)!important}
-.ch-main b{display:block;font-size:34px;font-weight:800;line-height:1;color:var(--saffron);letter-spacing:-.02em}.ch-main span{color:var(--mist);font-size:var(--t-meta);font-weight:700}
-.ch-side{margin-left:auto;display:flex;gap:18px;text-align:right}.ch-side b{display:block;font-size:var(--t-sec);font-weight:800;line-height:1.1}.ch-side small{color:var(--mist);font-size:var(--t-tiny);font-weight:600}
-.ch-msg{margin:12px 0 6px;font-size:var(--t-body);color:var(--white)}
-.chain2{display:block;width:100%;height:auto;margin-top:6px}
-.chain2 .chl{font-size:9px;font-weight:700;fill:var(--mist);font-family:inherit}.chain2 .chl.t{fill:var(--white);font-weight:800}
-.ch-leg{display:flex;gap:14px;margin-top:8px;font-size:var(--t-tiny);color:var(--mist);flex-wrap:wrap}
-.ch-leg span{display:inline-flex;align-items:center;gap:5px}.lg{display:inline-block;width:14px;height:8px;border-radius:4px}
-.lg.f{background:linear-gradient(#f6d47a,#c98a1c)}.lg.e{border:1.6px dashed var(--turq)}.lg.b{background:var(--coral);height:3px;width:12px;border-radius:2px}
+.ch-top{display:flex;align-items:flex-end;gap:12px}
+.ch-main b{display:block;font-size:44px;font-weight:800;line-height:.95;color:var(--saffron);letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.ch-main span{display:inline-flex;align-items:center;gap:6px;margin-top:6px;color:var(--mist);font-size:var(--t-meta);font-weight:700}
+.ch-main span .ico{width:15px;height:15px;color:var(--saffron)!important;stroke:var(--saffron)!important}
+.ch-side{margin-left:auto;display:flex;gap:20px;text-align:right;padding-bottom:2px}.ch-side b{display:block;font-size:var(--t-sec);font-weight:800;line-height:1.1;font-variant-numeric:tabular-nums}.ch-side small{color:var(--mist);font-size:var(--t-tiny);font-weight:600}
+.ch-rec{height:4px;border-radius:2px;background:color-mix(in srgb,var(--mist) 22%,transparent);margin:14px 0 0;overflow:hidden}.ch-rec i{display:block;height:100%;border-radius:2px;background:linear-gradient(90deg,#e3a937,var(--saffron))}
+.ch-msg{margin:10px 0 4px;font-size:var(--t-body);color:var(--white)}
+.chain2{display:block;width:100%;max-width:560px;height:auto;margin:8px auto 0}
+.chain2 .chl{font-size:9.5px;font-weight:700;fill:var(--mist);font-family:inherit}.chain2 .chl.mo{fill:var(--white);opacity:.85}
+.chain2 .chl.t{fill:var(--lapis);font-weight:800}.chain2 .chl-tbg{fill:var(--saffron)}
+.ch-leg{display:flex;gap:14px;margin-top:10px;font-size:var(--t-tiny);color:var(--mist);flex-wrap:wrap}
+.ch-leg span{display:inline-flex;align-items:center;gap:5px}.lg{display:inline-block;width:16px;height:9px;border-radius:5px;border:2.4px solid}
+.lg.f{border-color:#e3a937}.lg.e{border-color:var(--turq);border-style:dashed}.lg.b{border-color:var(--coral);border-left-color:transparent;border-right-color:transparent}.lg.td{border-color:var(--mist);border-style:dashed}
 /* ---- tutarlılık: tek kutu ve yazı ölçüsü ---- */
 .panel,.hcard,.fold,.chainbox,.weekbar,.scard2,.stat,.hedit,.trow{border-radius:var(--r-lg);padding:var(--pad)}
 .fold{padding:0}.fold summary{padding:var(--pad)}.fold .sgrid,.ybox{padding:0 var(--pad) var(--pad)}
@@ -781,34 +782,51 @@ function chainSvg(days=14){
   }
   return `<svg class="chain" viewBox="0 0 ${W+18} 36" preserveAspectRatio="xMinYMid meet" role="img" aria-label="Son ${days} günün zinciri">${links}</svg>`;
 }
-/* Takip sayfası zinciri: iç içe geçen gerçek zincir halkaları, altında gün harfleri */
+/* Takip sayfası zinciri: her gün aynı biçimde, birbirine geçmiş bir halka. Kırık günde koparılmış iki yarım halka. */
 function chainLinks(days=14){
-  const step=22, lw=30, W=(days-1)*step+lw+4, cy=15; let rings='', bars='', labels='';
-  const WL=['P','S','Ç','P','C','C','P'];
+  const step=25, lw=34, hh=22, cy=14, W=(days-1)*step+lw+4, WL=['P','S','Ç','P','C','C','P'];
+  const ring=(x,stroke,extra='')=>`<rect x="${x}" y="${cy-hh/2}" width="${lw}" height="${hh}" rx="${hh/2}" fill="none" stroke="${stroke}" stroke-width="3.8" ${extra}/>`;
+  const st=[], xs=[];
+  for(let i=0;i<days;i++){ const k=addDays(dk(),-(days-1-i)); st.push({k,s:dayState(k),today:k===dk()}); xs.push(2+i*step); }
+  const look=d=>{ const pend=d.today&&d.s!=='full'&&d.s!=='ex';
+    if(d.s==='full') return {c:'url(#chg)'};
+    if(d.s==='ex') return {c:'var(--turq)',x:'stroke-dasharray="5 3"'};
+    if(d.s==='rest') return {c:'var(--lapis3)'};
+    if(pend) return {c:'var(--mist)',x:'stroke-dasharray="4 4" opacity=".75"'};
+    return null; }; // kırık
+  let body='', defs='', labels='';
   for(let i=0;i<days;i++){
-    const k=addDays(dk(),-(days-1-i)), st=dayState(k), today=k===dk(), x=2+i*step;
-    const broken=(st==='part'||st==='none')&&!today, pend=today&&st!=='full'&&st!=='ex';
-    const col= st==='full'?'url(#chg)': st==='ex'?'var(--turq)': st==='rest'?'var(--lapis3)': pend?'var(--mist)':'var(--coral)';
-    const dash= st==='ex'||pend ? 'stroke-dasharray="4 3"' : '';
-    labels+=`<text x="${x+lw/2}" y="${cy+26}" text-anchor="middle" class="chl ${today?'t':''}">${WL[(kDate(k).getDay()+6)%7]}</text>`;
-    if(broken){ bars+=`<path d="M${x+5} ${cy-5}l5 5-5 5M${x+lw-5} ${cy-5}l-5 5 5 5" fill="none" stroke="var(--coral)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" opacity=".9"/>`; continue; }
-    if(i%2===0) rings+=`<rect x="${x}" y="${cy-9}" width="${lw}" height="18" rx="9" fill="none" stroke="${col}" stroke-width="3.6" ${dash}/>`;
-    else bars+=`<rect x="${x}" y="${cy-3.5}" width="${lw}" height="7" rx="3.5" fill="${st==='full'?col:'none'}" stroke="${col}" stroke-width="2.6" ${dash}/>`;
+    const d=st[i], L=look(d), x=xs[i];
+    if(L) body+=ring(x,L.c,L.x||'');
+    else { // kırık: iki yarım halka, uçları birbirinden uzaklaşmış
+      body+=`<path d="M${x+lw/2-3} ${cy-hh/2} H${x+hh/2} A${hh/2} ${hh/2} 0 0 0 ${x+hh/2} ${cy+hh/2} H${x+lw/2-6}" fill="none" stroke="var(--coral)" stroke-width="3" stroke-linecap="round" transform="rotate(-10 ${x+lw/2} ${cy})"/>`
+        +`<path d="M${x+lw/2+6} ${cy-hh/2} H${x+lw-hh/2} A${hh/2} ${hh/2} 0 0 1 ${x+lw-hh/2} ${cy+hh/2} H${x+lw/2+3}" fill="none" stroke="var(--coral)" stroke-width="3" stroke-linecap="round" transform="rotate(10 ${x+lw/2} ${cy})"/>`;
+    }
+    // iç içe geçme: bir önceki halkanın sağ ucunun alt yarısı bu halkanın üstünden geçer
+    if(i>0 && L && look(st[i-1])){ const P=look(st[i-1]);
+      defs+=`<clipPath id="chc${i}"><rect x="${x-2}" y="${cy}" width="${xs[i-1]+lw-x+4}" height="${hh}"/></clipPath>`;
+      body+=`<g clip-path="url(#chc${i})">${ring(xs[i-1],P.c,P.x||'')}</g>`; }
+    const lx=x+lw/2, wd=WL[(kDate(d.k).getDay()+6)%7];
+    labels+= d.today ? `<rect x="${lx-8}" y="${cy+hh/2+5}" width="16" height="15" rx="7.5" class="chl-tbg"/><text x="${lx}" y="${cy+hh/2+15.6}" text-anchor="middle" class="chl t">${wd}</text>`
+      : `<text x="${lx}" y="${cy+hh/2+15.6}" text-anchor="middle" class="chl${(kDate(d.k).getDay()+6)%7===0?' mo':''}">${wd}</text>`;
   }
-  return `<svg class="chain2" viewBox="0 0 ${W} 46" role="img" aria-label="Son ${days} günün zinciri"><defs><linearGradient id="chg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6d47a"/><stop offset="1" stop-color="#c98a1c"/></linearGradient></defs>${rings}${bars}${labels}</svg>`;
+  return `<svg class="chain2" viewBox="0 0 ${W} ${cy+hh/2+22}" role="img" aria-label="Son ${days} günün zinciri: ${st.filter(d=>d.s==='full').length} tam gün"><defs><linearGradient id="chg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f7d983"/><stop offset=".55" stop-color="#e3a937"/><stop offset="1" stop-color="#b9801c"/></linearGradient>${defs}</defs>${body}${labels}</svg>`;
 }
 function chainHero(){
   const ch=chainNow(), best=chainBest(), m=dk().slice(0,7), monthFull=Object.keys(S.days).filter(k=>k.startsWith(m)&&k<=dk()&&dayState(k)==='full').length;
   const todayOk=dayState(dk())==='full'||dayState(dk())==='ex';
   const msg = ch===0 ? (todayOk?'Yeni zincir başladı.':'Bugünkü görevlerini tamamla, yeni bir zincir başlasın.')
     : ch>=best ? `Şu an en uzun zincirindesin.${todayOk?'':' Bugünün halkasını eklemeyi unutma.'}`
-    : `En uzun zincirine ${best-ch} gün kaldı.${todayOk?'':' Bugünün halkası henüz eklenmedi.'}`;
+    : `Rekora ${best-ch} gün kaldı.${todayOk?'':' Bugünün halkası henüz eklenmedi.'}`;
+  const pct = best ? Math.min(100, ch/best*100) : 0;
   return `<div class="chainhero2 panel first">
-    <div class="ch-top"><div class="ch-main"><span class="ch-ico">${ico('chain')}</span><div><b>${ch}</b><span>günlük zincir</span></div></div>
-      <div class="ch-side"><div><b>${best}</b><small>en uzun</small></div><div><b>${monthFull}</b><small>bu ay tam gün</small></div></div></div>
+    <div class="ch-top">
+      <div class="ch-main"><b>${ch}</b><span>${ico('chain')} günlük zincir</span></div>
+      <div class="ch-side"><div><b>${best}</b><small>rekor</small></div><div><b>${monthFull}</b><small>bu ay tam gün</small></div></div></div>
+    ${best?`<div class="ch-rec" role="img" aria-label="Rekorun yüzde ${pct.toFixed(0)}'i"><i style="width:${pct.toFixed(1)}%"></i></div>`:''}
     <p class="ch-msg">${msg}</p>
     ${chainLinks(14)}
-    <div class="ch-leg"><span><i class="lg f"></i>Tam gün</span><span><i class="lg e"></i>Mazeretli</span><span><i class="lg b"></i>Kırık</span></div></div>`;
+    <div class="ch-leg"><span><i class="lg f"></i>Tam gün</span><span><i class="lg e"></i>Mazeretli</span><span><i class="lg b"></i>Kırık</span><span><i class="lg td"></i>Bugün</span></div></div>`;
 }
 function excuseLeft(k=dk()){ const m=k.slice(0,7); return EXCUSES-Object.keys(S.days).filter(d=>d.startsWith(m)&&S.days[d].excused).length; }
 
@@ -981,7 +999,7 @@ function savePages(id,n){
 }
 
 /* ================= BULUT EŞİTLEME (Supabase, Emanet ile aynı hesap) ================= */
-const CFG=window.SEFER_CONFIG||{}, VER='63';
+const CFG=window.SEFER_CONFIG||{}, VER='64';
 const DIL_ENABLED=false; // İngilizce rehberi şimdilik kapalı; veriler (S.lang) ve kod duruyor
 function dilOff(){ if(DIL_ENABLED) return; const n=S.tasks.length; S.tasks=S.tasks.filter(t=>t.type!=='lang'); if(S.tasks.length!==n) save(); if(tab==='dil') tab='bugun'; }
 let sb=null, sbUser=null, cloudMsg='', saveT=null, saving=false, pendingSave=false, lastPull=0, authMode='in';
