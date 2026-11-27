@@ -900,7 +900,9 @@ function savePages(id,n){
 }
 
 /* ================= BULUT EŞİTLEME (Supabase, Emanet ile aynı hesap) ================= */
-const CFG=window.SEFER_CONFIG||{}, VER='58';
+const CFG=window.SEFER_CONFIG||{}, VER='59';
+const DIL_ENABLED=false; // İngilizce rehberi şimdilik kapalı; veriler (S.lang) ve kod duruyor
+function dilOff(){ if(DIL_ENABLED) return; const n=S.tasks.length; S.tasks=S.tasks.filter(t=>t.type!=='lang'); if(S.tasks.length!==n) save(); if(tab==='dil') tab='bugun'; }
 let sb=null, sbUser=null, cloudMsg='', saveT=null, saving=false, pendingSave=false, lastPull=0, authMode='in';
 const cloudOn = () => !!(sb&&sbUser);
 function mergeDays(older,newer){
@@ -1777,7 +1779,7 @@ async function siInit(){ if(!(await siCall('available'))) return; await siInbox(
 document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'){ siInbox(); siLoadQuote(); } });
 
 /* ================= YÖNLENDİRME ================= */
-const TABS=[['bugun','sun','Bugün',vBugun],['takip','cal','Takip',vTakip],['kitaplar','ilim','Kitaplar',()=>''],['dil','lisan','Dil',()=>vDil()],['ayarlar','sliders','Ayarlar',vAyarlar]];
+const TABS=[['bugun','sun','Bugün',vBugun],['takip','cal','Takip',vTakip],['kitaplar','ilim','Kitaplar',()=>''],...(DIL_ENABLED?[['dil','lisan','Dil',()=>vDil()]]:[]),['ayarlar','sliders','Ayarlar',vAyarlar]];
 let tab='bugun';
 function dropScreen(){ // ekran süresi özelliği kaldırıldı: eski kayıtları ve gelen adresi temizle
   const q=new URLSearchParams(location.search); if(q.has('ekran')){ q.delete('ekran'); q.delete('k'); history.replaceState(null,'',location.pathname+(q.toString()?'?'+q:'')+location.hash); }
@@ -1951,7 +1953,7 @@ function addHatim(){ if(!S.tasks.some(t=>t.type==='hatim') && !S.hatimAdded){ S.
   S.tasks.splice(i>=0?i+1:0,0,{id:'hatim',name:'Hatim',hint:'',icon:'huzur',type:'hatim',goal:0,dini:true,days:[...ALL],remind:'',since:dk(),total:604,start:0,proj:'1. hatim',projStart:dk(),hist:[],quran:true}); } }
 if(S.city&&!S.cityId){ const m={istanbul:'16741','i̇stanbul':'16741',ankara:'16709',izmir:'16742','i̇zmir':'16742',bursa:'16724',kayseri:'16748'}[S.city.trim().toLocaleLowerCase('tr')]; if(m) S.cityId=m; }
 if(!S.cityId && !S.cityAuto){ S.cityId='62737'; S.cityAuto=true; }
-addHatim(); convKitap(); addCuma(); convMulti(); readHash(); kildimFromUrl(); dropScreen(); raporFromUrl(); tmRestore(); applyUI(); save(false); render(); maybeWeekSummary(); loadCities(); loadVakit();
+addHatim(); convKitap(); addCuma(); convMulti(); readHash(); dilOff(); kildimFromUrl(); dropScreen(); raporFromUrl(); tmRestore(); applyUI(); save(false); render(); maybeWeekSummary(); loadCities(); loadVakit();
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',initCloud); else initCloud();
 siInit();
 try{ localStorage.removeItem('sefer-abh'); }catch(e){}
