@@ -545,6 +545,19 @@ button.chainline{width:100%;text-align:left;font:inherit;color:inherit;cursor:po
 .vline .chev{color:var(--mist);font-size:20px;transition:transform .2s}.vline:not(:has(.vpr)) .chev{margin-left:auto}.vline.open .chev{transform:rotate(90deg)}
 .donegrp>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:6px;color:var(--turq);font-weight:700;font-size:var(--t-body);padding:6px 2px}.donegrp>summary::-webkit-details-marker{display:none}.donegrp>summary .ico{width:16px;height:16px}
 .donegrp[open]>summary{margin-bottom:6px}
+.chainhero2{padding:16px var(--pad) 14px}
+.ch-top{display:flex;align-items:center;gap:12px}
+.ch-main{display:flex;align-items:center;gap:12px}
+.ch-ico{display:grid;place-items:center;width:52px;height:52px;border-radius:16px;background:color-mix(in srgb,var(--saffron) 16%,var(--lapis2));border:1px solid color-mix(in srgb,var(--saffron) 35%,transparent)}
+.ch-ico .ico{width:26px;height:26px;color:var(--saffron)!important;stroke:var(--saffron)!important}
+.ch-main b{display:block;font-size:34px;font-weight:800;line-height:1;color:var(--saffron);letter-spacing:-.02em}.ch-main span{color:var(--mist);font-size:var(--t-meta);font-weight:700}
+.ch-side{margin-left:auto;display:flex;gap:18px;text-align:right}.ch-side b{display:block;font-size:var(--t-sec);font-weight:800;line-height:1.1}.ch-side small{color:var(--mist);font-size:var(--t-tiny);font-weight:600}
+.ch-msg{margin:12px 0 6px;font-size:var(--t-body);color:var(--white)}
+.chain2{display:block;width:100%;height:auto;margin-top:6px}
+.chain2 .chl{font-size:9px;font-weight:700;fill:var(--mist);font-family:inherit}.chain2 .chl.t{fill:var(--white);font-weight:800}
+.ch-leg{display:flex;gap:14px;margin-top:8px;font-size:var(--t-tiny);color:var(--mist);flex-wrap:wrap}
+.ch-leg span{display:inline-flex;align-items:center;gap:5px}.lg{display:inline-block;width:14px;height:8px;border-radius:4px}
+.lg.f{background:linear-gradient(#f6d47a,#c98a1c)}.lg.e{border:1.6px dashed var(--turq)}.lg.b{background:var(--coral);height:3px;width:12px;border-radius:2px}
 /* ---- tutarlılık: tek kutu ve yazı ölçüsü ---- */
 .panel,.hcard,.fold,.chainbox,.weekbar,.scard2,.stat,.hedit,.trow{border-radius:var(--r-lg);padding:var(--pad)}
 .fold{padding:0}.fold summary{padding:var(--pad)}.fold .sgrid,.ybox{padding:0 var(--pad) var(--pad)}
@@ -767,6 +780,35 @@ function chainSvg(days=14){
       : `<rect x="${x}" y="${y-3}" width="26" height="6" rx="3" fill="${st==='full'?c:'none'}" stroke="${c}" stroke-width="3" ${dash}/>`;
   }
   return `<svg class="chain" viewBox="0 0 ${W+18} 36" preserveAspectRatio="xMinYMid meet" role="img" aria-label="Son ${days} günün zinciri">${links}</svg>`;
+}
+/* Takip sayfası zinciri: iç içe geçen gerçek zincir halkaları, altında gün harfleri */
+function chainLinks(days=14){
+  const step=22, lw=30, W=(days-1)*step+lw+4, cy=15; let rings='', bars='', labels='';
+  const WL=['P','S','Ç','P','C','C','P'];
+  for(let i=0;i<days;i++){
+    const k=addDays(dk(),-(days-1-i)), st=dayState(k), today=k===dk(), x=2+i*step;
+    const broken=(st==='part'||st==='none')&&!today, pend=today&&st!=='full'&&st!=='ex';
+    const col= st==='full'?'url(#chg)': st==='ex'?'var(--turq)': st==='rest'?'var(--lapis3)': pend?'var(--mist)':'var(--coral)';
+    const dash= st==='ex'||pend ? 'stroke-dasharray="4 3"' : '';
+    labels+=`<text x="${x+lw/2}" y="${cy+26}" text-anchor="middle" class="chl ${today?'t':''}">${WL[(kDate(k).getDay()+6)%7]}</text>`;
+    if(broken){ bars+=`<path d="M${x+5} ${cy-5}l5 5-5 5M${x+lw-5} ${cy-5}l-5 5 5 5" fill="none" stroke="var(--coral)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" opacity=".9"/>`; continue; }
+    if(i%2===0) rings+=`<rect x="${x}" y="${cy-9}" width="${lw}" height="18" rx="9" fill="none" stroke="${col}" stroke-width="3.6" ${dash}/>`;
+    else bars+=`<rect x="${x}" y="${cy-3.5}" width="${lw}" height="7" rx="3.5" fill="${st==='full'?col:'none'}" stroke="${col}" stroke-width="2.6" ${dash}/>`;
+  }
+  return `<svg class="chain2" viewBox="0 0 ${W} 46" role="img" aria-label="Son ${days} günün zinciri"><defs><linearGradient id="chg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6d47a"/><stop offset="1" stop-color="#c98a1c"/></linearGradient></defs>${rings}${bars}${labels}</svg>`;
+}
+function chainHero(){
+  const ch=chainNow(), best=chainBest(), m=dk().slice(0,7), monthFull=Object.keys(S.days).filter(k=>k.startsWith(m)&&k<=dk()&&dayState(k)==='full').length;
+  const todayOk=dayState(dk())==='full'||dayState(dk())==='ex';
+  const msg = ch===0 ? (todayOk?'Yeni zincir başladı.':'Bugünkü görevlerini tamamla, yeni bir zincir başlasın.')
+    : ch>=best ? `Şu an en uzun zincirindesin.${todayOk?'':' Bugünün halkasını eklemeyi unutma.'}`
+    : `En uzun zincirine ${best-ch} gün kaldı.${todayOk?'':' Bugünün halkası henüz eklenmedi.'}`;
+  return `<div class="chainhero2 panel first">
+    <div class="ch-top"><div class="ch-main"><span class="ch-ico">${ico('chain')}</span><div><b>${ch}</b><span>günlük zincir</span></div></div>
+      <div class="ch-side"><div><b>${best}</b><small>en uzun</small></div><div><b>${monthFull}</b><small>bu ay tam gün</small></div></div></div>
+    <p class="ch-msg">${msg}</p>
+    ${chainLinks(14)}
+    <div class="ch-leg"><span><i class="lg f"></i>Tam gün</span><span><i class="lg e"></i>Mazeretli</span><span><i class="lg b"></i>Kırık</span></div></div>`;
 }
 function excuseLeft(k=dk()){ const m=k.slice(0,7); return EXCUSES-Object.keys(S.days).filter(d=>d.startsWith(m)&&S.days[d].excused).length; }
 
@@ -1657,8 +1699,7 @@ function vTakip(){
       <div class="d7">${dots7(t)}</div>${t.type==='pages'||t.type==='hatim'?readLog(t):''}</div>`; }).join('');
   const ch=chainNow(), best=chainBest();
   return `<header class="phead"><h1>Takip</h1><p>Görevlerinin ${chainPct()===100?'hepsini':'en az %'+chainPct()+({50:"'sini",75:"'ini",90:"'ını"}[chainPct()]||"'ini")} yaptığın her gün zincire bir halka eklenir.</p></header>
-    <div class="tk-grid"><div class="tk-top"><div class="chainhero panel first"><div class="cstat"><b>${ch}</b><small>günlük zincir</small></div><div class="cstat"><b>${best}</b><small>en uzun zincir</small></div>${chainSvg(14)}
-      <p class="muted" style="grid-column:1/-1;font-size:var(--t-meta);line-height:1.45">Altın halkalar zincir hedefinin tutturulduğu günler. Kesik turkuaz halkalar mazeretli günler. Kırmızı kopukluk zincirin kırıldığı gün.</p></div>
+    <div class="tk-grid"><div class="tk-top">${chainHero()}
     ${vCal()}</div><div class="tk-r">
  ${S.tasks.some(t=>t.type==='hatim'||(t.type==='pages'&&hasBook(t)))?`<div class="hsec"><h3>Hatim ve kitaplar</h3><div class="hgrid">${S.tasks.filter(t=>(t.type==='hatim'&&!(t.parent&&!hasBook(t)))||(t.type==='pages'&&hasBook(t))).map(t=>t.quran||hasBook(t)?hatimCard(t):`<button class="hcard hempty" data-act="bedit" data-id="${esc(t.id)}"><b>${esc(t.name)}</b><span>Okuduğun kitabı, sayfa sayısını ve bitirme hedefini gir.</span></button>`).join('')}</div></div>`:''}
     <button class="panel rapbtn" data-act="rapor"><b>Dua grubu raporu</b><span>Son raporundan bugüne kadar okudukların, gruba göndermeye hazır.</span></button>
