@@ -1807,10 +1807,11 @@ function siLinkRow(t){ if(!t.siBook) return '';
 function siSchedule(){ clearTimeout(siTimer); siTimer=setTimeout(siPush,800); }
 async function siPush(){
   const L=S.tasks.filter(t=>t.siBook&&hasBook(t)); if(!L.length) return;
-  for(const t of L){ const h=hProg(t), p={readPages:h.cur,totalPages:h.total,finished:false,link:{task:t.name,goal:effGoal(t),due:t.due||'',streak:streakOf(t)}};
+  for(const t of L){ const P=t.parent&&S.tasks.find(x=>x.id===t.parent), h=hProg(t);   // çok kitaplı görevde ad, hedef ve seri ana görevden
+    const p={readPages:h.cur,totalPages:h.total,finished:false,link:{task:P?P.name:t.name,goal:effGoal(t)||(P?+P.goal||0:0),due:t.due||'',streak:streakOf(P||t)}};
     const j=JSON.stringify(p); if(siLast[t.siBook]===j) continue; const ok=await siCall('setProgress',t.siBook,p); if(ok) siLast[t.siBook]=j; }
 }
-function siFinish(t,h){ if(!t.siBook) return; const id=t.siBook; siCall('setProgress',id,{readPages:h.total,totalPages:h.total,finished:true,link:{task:t.name,goal:0,due:'',streak:streakOf(t)}}); delete siLast[id]; }
+function siFinish(t,h){ if(!t.siBook) return; const id=t.siBook, P=t.parent&&S.tasks.find(x=>x.id===t.parent); siCall('setProgress',id,{readPages:h.total,totalPages:h.total,finished:true,link:{task:P?P.name:t.name,goal:0,due:'',streak:streakOf(P||t)}}); delete siLast[id]; }
 function siAddPages(t,n){ // Satır İzi'den gelen sayfayı bugünün kaydına ekler (arayüz açmadan)
   const h=hProg(t); n=Math.min(Math.round(n),Math.max(0,h.left)); if(n<=0) return 0;
   const r=rec(), goal=effGoal(t), id=t.id; r.prog=r.prog||{};
