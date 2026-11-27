@@ -537,6 +537,14 @@ button.chainline{width:100%;text-align:left;font:inherit;color:inherit;cursor:po
 .btn .ico{vertical-align:-3px}
 .dspoken{margin-top:10px;line-height:1.6;font-size:var(--t-item)}
 .dweak{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:7px 0;border-bottom:1px solid var(--lapis3)}.dweak small{grid-column:1/-1;color:var(--mist);font-size:var(--t-meta)}
+.hrow .pills{background:none;border:0;padding:0;font:inherit;color:inherit;cursor:pointer;display:flex;gap:8px}
+.pill.risk{border-color:var(--coral)!important}.pill{position:relative}.pdot{position:absolute;top:-3px;right:-3px;width:9px;height:9px;border-radius:50%;background:var(--coral)}
+.hprog{height:4px;border-radius:99px;background:var(--lapis3);margin:10px 0 2px;overflow:hidden}.hprog i{display:block;height:100%;background:var(--saffron);border-radius:99px;transition:width .3s}.hprog.ok i{background:var(--turq)}
+.vline{display:flex;align-items:center;gap:10px;width:100%;padding:10px 14px;border-radius:var(--r-md);background:var(--lapis2);border:1px solid var(--lapis3);font:inherit;color:inherit;text-align:left;cursor:pointer;margin-top:4px}
+.vline b{font-size:var(--t-body)}.vline span{color:var(--mist);font-size:var(--t-meta)}.vline .vpr{margin-left:auto;color:var(--turq);display:inline-flex;align-items:center;gap:3px}.vline .vpr .ico{width:13px;height:13px}
+.vline .chev{color:var(--mist);font-size:20px;transition:transform .2s}.vline:not(:has(.vpr)) .chev{margin-left:auto}.vline.open .chev{transform:rotate(90deg)}
+.donegrp>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:6px;color:var(--turq);font-weight:700;font-size:var(--t-body);padding:6px 2px}.donegrp>summary::-webkit-details-marker{display:none}.donegrp>summary .ico{width:16px;height:16px}
+.donegrp[open]>summary{margin-bottom:6px}
 /* ---- tutarlılık: tek kutu ve yazı ölçüsü ---- */
 .panel,.hcard,.fold,.chainbox,.weekbar,.scard2,.stat,.hedit,.trow{border-radius:var(--r-lg);padding:var(--pad)}
 .fold{padding:0}.fold summary{padding:var(--pad)}.fold .sgrid,.ybox{padding:0 var(--pad) var(--pad)}
@@ -900,7 +908,7 @@ function savePages(id,n){
 }
 
 /* ================= BULUT EŞİTLEME (Supabase, Emanet ile aynı hesap) ================= */
-const CFG=window.SEFER_CONFIG||{}, VER='59';
+const CFG=window.SEFER_CONFIG||{}, VER='60';
 const DIL_ENABLED=false; // İngilizce rehberi şimdilik kapalı; veriler (S.lang) ve kod duruyor
 function dilOff(){ if(DIL_ENABLED) return; const n=S.tasks.length; S.tasks=S.tasks.filter(t=>t.type!=='lang'); if(S.tasks.length!==n) save(); if(tab==='dil') tab='bugun'; }
 let sb=null, sbUser=null, cloudMsg='', saveT=null, saving=false, pendingSave=false, lastPull=0, authMode='in';
@@ -1089,6 +1097,17 @@ const vakitOf = k => { if(!S.cityId||VK.id!==S.cityId||!VK.days) return null; co
   return {imsak:a[0],sabah:a[1],gunes:a[2],ogle:a[5],ikindi:a[6],aksam:a[9],yatsi:a[11]}; };
 const NAMAZ=[['sabah','Sabah namazı'],['ogle','Öğle namazı'],['ikindi','İkindi namazı'],['aksam','Akşam namazı'],['yatsi','Yatsı namazı']];
 function currentVakit(){ const v=vakitOf(dk()); if(!v) return null; const n=new Date(), hm=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0'); let cur=null; NAMAZ.forEach(([id])=>{ if(v[id]&&v[id]<=hm) cur=id; }); if(v.gunes&&hm>=v.gunes&&hm<(v.ogle||'99')) cur=null; return cur; }
+const VDAT={imsak:'İmsaka',gunes:'Güneşe',ogle:'Öğleye',ikindi:'İkindiye',aksam:'Akşama',yatsi:'Yatsıya'};
+function vakitLine(){
+  const v=vakitOf(dk()); if(!v) return '';
+  const now=new Date(), hm=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0'), L=VAKIT.filter(x=>x[0]!=='sabah');
+  const cur=[...L].reverse().find(([id])=>v[id]<=hm), nx=L.find(([id])=>v[id]>hm);
+  let mins, nl; if(nx){ const [h,m]=v[nx[0]].split(':').map(Number); mins=h*60+m-(now.getHours()*60+now.getMinutes()); nl=VDAT[nx[0]]; }
+  else { const t=vakitOf(addDays(dk(),1)); if(t){ const [h,m]=t.imsak.split(':').map(Number); mins=24*60-(now.getHours()*60+now.getMinutes())+h*60+m; nl=VDAT.imsak; } }
+  const dur=mins==null?'':mins>=60?`${Math.floor(mins/60)} sa${mins%60?` ${mins%60} dk`:''}`:`${mins} dk`;
+  const k=dk(), pr=['sabah','ogle','ikindi','aksam','yatsi'].filter(n=>prayed(k,n)).length;
+  return `<button class="vline ${vOpen?'open':''}" data-act="vtoggle"><b>${cur?(cur[0]==='imsak'?'Sabah':cur[1])+' vakti':'Gece'}</b><span>${nl&&dur?`${nl} ${dur}`:''}</span>${pr?`<span class="vpr">${ico('check')} ${pr}/5</span>`:''}<span class="chev">›</span></button>${vOpen?vakitStrip():''}`;
+}
 function vakitStrip(){
   const v=vakitOf(dk()); if(!v) return '';
   const now=new Date(), hm=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
@@ -1471,13 +1490,14 @@ function saveHatim(id){
 
 /* ================= GÖRÜNÜMLER ================= */
 function vHeader(){
-  const T=todays(), d=T.filter(t=>isDone(t,dk())).length;
+  const T=todays(), d=T.filter(t=>isDone(t,dk())).length, need=chainNeed(T.length), linked=need&&d>=need, warn=excuseBox().includes('warn');
   return `<div class="hrow"><div class="brandm">${ico('huzur')}</div>
     <div class="who"><strong>Sefer</strong><span>${new Date().toLocaleDateString('tr-TR',{weekday:'long',day:'numeric',month:'long'})}</span></div>
-    <div class="pills"><span class="pill" style="color:var(--saffron)" title="Zincir">${ico('chain')}<span style="color:var(--white)">${chainNow()} gün</span></span><span class="pill" style="color:var(--turq)">${ico('check')}<span style="color:var(--white)">${d} / ${T.length}</span></span></div></div>`;
+    <button class="pills" data-act="chainmenu" aria-label="Zincir ve mazeret"><span class="pill ${warn?'risk':''}" style="color:var(--saffron)" title="Zincir">${ico('chain')}<span style="color:var(--white)">${chainNow()} gün</span>${warn?'<i class="pdot"></i>':''}</span><span class="pill" style="color:var(--turq)">${ico('check')}<span style="color:var(--white)">${d} / ${T.length}</span></span></button></div>
+    ${tab==='bugun'&&T.length?`<div class="hprog ${linked?'ok':''}" title="Zincir için ${need} görev"><i style="width:${Math.min(100,need?d/need*100:100).toFixed(0)}%"></i></div>`:''}`;
 }
 function taskRow(t,k=dk()){
-  const r=S.days[k]||{done:{}}, e=(r.done||{})[t.id], d=!!e, ty=t.type||'check', tool={count:'beads',timer:'timer',pages:'page',hatim:'ilim'}[ty]||'';
+  const r=S.days[k]||{done:{}}, e=(r.done||{})[t.id], d=!!e, ty=t.type||'check', tool={count:'beads',timer:'timer',pages:'page',hatim:'ilim',books:'ilim',lang:'lisan'}[ty]||'';
   const run=!d&&TM&&TM.id===t.id, prog=r.prog&&r.prog[t.id], st=isWeekly(t)?weekStreak(t):streakOf(t);
   let hint=esc(t.hint);
   if(isQuranRead(t)) hint = d ? (sureTxt(suresOn(t,dk()))||'Okundu') : 'Okuduğun sureyi gir';
@@ -1496,7 +1516,7 @@ function taskRow(t,k=dk()){
     <span class="medal" style="--c:${col(t)}">${ico(t.icon)}</span>
     <span class="tx"><b>${esc(t.name)}</b><small ${run?`id="tmh-${esc(t.id)}" style="color:var(--turq)"`:''}>${hint}</small>${hbar}</span>
     ${st?`<span class="streak" title="${st} ${isWeekly(t)?'haftalık':'günlük'} seri">${ico('flame')}${st}${isWeekly(t)?' hf':''}</span>`:''}
-    <span class="tick ${d?'':'tool'}">${d||!tool?ico('check'):ico(tool)}</span></button>`;
+    ${d||!tool?`<span class="tick">${ico('check')}</span>`:''}</button>`;
 }
 function excuseBox(){
   const t=dk(), y=addDays(t,-1);
@@ -1513,6 +1533,7 @@ function chainMenu(){ const k=dk(), left=excuseLeft();
     <div class="surebox"><span class="lab">Mazeret</span>${excused(k)?`<p style="margin:4px 0 10px">Bugün mazeretli sayıldı. Serilerin ve zincirin korunuyor.</p><button class="btn ghost" data-act="unexcuse" data-id="${k}">Mazereti geri al</button>`
       :`<p class="muted" style="margin:4px 0 10px">Hastalık, yolculuk gibi günlerde bugünü mazeretli sayarsan serilerin bozulmaz. Bu ay ${Math.max(0,left)} hakkın kaldı.</p><button class="btn" data-act="excuse" data-id="${k}" ${left<=0?'disabled':''}>Bugün mazeretliyim</button>`}</div>
     <button class="linkb" style="margin-top:14px;font-size:var(--t-meta)" data-act="gotakip">Takvimi ve geçmişi gör</button>`); }
+let doneOpen=false, vOpen=false;
 function multiRow(L,vnow){
   const k=dk(), dn=L.filter(t=>isDone(t,k)).length, all=dn===L.length, t0=L[0];
   return `<div class="task multi ${all?'done':''}"><span class="medal" style="--c:${col(t0)}">${ico(t0.icon)}</span>
@@ -1538,16 +1559,16 @@ function vBugun(){
   const grp = (title,items,first) => { const open=items.filter(it=>!it.done); if(!open.length) return '';
     return `<div class="group ${first?'first':''}"><div class="ghead"><h3>${title}</h3><small>${open.length} kaldı</small></div>${open.map(rowOf).join('')}</div>`; };
   const asIt = L => L.map(t=>({t,done:isDone(t,k)}));
-  const gV=grp('Namaz vakitlerinde',vitems,true), gD=grp(vitems.length?'Diğer ibadetler':'İbadet',asIt(dini),!gV), gG=grp('Gelişim',asIt(diger),!gV&&!gD);
+  const gV='', gD=grp('İbadet',[...vitems,...asIt(dini)],true), gG=grp('Gelişim',asIt(diger),!gD);
   const doneItems=[...vitems,...asIt(dini),...asIt(diger)].filter(it=>it.done);
   const ex=excuseBox(), left2=excuseLeft(), barP=need?Math.min(100,n/need*100):100;
   const exToday=excused(k);
-  return `<div class="cols v-bugun"><div class="a-hero"><button class="chainline ${(ev&&!linked&&T.length&&!exToday)||ex.includes('warn')?'risk':''} ${linked||exToday?'ok':''}" data-act="chainmenu" aria-label="Zincir ve mazeret"><span class="clico">${ico('chain')}</span><div class="cltx"><b>${head}</b><small>${exToday?'Bugün mazeretli, serilerin korunuyor.':ex.includes('warn')?'Dün eksik kaldı. Mazeretli saymak için dokun.':sub}</small><div class="clbar"><i style="width:${(exToday?100:barP).toFixed(0)}%"></i></div></div><span class="chev">›</span></button>
-    ${vakitStrip()}${S.ui.quote===false?'':`<div id="siq">${siQuoteHtml()}</div>`}</div><div class="a-tasks">
+  return `<div class="cols v-bugun"><div class="a-hero">
+    ${vakitLine()}${S.ui.quote===false?'':`<div id="siq">${siQuoteHtml()}</div>`}</div><div class="a-tasks">
     ${gV}${gD}${gG}
     ${!gV&&!gD&&!gG&&T.length?`<div class="group first"><div class="ghead"><h3>Bugünkü görevlerin tamam</h3></div></div>`:''}
     ${W.length?`<div class="group"><div class="ghead"><h3>Bu hafta</h3><small>${W.filter(t=>weekMet(t,wkStart(k))).length} / ${W.length} hedef tamam</small></div>${W.map(t=>taskRow(t)).join('')}</div>`:''}
-    ${doneItems.length?`<div class="group donegrp"><div class="ghead"><h3>Tamamlananlar</h3><small>${doneItems.length}</small></div>${doneItems.map(rowOf).join('')}</div>`:''}
+    ${doneItems.length?`<details class="group donegrp" ${doneOpen?'open':''} ontoggle="doneOpen=this.open"><summary>${ico('check')} ${doneItems.length} görev tamamlandı</summary>${doneItems.map(rowOf).join('')}</details>`:''}
     ${noteOf(k)?`<button class="notecard" data-act="note" data-id="${k}"><span class="lab">Günün notu</span><span class="nt">${esc(noteOf(k))}</span></button>`:`<button class="linkb noteadd" data-act="note" data-id="${k}">${ico('plus')} Günün notu</button>`}
     </div></div>`;
 }
@@ -1813,7 +1834,7 @@ const ACT={
   hsave:id=>saveHatim(id),
   bedit:id=>openBook(id),
   mbopen:id=>openBooks(id), mbsave:id=>saveBooks(id),
-  note:k=>openNote(k), chainmenu:()=>chainMenu(), gotakip:()=>{ closeModal(); go('takip'); },
+  note:k=>openNote(k), chainmenu:()=>chainMenu(), vtoggle:()=>{ vOpen=!vOpen; render(); }, gotakip:()=>{ closeModal(); go('takip'); },
   kiddel:id=>{ const c=S.tasks.find(x=>x.id===id); if(!c) return; if(!confirmTwice('kiddel'+id)) return toast(`${c.proj} listeden çıkarılsın mı? Onaylamak için tekrar dokun.`);
     if(c.siBook) siCall('unlink',c.siBook); const pid=c.parent; S.tasks=S.tasks.filter(x=>x.id!==id); save(); render(); openBooks(pid); toast('Kitap listeden çıkarıldı. Okuduğun sayfalar geçmişte kalıyor.'); },
   mbadd:id=>{ const cid=addKid(id); save(false); openBook(cid); },
