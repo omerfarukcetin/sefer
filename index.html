@@ -865,7 +865,7 @@ function savePages(id,n){
 }
 
 /* ================= BULUT EŞİTLEME (Supabase, Emanet ile aynı hesap) ================= */
-const CFG=window.SEFER_CONFIG||{}, VER='53';
+const CFG=window.SEFER_CONFIG||{}, VER='54';
 let sb=null, sbUser=null, cloudMsg='', saveT=null, saving=false, pendingSave=false, lastPull=0, authMode='in';
 const cloudOn = () => !!(sb&&sbUser);
 function mergeDays(older,newer){
@@ -1323,6 +1323,7 @@ function tidyKids(keep){
   S.tasks.filter(t=>t.parent&&!hasBook(t)&&t.id!==keep).forEach(c=>{ const P=S.tasks.find(x=>x.id===c.parent); if(P&&c.hist&&c.hist.length) P.hist=[...(P.hist||[]),...c.hist]; });
   S.tasks=S.tasks.filter(t=>!(t.parent&&!hasBook(t)&&t.id!==keep));
 }
+let _cf={}; function confirmTwice(k){ const now=Date.now(); if(_cf[k]&&now-_cf[k]<4000){ delete _cf[k]; return true; } _cf[k]=now; return false; }
 function addKid(pid){ const P=S.tasks.find(x=>x.id===pid), id='k'+Date.now().toString(36);
   S.tasks.push({id,parent:pid,name:'Kitap',icon:P.icon||'ilim',type:'hatim',quran:false,total:0,proj:'',start:0,projStart:'',hist:[],goal:0,due:'',days:[...ALL],remind:'',dini:false});
   P.kids=[...new Set([...(P.kids||[]),id])]; if(!P.multiSince) P.multiSince=dk(); return id; }
@@ -1375,7 +1376,8 @@ function openBook(id){
       <div id="bk_day" ${t.due||!(+t.goal)?'hidden':''}><label><span class="lab">Günde kaç sayfa?</span><input id="bk_g" type="number" inputmode="numeric" min="1" value="${esc(+t.goal||'')}"></label></div>
       <p class="heta" id="bk_info"></p>
       <button class="btn turq" data-act="bsave" data-id="${esc(id)}">Kaydet</button>
-      ${t.type==='pages'&&hasBook(t)?`<button class="btn ghost" data-act="bdel" data-id="${esc(id)}">Kitabı kaldır, sadece sayfa say</button>`:''}</div>`);
+      ${t.type==='pages'&&hasBook(t)?`<button class="btn ghost" data-act="bdel" data-id="${esc(id)}">Kitabı kaldır, sadece sayfa say</button>`:''}
+      ${t.parent&&hasBook(t)?`<button class="btn ghost" data-act="kiddel" data-id="${esc(id)}">Bu kitabı listeden çıkar</button>`:''}</div>`);
   ['bk_t','bk_c','bk_d','bk_g'].forEach(i=>{ const el=$(i); if(el) el.addEventListener('input',bookInfo); }); bookInfo();
   if(!t.quran) siPicker(t);
 }
@@ -1766,6 +1768,8 @@ const ACT={
   hsave:id=>saveHatim(id),
   bedit:id=>openBook(id),
   mbopen:id=>openBooks(id), mbsave:id=>saveBooks(id),
+  kiddel:id=>{ const c=S.tasks.find(x=>x.id===id); if(!c) return; if(!confirmTwice('kiddel'+id)) return toast(`${c.proj} listeden çıkarılsın mı? Onaylamak için tekrar dokun.`);
+    if(c.siBook) siCall('unlink',c.siBook); const pid=c.parent; S.tasks=S.tasks.filter(x=>x.id!==id); save(); render(); openBooks(pid); toast('Kitap listeden çıkarıldı. Okuduğun sayfalar geçmişte kalıyor.'); },
   mbadd:id=>{ const cid=addKid(id); save(false); openBook(cid); },
   siqnext:()=>siNextQuote(), bsave:id=>saveBook(id),
   siopen:h=>{ closeModal(); siOpen(h); },
