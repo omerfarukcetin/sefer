@@ -335,8 +335,8 @@ button.zikr:active{transform:scale(.97)}
 .nofx *{animation:none!important;transition:none!important}
 
 /* ---------- gündüz teması ---------- */
-:root[data-theme=light]{--lapis:#eef2f8;--lapis2:#ffffff;--lapis3:#dde4ef;--line:#c5d1e3;--white:#15264a;--mist:#5a6a86;
-  --turq:#128a88;--saffron:#d99a1e;--coral:#cf5236;--sky:#4a63c9;--leaf:#2f8a52;--navbg:rgba(255,255,255,.96);--sidebg:#ffffff;--zbg:#e4ebf6}
+:root[data-theme=light]{--lapis:#efe7d6;--lapis2:#f9f4e8;--lapis3:#e1d5bb;--line:#d3c4a3;--white:#2b2620;--mist:#776c5b;
+  --turq:#0f6e69;--saffron:#b9801c;--coral:#b4503a;--sky:#45619a;--leaf:#3f7a4e;--navbg:rgba(249,244,232,.97);--sidebg:#f6efe0;--zbg:#e8dec8}
 :root[data-theme=light] body{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cg fill='none' stroke='%2315264a' stroke-opacity='.05' stroke-width='1'%3E%3Crect x='18' y='18' width='20' height='20'/%3E%3Crect x='18' y='18' width='20' height='20' transform='rotate(45 28 28)'/%3E%3C/g%3E%3C/svg%3E")}
 :root[data-theme=light] .task,:root[data-theme=light] .trow2,:root[data-theme=light] .rrow,:root[data-theme=light] .panel,:root[data-theme=light] .stat{box-shadow:0 1px 2px rgba(21,38,74,.06)}
 :root[data-theme=light] .mapwrap{box-shadow:0 10px 30px rgba(21,38,74,.15)}
@@ -590,6 +590,36 @@ p,.muted,.heta,.ins,.excuse p,.hero .txt p,.phead p,.log,.ck,input,select,textar
   .tk-r .morehead{margin-top:18px}
   .tk-r .ybox{overflow-x:auto}
 }
+
+/* ---- görünüm iyileştirmesi ---- */
+body{background-image:none!important;background:radial-gradient(1200px 380px at 50% -120px,color-mix(in srgb,var(--lapis2) 70%,transparent),transparent 70%),var(--lapis)}
+#hdr::before{content:"";position:absolute;inset:0;z-index:-1;opacity:.5;pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='.05' stroke-width='1'%3E%3Crect x='18' y='18' width='20' height='20'/%3E%3Crect x='18' y='18' width='20' height='20' transform='rotate(45 28 28)'/%3E%3C/g%3E%3C/svg%3E");
+  -webkit-mask-image:linear-gradient(#000,transparent);mask-image:linear-gradient(#000,transparent)}
+#hdr{isolation:isolate}
+.who strong{font-size:var(--t-sec);letter-spacing:0}.who span{margin-top:2px}
+.hrow .pill{padding:5px 9px;font-size:var(--t-meta)}.hrow .pill .ico{width:14px;height:14px}
+.tcard{background:var(--lapis2);border:1px solid var(--lapis3);border-radius:var(--r-lg);overflow:hidden}
+.tcard>.task{margin:0!important;border:0!important;border-radius:0!important;background:transparent!important;border-bottom:1px solid var(--lapis3)!important}
+.tcard>.task:last-child{border-bottom:0!important}
+.tcard>.task:active{background:var(--lapis3)!important}
+.g-ib .medal{--c:var(--turq)!important}.g-ge .medal{--c:var(--saffron)!important}
+.donegrp .medal{--c:var(--mist)!important}
+.donegrp .tcard{background:transparent;border-style:dashed}
+.task .tick{transition:transform .2s,background .2s}
+.task.pop .tick{animation:tpop .45s cubic-bezier(.3,1.6,.5,1)}
+.task.pop{animation:tin .5s ease}
+@keyframes tpop{0%{transform:scale(.6)}60%{transform:scale(1.25)}100%{transform:scale(1)}}
+@keyframes tin{0%{background:color-mix(in srgb,var(--turq) 25%,transparent)}100%{background:transparent}}
+.hprog.glow i{animation:hglow 1.2s ease}
+@keyframes hglow{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--turq) 70%,transparent)}50%{box-shadow:0 0 14px 3px color-mix(in srgb,var(--turq) 60%,transparent)}100%{box-shadow:none}}
+.vb{transition:background .2s,border-color .2s}.task.multi.pop{animation:none}.vb.pop{animation:vpop .4s ease}@keyframes vpop{0%{transform:scale(.92)}60%{transform:scale(1.06)}100%{transform:scale(1)}}
+:root[data-theme=light] #hdr::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cg fill='none' stroke='%232b2620' stroke-opacity='.07' stroke-width='1'%3E%3Crect x='18' y='18' width='20' height='20'/%3E%3Crect x='18' y='18' width='20' height='20' transform='rotate(45 28 28)'/%3E%3C/g%3E%3C/svg%3E")}
+:root[data-theme=light] .tcard{box-shadow:0 1px 2px rgba(43,38,32,.06)}
+:root[data-theme=light] .vb.on,:root[data-theme=light] .dsteps span.on{color:#fff}
+@media (prefers-reduced-motion:reduce){.task.pop,.task.pop .tick,.hprog.glow i,.vb.pop{animation:none}}
+@media (max-width:999px){.hrow .brandm{display:none}}
+.who strong{white-space:nowrap}
 </style>
 </head>
 <body>
@@ -772,7 +802,8 @@ function lanternSvg(p){ // p: 0..1 günlük ilerleme
     <path d="M66 104h8l-4 8z" fill="#c99a3a"/></svg>`;
 }
 /* ================= GÖREV TAMAMLAMA ================= */
-function completeTask(id,n=1){
+let justDone='', wasLinked=null;
+function completeTask(id,n=1){ justDone=id; setTimeout(()=>{ justDone=''; },900);
   const t=S.tasks.find(x=>x.id===id); if(!t) return; const r=rec(); if(r.done[id]) return;
   r.done[id]={n,t:Date.now()}; vib(12); save(); render();
   const T=todays(); if(T.length && T.every(x=>isDone(x,dk()))) toast('Bugünkü görevlerin tamam.');
@@ -1506,12 +1537,14 @@ function saveHatim(id){
 }
 
 /* ================= GÖRÜNÜMLER ================= */
+function hijri(d=new Date()){ try{ return new Intl.DateTimeFormat('tr-TR-u-ca-islamic-umalqura',{day:'numeric',month:'long',year:'numeric'}).format(d).replace(/^Hicri\s*/,'').replace(/\s*(AH|Hicri)$/,''); }catch(e){ return ''; } }
 function vHeader(){
   const T=todays(), d=T.filter(t=>isDone(t,dk())).length, need=chainNeed(T.length), linked=need&&d>=need, warn=excuseBox().includes('warn');
+  const glowNow = linked&&wasLinked===false; setTimeout(()=>{ wasLinked=!!linked; },0); if(wasLinked===null) wasLinked=!!linked;
   return `<div class="hrow"><div class="brandm">${ico('huzur')}</div>
-    <div class="who"><strong>Sefer</strong><span>${new Date().toLocaleDateString('tr-TR',{weekday:'long',day:'numeric',month:'long'})}</span></div>
+    <div class="who"><strong>${new Date().toLocaleDateString('tr-TR',{weekday:'long'})}, ${new Date().toLocaleDateString('tr-TR',{day:'numeric',month:'long'})}</strong><span>${hijri()}</span></div>
     <button class="pills" data-act="chainmenu" aria-label="Zincir ve mazeret"><span class="pill ${warn?'risk':''}" style="color:var(--saffron)" title="Zincir">${ico('chain')}<span style="color:var(--white)">${chainNow()} gün</span>${warn?'<i class="pdot"></i>':''}</span><span class="pill" style="color:var(--turq)">${ico('check')}<span style="color:var(--white)">${d} / ${T.length}</span></span></button></div>
-    ${tab==='bugun'&&T.length?`<div class="hprog ${linked?'ok':''}" title="Zincir için ${need} görev"><i style="width:${Math.min(100,need?d/need*100:100).toFixed(0)}%"></i></div>`:''}`;
+    ${tab==='bugun'&&T.length?`<div class="hprog ${linked?'ok':''} ${linked&&wasLinked===false?'glow':''}" title="Zincir için ${need} görev"><i style="width:${Math.min(100,need?d/need*100:100).toFixed(0)}%"></i></div>`:''}`;
 }
 function taskRow(t,k=dk()){
   const r=S.days[k]||{done:{}}, e=(r.done||{})[t.id], d=!!e, ty=t.type||'check', tool={count:'beads',timer:'timer',pages:'page',hatim:'ilim',books:'ilim',lang:'lisan'}[ty]||'';
@@ -1529,7 +1562,7 @@ function taskRow(t,k=dk()){
   if(ty==='lang'&&dilOn()){ const nx=dilNextTopic(); hint = d ? `${dilLvl()} · bugünkü ders tamam` : `${dilLvl()}${nx?' · '+esc(nx):''}${dilDue().length?` · ${dilDue().length} kelime tekrarı`:''}`; }
   if(ty==='books'){ hint=booksHint(t); const L=liveKids(t); if(L.length===1){ const h=hProg(L[0]); hbar=`<span class="mbar"><i style="width:${h.pct}%;background:${col(t)}"></i></span>`; } }
   else if(ty==='hatim'&&!t.quran&&!hasBook(t)){ hint='Kitabını girmek için dokun'; } else if(ty==='hatim'){ const h=hProg(t), g=effGoal(t); hint = `${!t.quran&&t.proj?esc(t.proj)+', ':''}${d?`bugün ${e.n} sayfa, `:prog?`bugün ${prog}${g?' / '+g:''} sayfa, `:g?`bugün ${g} sayfa hedef, `:''}sayfa ${h.cur} / ${h.total}${h.juz?`, ${h.juz}. cüz`:''}`; hbar=`<span class="mbar"><i style="width:${h.pct}%;background:${col(t)}"></i></span>`; }
-  return `<button class="task ${d?'done':''}" data-act="toggle" data-id="${esc(t.id)}" aria-pressed="${d}">
+  return `<button class="task ${d?'done':''} ${t.id===justDone?'pop':''}" data-act="toggle" data-id="${esc(t.id)}" aria-pressed="${d}">
     <span class="medal" style="--c:${col(t)}">${ico(t.icon)}</span>
     <span class="tx"><b>${esc(t.name)}</b><small ${run?`id="tmh-${esc(t.id)}" style="color:var(--turq)"`:''}>${hint}</small>${hbar}</span>
     ${st?`<span class="streak" title="${st} ${isWeekly(t)?'haftalık':'günlük'} seri">${ico('flame')}${st}${isWeekly(t)?' hf':''}</span>`:''}
@@ -1553,10 +1586,10 @@ function chainMenu(){ const k=dk(), left=excuseLeft();
 let doneOpen=false, vOpen=false;
 function multiRow(L,vnow){
   const k=dk(), dn=L.filter(t=>isDone(t,k)).length, all=dn===L.length, t0=L[0];
-  return `<div class="task multi ${all?'done':''}"><span class="medal" style="--c:${col(t0)}">${ico(t0.icon)}</span>
+  return `<div class="task multi ${all?'done':''} ${L.some(t=>t.id===justDone)?'pop':''}"><span class="medal" style="--c:${col(t0)}">${ico(t0.icon)}</span>
     <span class="tx"><b>${esc(t0.name.trim())}</b><small>${dn} / ${L.length} vakit</small></span>
     <span class="vbtns">${L.map(t=>{ const d=isDone(t,k), lb=(NAMAZ.find(x=>x[0]===t.vakit)||[,''])[1].replace(' namazı','');
-      return `<button class="vb ${d?'on':''} ${vnow===t.vakit&&!d?'now':''}" data-act="toggle" data-id="${esc(t.id)}" aria-pressed="${d}" aria-label="${esc(t0.name)}, ${lb}">${d?ico('check'):''}<span>${lb}</span></button>`; }).join('')}</span></div>`;
+      return `<button class="vb ${d?'on':''} ${vnow===t.vakit&&!d?'now':''} ${t.id===justDone?'pop':''}" data-act="toggle" data-id="${esc(t.id)}" aria-pressed="${d}" aria-label="${esc(t0.name)}, ${lb}">${d?ico('check'):''}<span>${lb}</span></button>`; }).join('')}</span></div>`;
 }
 function vBugun(){
   const T=todays(), k=dk(), n=T.filter(t=>isDone(t,k)).length, p=T.length?n/T.length:0, left=T.filter(t=>!isDone(t,k));
@@ -1574,7 +1607,7 @@ function vBugun(){
   const vitems=[]; byName.forEach(L=>{ if(L.length>1) vitems.push({multi:L, done:L.every(t=>isDone(t,k))}); else vitems.push({t:L[0], done:isDone(L[0],k)}); });
   const rowOf = it => it.multi ? multiRow(it.multi,vnow) : taskRow(it.t);
   const grp = (title,items,first) => { const open=items.filter(it=>!it.done); if(!open.length) return '';
-    return `<div class="group ${first?'first':''}"><div class="ghead"><h3>${title}</h3><small>${open.length} kaldı</small></div>${open.map(rowOf).join('')}</div>`; };
+    return `<div class="group ${first?'first':''} g-${title==='İbadet'?'ib':'ge'}"><div class="ghead"><h3>${title}</h3><small>${open.length} kaldı</small></div><div class="tcard">${open.map(rowOf).join('')}</div></div>`; };
   const asIt = L => L.map(t=>({t,done:isDone(t,k)}));
   const gV='', gD=grp('İbadet',[...vitems,...asIt(dini)],true), gG=grp('Gelişim',asIt(diger),!gD);
   const doneItems=[...vitems,...asIt(dini),...asIt(diger)].filter(it=>it.done);
@@ -1585,7 +1618,7 @@ function vBugun(){
     ${gV}${gD}${gG}
     ${!gV&&!gD&&!gG&&T.length?`<div class="group first"><div class="ghead"><h3>Bugünkü görevlerin tamam</h3></div></div>`:''}
     ${W.length?`<div class="group"><div class="ghead"><h3>Bu hafta</h3><small>${W.filter(t=>weekMet(t,wkStart(k))).length} / ${W.length} hedef tamam</small></div>${W.map(t=>taskRow(t)).join('')}</div>`:''}
-    ${doneItems.length?`<details class="group donegrp" ${doneOpen?'open':''} ontoggle="doneOpen=this.open"><summary>${ico('check')} ${doneItems.length} görev tamamlandı</summary>${doneItems.map(rowOf).join('')}</details>`:''}
+    ${doneItems.length?`<details class="group donegrp" ${doneOpen?'open':''} ontoggle="doneOpen=this.open"><summary>${ico('check')} ${doneItems.length} görev tamamlandı</summary><div class="tcard">${doneItems.map(rowOf).join('')}</div></details>`:''}
     ${noteOf(k)?`<button class="notecard" data-act="note" data-id="${k}"><span class="lab">Günün notu</span><span class="nt">${esc(noteOf(k))}</span></button>`:`<button class="linkb noteadd" data-act="note" data-id="${k}">${ico('plus')} Günün notu</button>`}
     </div></div>`;
 }
