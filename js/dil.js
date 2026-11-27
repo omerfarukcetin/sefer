@@ -33,7 +33,11 @@ const dilDoneTopics = () => dilTopics().filter(t => dilTp(t) >= DIL_PER_TOPIC).l
 const dilNextTopic = () => dilTopics().find(t => dilTp(t) < DIL_PER_TOPIC) || null;
 const dilTask = () => S.tasks.find(t => t.type === 'lang');
 const dilDue = () => (S.lang.words || []).filter(w => (w.due || '') <= dk());
-let DIL = { busy: '', err: '', reveal: false, sel: null, fb: null, test: null };
+let DIL = { busy: '', err: '', reveal: false, sel: null, fb: null, test: null, rec: null, sh: {}, dict: null, spk: null, rate: 0.9 };
+/* zayıf noktalar: yanlış cevaplar ve düzeltmelerden gelen etiketler; dersler bunlara göre hedeflenir */
+function dilWeak(tag, note) { if (!tag) return; const W = S.lang.weak = S.lang.weak || []; W.push({ tag: String(tag).slice(0, 40), note: String(note || '').slice(0, 120), at: dk() }); S.lang.weak = W.slice(-60); }
+function dilWeakTop(n = 5) { const m = {}; (S.lang.weak || []).filter(w => w.at >= addDays(dk(), -30)).forEach(w => { const k = w.tag.toLowerCase(); m[k] = m[k] || { tag: w.tag, n: 0, note: w.note }; m[k].n++; m[k].note = w.note || m[k].note; });
+  return Object.values(m).sort((a, b) => b.n - a.n).slice(0, n); }
 
 /* ---------- Gemini ---------- */
 async function dilAI(prompt, maxTokens = 4000) {
@@ -78,6 +82,36 @@ function dilGrade(w, ok) {
   if (ok) { w.reps = (w.reps || 0) + 1; w.ivl = w.reps === 1 ? 1 : w.reps === 2 ? 3 : Math.round((w.ivl || 3) * 2.3); w.due = addDays(dk(), w.ivl); }
   else { w.reps = 0; w.ivl = 0; w.due = addDays(dk(), 1); }
 }
+function dilVoices() { try { return speechSynthesis.getVoices().filter(v => /^en(-|_)/i.test(v.lang)); } catch (e) { return []; } }
+function dilPlayScript(script) { // diyalogu iki farklı sesle okur
+  try { speechSynthesis.cancel(); const V = dilVoices(), va = V.find(v => /GB/i.test(v.lang)) || V[0], vb = V.find(v => v !== va && /US/i.test(v.lang)) || V.find(v => v !== va) || va;
+    String(script || '').split(/\n+/).map(x => x.trim()).filter(Boolean).forEach(line => { const m = line.match(/^([AB]):\s*(.*)$/); const u = new SpeechSynthesisUtterance(m ? m[2] : line);
+      u.lang = 'en-GB'; u.rate = DIL.rate; const v = m && m[1] === 'B' ? vb : va; if (v) { u.voice = v; u.lang = v.lang; } speechSynthesis.speak(u); }); }
+  catch (e) { toast('Bu cihaz sesli okumayı desteklemiyor.'); } }
+const dilSR = () => window.SpeechRecognition || window.webkitSpeechRecognition;
+function dilRecStart(target) { // konuşmayı yazıya çevirir (Chrome / Android)
+  const SR = dilSR(); if (!SR) { toast('Bu tarayıcı konuşma tanımayı desteklemiyor. Chrome kullan ya da yazarak cevap ver.'); return; }
+  if (DIL.rec && DIL.rec.r) { try { DIL.rec.r.stop(); } catch (e) {} }
+  const r = new SR(); r.lang = 'en-US'; r.interimResults = true; r.continuous = target === 'sp'; r.maxAlternatives = 1;
+  DIL.rec = { target, r, text: '', on: true };
+  r.onresult = e => { let t = ''; for (let i = 0; i < e.results.length; i++) t += e.results[i][0].transcript + ' '; DIL.rec.text = t.trim(); const el = document.getElementById('drec_' + target); if (el) el.textContent = DIL.rec.text; };
+  r.onerror = e => { DIL.rec.on = false; if (e.error === 'not-allowed') toast('Mikrofon izni verilmedi. Tarayıcı ayarlarından izin ver.'); else if (e.error !== 'aborted' && e.error !== 'no-speech') toast('Ses anlaşılamadı, tekrar dene.'); render(); };
+  r.onend = () => { if (!DIL.rec || DIL.rec.r !== r) return; DIL.rec.on = false; dilRecDone(target, DIL.rec.text); };
+  try { r.start(); } catch (e) {} render();
+}
+function dilRecStop() { if (DIL.rec && DIL.rec.r) try { DIL.rec.r.stop(); } catch (e) {} }
+const dilNorm = t => String(t || '').toLowerCase().replace(/[’']/g, "'").replace(/[^a-z0-9' ]+/g, ' ').split(/\s+/).filter(Boolean);
+function dilDiff(target, said) { // hedef cümlenin hangi kelimeleri doğru söylendi/yazıldı
+  const A = dilNorm(target), B = dilNorm(said), pool = B.slice(); let ok = 0;
+  const marks = A.map(w => { const i = pool.indexOf(w); if (i >= 0) { pool.splice(i, 1); ok++; return [w, true]; } return [w, false]; });
+  return { pct: A.length ? Math.round(ok / A.length * 100) : 0, marks };
+}
+const dilMarks = d => d.marks.map(([w, ok]) => `<span class="${ok ? 'mk-ok' : 'mk-no'}">${esc(w)}</span>`).join(' ');
+function dilRecDone(target, text) {
+  if (target === 'sp') { const c = dilCur(); if (c) { c.spoken = text; save(); } render(); return; }
+  if (target.startsWith('s')) { const i = +target.slice(1), L = (S.lang.les || {})[dk()], tgt = ((L.speaking || {}).shadow || [])[i]; const d = dilDiff(tgt, text);
+    DIL.sh = { ...DIL.sh, [i]: { text, ...d } }; d.marks.filter(m => !m[1] && m[0].length > 2).slice(0, 2).forEach(m => dilWeak('telaffuz', m[0])); save(); render(); }
+}
 function dilSpeak(t) { try { const u = new SpeechSynthesisUtterance(t); u.lang = 'en-GB'; u.rate = 0.9; speechSynthesis.cancel(); speechSynthesis.speak(u); } catch (e) { toast('Bu cihaz sesli okumayı desteklemiyor.'); } }
 const dilSay = t => `<button class="dsay" data-act="dsay" data-id="${esc(t)}" aria-label="Sesli oku">${ico('sound')}</button>`;
 
@@ -86,23 +120,29 @@ async function dilMakeLesson() {
   const topic = dilNextTopic(); if (!topic) return null;
   const n = dilTp(topic) + 1, focus = n === 1 ? 'konunun temeli, en sık kullanılan kalıplar' : n === 2 ? 'alıştırma ağırlıklı, farklı örnekler' : 'günlük hayatta kullanım ve sık yapılan hatalar';
   const known = (S.lang.words || []).slice(-150).map(w => w.w).join(', ');
+  const weak = dilWeakTop(4).map(w => w.tag + (w.note ? ' (' + w.note + ')' : '')).join('; ');
   const p = `Sen Türkçe konuşan bir öğrenciye İngilizce öğreten deneyimli bir öğretmensin. Öğrencinin seviyesi CEFR ${dilLvl()}. Günde 15 dakika çalışıyor.
 Bugünkü konu: "${topic}" (bu konunun ${n}. dersi, odak: ${focus}).
 Öğrencinin zaten bildiği kelimeler (bunları yeni kelime olarak verme): ${known || 'yok'}.
+${weak ? `Öğrencinin son haftalarda sık yaptığı hatalar: ${weak}. Alıştırmalardan en az biri ve dinleme ya da konuşma görevlerinden biri bu zayıf noktaları hedeflesin.` : ''}
 Yalnızca şu JSON'u döndür:
 {"topic":"konu adı (Türkçe)","explain":"Türkçe, sade, en fazla 110 kelimelik anlatım","examples":[{"en":"","tr":""}] (4 örnek),
-"practice":[{"q":"boşluklu ya da seçmeli İngilizce soru","options":["","","",""],"answer":0,"why":"Türkçe kısa açıklama"}] (3 soru),
+"practice":[{"q":"boşluklu ya da seçmeli İngilizce soru","options":["","","",""],"answer":0,"why":"Türkçe kısa açıklama","tag":"hatanın türü, Türkçe 1-3 kelime (örn. artikel, geçmiş zaman, edat)"}] (4 soru),
+"listening":{"script":"${({ A1: 50, A2: 70, B1: 100, B2: 130, C1: 160, C2: 180 })[dilLvl()]} kelimelik, iki kişi arasında doğal bir İngilizce diyalog; her satır 'A: ' ya da 'B: ' ile başlasın, satırlar \\n ile ayrılsın","questions":[{"q":"İngilizce dinlediğini anlama sorusu","options":["","","",""],"answer":0}] (3 soru),"dictation":"diyalogdan ya da konudan, seviyeye uygun tek bir İngilizce cümle (dikte için)"},
+"speaking":{"shadow":["sesli tekrar için seviyeye uygun 3 kısa İngilizce cümle, konuyu ve yeni kelimeleri kullansın"],"prompt":"öğrencinin 30-60 saniye sesli cevaplayacağı İngilizce bir soru","prompt_tr":"sorunun Türkçe açıklaması ve cevapta kullanması önerilen kalıp"},
 "words":[{"w":"İngilizce kelime ya da kalıp","tr":"Türkçe anlamı","ex":"seviyeye uygun kısa İngilizce örnek cümle"}] (6 kelime, ${dilLvl()} seviyesine uygun, konuyla ya da günlük hayatla ilgili),
-"reading":{"title":"","text":"${dilLvl()} seviyesine uygun, bugünkü konuyu ve yeni kelimeleri kullanan ${({ A1: 60, A2: 90, B1: 130, B2: 170, C1: 210, C2: 250 })[dilLvl()]} kelimelik İngilizce metin","questions":[{"q":"İngilizce anlama sorusu","options":["","","",""],"answer":0}] (3 soru)},
+"reading":{"title":"","text":"${dilLvl()} seviyesine uygun, bugünkü konuyu ve yeni kelimeleri kullanan ${({ A1: 50, A2: 70, B1: 100, B2: 130, C1: 160, C2: 190 })[dilLvl()]} kelimelik İngilizce metin","questions":[{"q":"İngilizce anlama sorusu","options":["","","",""],"answer":0}] (2 soru)},
 "writing":"Türkçe yönerge: bugünkü konuyu kullanarak 2-3 İngilizce cümle yazdıran kısa bir görev"}
 "answer" doğru seçeneğin sıra numarasıdır (0'dan başlar). Doğru cevapların yeri soruya göre değişsin.`;
-  const j = await dilAI(p);
+  const j = await dilAI(p, 7000);
   if (!j || !j.explain || !Array.isArray(j.practice) || !j.reading) throw new Error('json');
   return { ...j, k: dk(), topic, n };
 }
 
 /* ---------- akış ---------- */
-const DIL_STEPS = [['review', 'Kelime tekrarı'], ['words', 'Yeni kelimeler'], ['grammar', 'Konu'], ['reading', 'Okuma'], ['writing', 'Yazma']];
+const DIL_STEPS = [['review', 'Tekrar'], ['words', 'Kelimeler'], ['grammar', 'Konu'], ['listening', 'Dinleme'], ['speaking', 'Konuşma'], ['reading', 'Okuma'], ['writing', 'Yazma']];
+const dilHas = (L, s) => s === 'review' || (L && (s === 'words' ? (L.words || []).length : s === 'grammar' ? L.explain : s === 'writing' ? L.writing : !!L[s]));
+const dilOrder = c => { const L = (S.lang.les || {})[dk()]; return DIL_STEPS.map(s => s[0]).filter(s => s === 'review' || (!c.offline && dilHas(L, s))); };
 function dilCur() { const c = S.lang.cur; return c && c.k === dk() ? c : null; }
 async function dilStart() {
   if (DIL.busy) return;
@@ -123,9 +163,9 @@ async function dilStart() {
 }
 function dilNext() {
   const c = dilCur(); if (!c) return; const L = (S.lang.les || {})[dk()];
-  const order = DIL_STEPS.map(s => s[0]).filter(s => s === 'review' || (L && !c.offline));
+  const order = dilOrder(c);
   const i = order.indexOf(c.step);
-  c.i = 0; DIL.reveal = false; DIL.sel = null; DIL.fb = null;
+  c.i = 0; DIL.reveal = false; DIL.sel = null; DIL.fb = null; DIL.sh = {}; DIL.dict = null; DIL.spk = null; dilRecStop(); try { speechSynthesis.cancel(); } catch (e) {}
   if (i < order.length - 1) { c.step = order[i + 1]; save(); render(); window.scrollTo(0, 0); return; }
   dilFinish();
 }
@@ -146,7 +186,7 @@ function vDil() {
   const lv = dilLvl(), tops = dilTopics(), dn = dilDoneTopics(), due = dilDue().length, W = (S.lang.words || []).length, nx = dilNextTopic();
   const pct = Math.round(tops.length ? (tops.reduce((a, t) => a + Math.min(DIL_PER_TOPIC, dilTp(t)), 0) / (tops.length * DIL_PER_TOPIC)) * 100 : 0);
   const today = c && c.step === 'done';
-  return `<div class="dil"><header class="phead"><h1>İngilizce</h1><p>Günde 15 dakika: kelime tekrarı, bir konu, kısa bir okuma ve yazma.</p></header>
+  return `<div class="dil"><header class="phead"><h1>İngilizce</h1><p>Günde yaklaşık 20 dakika: kelime, konu, dinleme, konuşma, okuma ve yazma.</p></header>
     <div class="panel dlev"><div class="dlvbadge">${lv}</div><div class="dlvtx"><b>${lv} seviyesi</b><small>${dn} / ${tops.length} konu tamam${nx ? `, sıradaki: ${esc(nx)}` : ''}</small><span class="mbar"><i style="width:${pct}%;background:var(--turq)"></i></span></div></div>
     ${DIL.busy ? `<div class="panel"><p>${esc(DIL.busy)}</p></div>` : ''}
     ${DIL.err ? `<div class="panel excuse warn"><p>${esc(DIL.err)}</p></div>` : ''}
@@ -157,6 +197,7 @@ function vDil() {
       <p class="muted" style="margin:6px 0 10px">${due ? `${due} kelimenin tekrar zamanı geldi.` : 'Bugün tekrar edilecek kelime yok.'} Bildiğin kelimeler giderek daha seyrek sorulur.</p>
       <button class="btn ${due ? 'turq' : 'ghost'}" data-act="drev" ${W ? '' : 'disabled'}>Kelimeleri tekrar et</button></div>
     ${!nx ? `<div class="panel"><h3>Seviye sınavı</h3><p class="muted" style="margin-bottom:10px">${lv} konularının hepsini bitirdin. 15 soruluk sınavda 11 doğru yaparsan ${DIL_LEVELS[DIL_LEVELS.indexOf(lv) + 1] || 'son'} seviyesine geçersin.</p><button class="btn turq" data-act="dexam" ${DIL.busy ? 'disabled' : ''}>Sınava gir</button></div>` : ''}
+    ${(() => { const W = dilWeakTop(5); return W.length ? `<div class="panel"><h3>Odaklanacağın noktalar</h3><p class="muted" style="margin-bottom:8px">Son 30 gündeki hatalarından. Sonraki dersler bunları da çalıştırır.</p>${W.map(w => `<div class="dweak"><b>${esc(w.tag)}</b><span class="muted">${w.n} kez</span>${w.note ? `<small>${esc(w.note)}</small>` : ''}</div>`).join('')}</div>` : ''; })()}
     <details class="fold"><summary><span>Yol haritası</span><small>A1 → C2</small></summary><div class="ybox">${DIL_LEVELS.map(L => {
       const cur = L === lv, past = DIL_LEVELS.indexOf(L) < DIL_LEVELS.indexOf(lv);
       return `<div class="droad ${cur ? 'cur' : ''}"><b>${L}${past ? ' ✓' : cur ? ' · şu an buradasın' : ''}</b>${cur ? `<ul>${DIL_SYL[L].map(t => { const n = dilTp(t); return `<li class="${n >= DIL_PER_TOPIC ? 'ok' : ''}">${n >= DIL_PER_TOPIC ? '✓' : `${n}/${DIL_PER_TOPIC}`} ${esc(t)}</li>`; }).join('')}</ul>` : ''}</div>`; }).join('')}</div></details>
@@ -175,7 +216,7 @@ function dilSetup() {
       <span class="lab" style="margin-top:14px">Seviyemi biliyorum</span><div class="chips">${DIL_LEVELS.map(L => `<button class="chip" data-act="dsetlvl" data-id="${L}">${L}</button>`).join('')}</div></div>
     <p class="muted" style="font-size:var(--t-meta)">Dersler Satır İzi'ye girdiğin Gemini anahtarıyla hazırlanır. Kelime tekrarı anahtarsız da çalışır.</p></div>`;
 }
-function dilStepBar(c) { if (c.extra) return ''; const L = (S.lang.les || {})[dk()]; const st = DIL_STEPS.filter(s => s[0] === 'review' || (L && !c.offline));
+function dilStepBar(c) { if (c.extra) return ''; const ord = dilOrder(c), st = DIL_STEPS.filter(s => ord.includes(s[0]));
   return `<div class="dsteps">${st.map(([id, l]) => `<span class="${id === c.step ? 'on' : st.findIndex(x => x[0] === c.step) > st.findIndex(x => x[0] === id) ? 'ok' : ''}">${l}</span>`).join('')}</div>`; }
 function dilMcq(q, i, name) {
   const sel = DIL.sel && DIL.sel[name + i];
@@ -202,6 +243,29 @@ function dilLesson(c) {
       <div class="dexs">${(L.examples || []).map(x => `<div><b>${esc(x.en)}</b> ${dilSay(x.en)}<small>${esc(x.tr)}</small></div>`).join('')}</div></div>
       <div class="panel"><h3>Alıştırma</h3>${(L.practice || []).map((q, i) => dilMcq(q, i, 'p')).join('')}</div>
       <button class="btn turq dnext" data-act="dnext" ${allA ? '' : 'disabled'}>${allA ? 'Devam' : 'Önce soruları cevapla'}</button>`; }
+  if (c.step === 'listening') { const Lc = L.listening || {}, allA = (Lc.questions || []).every((q, i) => DIL.sel && DIL.sel['l' + i] != null), D = DIL.dict;
+    return `${head}<div class="panel"><h3>Dinle</h3><p class="muted" style="margin-bottom:10px">Metni görmeden dinle. Gerekirse birkaç kez, gerekirse yavaşlatarak dinleyebilirsin.</p>
+      <div class="dplay"><button class="btn turq" data-act="dlplay">${ico('sound')} Dinle</button><button class="chip ${DIL.rate < 0.8 ? 'on' : ''}" data-act="drate" data-id="0.7">Yavaş</button><button class="chip ${DIL.rate >= 0.8 ? 'on' : ''}" data-act="drate" data-id="0.9">Normal</button></div>
+      ${(Lc.questions || []).map((q, i) => dilMcq(q, i, 'l')).join('')}
+      ${allA ? `<details class="dscript"><summary>Metni göster</summary><p class="dread">${esc(Lc.script || '')}</p></details>` : ''}</div>
+      ${Lc.dictation ? `<div class="panel"><h3>Dikte</h3><p class="muted" style="margin-bottom:10px">Cümleyi dinle ve duyduğunu yaz.</p>
+        <div class="dplay"><button class="btn" data-act="dsay" data-id="${esc(Lc.dictation)}">${ico('sound')} Cümleyi dinle</button></div>
+        <input id="ddict" placeholder="Duyduğunu yaz…" value="${esc(D ? D.text : '')}" ${D ? 'readonly' : ''} autocomplete="off" autocapitalize="off" spellcheck="false">
+        ${D ? `<div class="dfb"><span class="lab">%${D.pct} doğru</span><p class="dmarks">${dilMarks(D)}</p><p class="muted">Doğrusu: ${esc(Lc.dictation)}</p></div>` : `<button class="btn" style="width:100%;margin-top:10px" data-act="ddict">Kontrol et</button>`}</div>` : ''}
+      <button class="btn turq dnext" data-act="dnext" ${allA ? '' : 'disabled'}>${allA ? 'Devam' : 'Önce soruları cevapla'}</button>`; }
+  if (c.step === 'speaking') { const Sp = L.speaking || {}, sr = !!dilSR(), rec = DIL.rec && DIL.rec.on ? DIL.rec.target : '', fb = DIL.spk;
+    return `${head}<div class="panel"><h3>Sesli tekrar</h3><p class="muted" style="margin-bottom:6px">Cümleyi dinle, sonra mikrofona dokunup aynı şekilde söyle. Telaffuzun kelime kelime kontrol edilir.</p>
+      ${(Sp.shadow || []).map((t, i) => { const r = DIL.sh[i]; return `<div class="dshadow"><div class="between"><b>${esc(t)}</b><span style="display:flex;gap:6px">${dilSay(t)}${sr ? `<button class="dmic ${rec === 's' + i ? 'on' : ''}" data-act="${rec === 's' + i ? 'drstop' : 'drec'}" data-id="s${i}" aria-label="Söyle">${ico('mic')}</button>` : ''}</span></div>
+        ${rec === 's' + i ? `<p class="muted" id="drec_s${i}">Dinliyorum…</p>` : r ? `<p class="dmarks">${dilMarks(r)}</p><small class="muted">%${r.pct} anlaşıldı${r.pct < 70 ? '. Bir kez daha dene.' : '. Güzel.'}</small>` : ''}</div>`; }).join('')}
+      ${sr ? '' : '<p class="muted" style="font-size:var(--t-meta)">Bu tarayıcı konuşma tanımayı desteklemiyor. Cümleleri dinleyip sesli tekrar etmen yine işe yarar; telefonda Chrome ile açarsan kontrol de edilir.</p>'}</div>
+      <div class="panel"><h3>Konuş</h3><p><b>${esc(Sp.prompt || '')}</b> ${Sp.prompt ? dilSay(Sp.prompt) : ''}</p><p class="muted" style="margin:4px 0 10px">${esc(Sp.prompt_tr || '')} 30-60 saniye konuşmaya çalış.</p>
+        ${sr ? `<button class="btn ${rec === 'sp' ? 'turq' : ''}" style="width:100%" data-act="${rec === 'sp' ? 'drstop' : 'drec'}" data-id="sp">${ico('mic')} ${rec === 'sp' ? 'Bitirdim' : c.spoken ? 'Yeniden konuş' : 'Konuşmaya başla'}</button>` : ''}
+        <p class="dspoken" id="drec_sp">${rec === 'sp' ? 'Dinliyorum…' : esc(c.spoken || '')}</p>
+        ${sr ? '' : `<textarea id="dspk" rows="3" placeholder="Konuşamıyorsan cevabını yaz…">${esc(c.spoken || '')}</textarea>`}
+        ${fb ? `<div class="dfb"><span class="lab">Düzeltilmiş hâli${fb.score != null && !isNaN(+fb.score) ? ` · ${fb.score}/10` : ''}</span><p><b>${esc(fb.corrected)}</b> ${dilSay(fb.corrected)}</p>${(fb.notes || []).length ? `<ul>${fb.notes.map(n => `<li>${esc(n)}</li>`).join('')}</ul>` : ''}${fb.better ? `<span class="lab">Daha doğal bir söyleyiş</span><p>${esc(fb.better)} ${dilSay(fb.better)}</p>` : ''}</div>`
+          : (c.spoken || !sr) && rec !== 'sp' ? `<button class="btn turq" style="width:100%;margin-top:8px" data-act="dspkcheck" ${DIL.busy ? 'disabled' : ''}>${DIL.busy ? 'Değerlendiriliyor…' : 'Değerlendir'}</button>` : ''}</div>
+      ${DIL.err ? `<div class="panel excuse warn"><p>${esc(DIL.err)}</p></div>` : ''}
+      <button class="btn ${fb ? 'turq' : 'ghost'} dnext" data-act="dnext">${fb ? 'Devam' : 'Konuşmayı atla'}</button>`; }
   if (c.step === 'reading') { const R = L.reading || {}, allA = (R.questions || []).every((q, i) => DIL.sel && DIL.sel['r' + i] != null);
     return `${head}<div class="panel"><div class="between"><h3 style="margin:0">${esc(R.title || 'Okuma')}</h3>${dilSay(R.text || '')}</div><p class="dread">${esc(R.text || '')}</p></div>
       <div class="panel"><h3>Anladın mı?</h3>${(R.questions || []).map((q, i) => dilMcq(q, i, 'r')).join('')}</div>
@@ -209,7 +273,7 @@ function dilLesson(c) {
   if (c.step === 'writing') { const fb = DIL.fb;
     return `${head}<div class="panel"><h3>Yazma</h3><p style="margin-bottom:10px">${esc(L.writing || 'Bugünkü konuyu kullanarak 2-3 cümle yaz.')}</p>
       <textarea id="dwrite" rows="4" placeholder="Write here…" ${fb ? 'readonly' : ''}>${esc(c.text || '')}</textarea>
-      ${fb ? `<div class="dfb"><span class="lab">Düzeltilmiş hâli · ${fb.score}/10</span><p><b>${esc(fb.corrected)}</b> ${dilSay(fb.corrected)}</p>${(fb.notes || []).length ? `<ul>${fb.notes.map(n => `<li>${esc(n)}</li>`).join('')}</ul>` : ''}${fb.better ? `<span class="lab">Daha doğal bir söyleyiş</span><p>${esc(fb.better)}</p>` : ''}</div>`
+      ${fb ? `<div class="dfb"><span class="lab">Düzeltilmiş hâli${fb.score != null && !isNaN(+fb.score) ? ` · ${fb.score}/10` : ''}</span><p><b>${esc(fb.corrected)}</b> ${dilSay(fb.corrected)}</p>${(fb.notes || []).length ? `<ul>${fb.notes.map(n => `<li>${esc(n)}</li>`).join('')}</ul>` : ''}${fb.better ? `<span class="lab">Daha doğal bir söyleyiş</span><p>${esc(fb.better)}</p>` : ''}</div>`
       : `<button class="btn turq" style="width:100%;margin-top:10px" data-act="dcheck" ${DIL.busy ? 'disabled' : ''}>${DIL.busy ? 'Kontrol ediliyor…' : 'Kontrol et'}</button>`}</div>
       ${DIL.err ? `<div class="panel excuse warn"><p>${esc(DIL.err)}</p></div>` : ''}
       <button class="btn ${fb ? 'turq' : 'ghost'} dnext" data-act="dnext">${fb ? 'Dersi bitir' : 'Yazmadan bitir'}</button>`; }
@@ -271,14 +335,34 @@ const DIL_ACT = {
     DIL.extra = true; DIL.reveal = false; render(); window.scrollTo(0, 0); },
   dnext: () => { if (DIL.extra) { DIL.extra = false; render(); return; } dilNext(); },
   dwords: () => { dilAddWords(((S.lang.les || {})[dk()] || {}).words); save(); dilNext(); },
-  dpick: v => { const [k, j] = v.split(':'); DIL.sel = { ...(DIL.sel || {}), [k]: +j }; render(); },
+  dpick: v => { const [k, j] = v.split(':'); DIL.sel = { ...(DIL.sel || {}), [k]: +j };
+    const L = (S.lang.les || {})[dk()] || {}, kind = k[0], i = +k.slice(1), q = kind === 'p' ? (L.practice || [])[i] : kind === 'r' ? ((L.reading || {}).questions || [])[i] : kind === 'l' ? ((L.listening || {}).questions || [])[i] : null;
+    if (q && +j !== +q.answer) { dilWeak(kind === 'p' ? (q.tag || L.topic) : kind === 'r' ? 'okuduğunu anlama' : 'dinlediğini anlama', kind === 'p' ? q.q : ''); save(); }
+    render(); },
   dcheck: async () => {
     const txt = ($('dwrite') || {}).value || ''; if (txt.trim().length < 3) return toast('Önce birkaç cümle yaz.');
     const c = dilCur(); c.text = txt; save(); DIL.busy = 'x'; DIL.err = ''; render();
     try { DIL.fb = await dilAI(`Türkçe konuşan, CEFR ${dilLvl()} seviyesindeki bir öğrenci şu görev için İngilizce yazdı.
 Görev: ${((S.lang.les || {})[dk()] || {}).writing || ''}
 Öğrencinin yazdığı: """${txt.slice(0, 1200)}"""
-Yalnızca şu JSON'u döndür: {"corrected":"hataları düzeltilmiş hâli (anlamı koru)","notes":["Türkçe, kısa açıklamalar: hangi hata neden yanlış (en fazla 4)"],"score":0-10 arası puan,"better":"aynı şeyi daha doğal söyleyen bir örnek"}. Hata yoksa notes'ta bunu belirt.`, 1500); }
+Yalnızca şu JSON'u döndür: {"corrected":"hataları düzeltilmiş hâli (anlamı koru)","notes":["Türkçe, kısa açıklamalar: hangi hata neden yanlış (en fazla 4)"],"tags":["her hatanın türü, Türkçe 1-3 kelime (örn. artikel, geçmiş zaman)"],"score":0-10 arası puan,"better":"aynı şeyi daha doğal söyleyen bir örnek"}. Hata yoksa notes'ta bunu belirt, tags boş olsun.`, 1500);
+      (DIL.fb.tags || []).forEach((t, i) => dilWeak(t, (DIL.fb.notes || [])[i])); save(); }
+    catch (e) { DIL.err = dilErrText(e); }
+    DIL.busy = ''; render(); },
+  dlplay: () => dilPlayScript((((S.lang.les || {})[dk()] || {}).listening || {}).script),
+  drate: v => { DIL.rate = +v; render(); },
+  ddict: () => { const t = ($('ddict') || {}).value || '', L = (S.lang.les || {})[dk()] || {}; if (!t.trim()) return toast('Önce duyduğunu yaz.');
+    DIL.dict = { text: t, ...dilDiff(L.listening.dictation, t) }; if (DIL.dict.pct < 100) dilWeak('dinleyip yazma', DIL.dict.marks.filter(m => !m[1]).map(m => m[0]).join(', ')); save(); render(); },
+  drec: id => dilRecStart(id),
+  drstop: () => dilRecStop(),
+  dspkcheck: async () => {
+    const c = dilCur(), ta = $('dspk'); if (ta) { c.spoken = ta.value; } const txt = (c.spoken || '').trim(); if (txt.split(/\s+/).length < 3) return toast('Biraz daha uzun konuş ya da yaz.');
+    save(); DIL.busy = 'x'; DIL.err = ''; render(); const Sp = (((S.lang.les || {})[dk()] || {}).speaking) || {};
+    try { DIL.spk = await dilAI(`Türkçe konuşan, CEFR ${dilLvl()} seviyesindeki bir öğrenci şu soruya sesli cevap verdi; konuşması yazıya çevrildi (noktalama eksik olabilir, telaffuz kaynaklı küçük tanıma hatalarını görmezden gel).
+Soru: ${Sp.prompt || ''}
+Öğrencinin söylediği: «${txt.slice(0, 1500)}»
+Yalnızca şu JSON'u döndür: {"corrected":"dilbilgisi hataları düzeltilmiş hâli","notes":["Türkçe kısa açıklamalar: dilbilgisi, kelime seçimi, akıcılık için öneri (en fazla 4)"],"tags":["her hatanın türü, Türkçe 1-3 kelime"],"score":0-10,"better":"aynı cevabı daha doğal ve seviyeye uygun söyleyen 2-3 cümle"}`, 1500);
+      (DIL.spk.tags || []).forEach((t, i) => dilWeak(t, (DIL.spk.notes || [])[i])); save(); }
     catch (e) { DIL.err = dilErrText(e); }
     DIL.busy = ''; render(); },
   dplace: () => dilBeginTest('place'),
