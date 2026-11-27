@@ -908,7 +908,7 @@ function savePages(id,n){
 }
 
 /* ================= BULUT EŞİTLEME (Supabase, Emanet ile aynı hesap) ================= */
-const CFG=window.SEFER_CONFIG||{}, VER='60';
+const CFG=window.SEFER_CONFIG||{}, VER='61';
 const DIL_ENABLED=false; // İngilizce rehberi şimdilik kapalı; veriler (S.lang) ve kod duruyor
 function dilOff(){ if(DIL_ENABLED) return; const n=S.tasks.length; S.tasks=S.tasks.filter(t=>t.type!=='lang'); if(S.tasks.length!==n) save(); if(tab==='dil') tab='bugun'; }
 let sb=null, sbUser=null, cloudMsg='', saveT=null, saving=false, pendingSave=false, lastPull=0, authMode='in';
@@ -966,11 +966,28 @@ async function pushCloud(){
   if(!cloudOn()) return; if(saving){ pendingSave=true; return; }
   saving=true; setCloud('Kaydediliyor…'); let err=null;
   try{
-    const g=await tmo(sb.from('sefer_state').select('data,updated_at').eq('user_id',sbUser.id).maybeSingle());
-    if(g.error) throw g.error;
-    if(g.data&&g.data.data){ const before=JSON.stringify(S.days); S=mergeState(S,{...g.data.data,updatedAt:+g.data.updated_at||+g.data.data.updatedAt||0}); S.owner=sbUser.id; persist(); snapDays(); lastPull=Date.now();
-      if(JSON.stringify(S.days)!==before && !(document.activeElement&&/TEXTAREA|INPUT/.test(document.activeElement.tagName)) && !$('modal').classList.contains('open')) render(); }
-    const r=await tmo(sb.from('sefer_state').upsert({user_id:sbUser.id,data:S,updated_at:+S.updatedAt||Date.now()})); err=r.error; }catch(e){ err=e; }
+    // Okuma ile yazma arasında başka cihaz yazarsa yazma reddedilir; yeniden okunup birleştirilir (en fazla 4 deneme).
+    for(let attempt=1;;attempt++){
+      const g=await tmo(sb.from('sefer_state').select('data,updated_at').eq('user_id',sbUser.id).maybeSingle());
+      if(g.error) throw g.error;
+      const remoteAt = g.data ? (+g.data.updated_at||0) : null;
+      if(g.data&&g.data.data){ const before=JSON.stringify(S.days); S=mergeState(S,{...g.data.data,updatedAt:+g.data.updated_at||+g.data.data.updatedAt||0}); S.owner=sbUser.id; persist(); snapDays(); lastPull=Date.now();
+        if(JSON.stringify(S.days)!==before && !(document.activeElement&&/TEXTAREA|INPUT/.test(document.activeElement.tagName)) && !$('modal').classList.contains('open')) render(); }
+      // Her yazma buluttaki sürümden büyük olmalı: aynı sürümü okuyan başka cihaz bu yazmanın üstüne yazamaz
+      const at=Math.max(+S.updatedAt||0, Date.now(), (remoteAt||0)+1); S.updatedAt=at; persist();
+      let r;
+      if(remoteAt===null){
+        r=await tmo(sb.from('sefer_state').insert({user_id:sbUser.id,data:S,updated_at:at}).select('updated_at'));
+        if(r.error&&r.error.code==='23505') r={data:[]};
+      } else {
+        r=await tmo(sb.from('sefer_state').update({data:S,updated_at:at}).eq('user_id',sbUser.id).eq('updated_at',remoteAt).select('updated_at'));
+      }
+      if(r.error) throw r.error;
+      if(r.data&&r.data.length) break;
+      syncLog('conflict',(syncInfo().conflict||0)+1);
+      if(attempt>=4) throw new Error('Başka bir cihaz aynı anda eşitliyor; biraz sonra yeniden denenecek');
+    }
+  }catch(e){ err=e; }
   saving=false; setCloud(err ? cloudErr(err) : 'Eşitlendi'); if(err) syncLog('err',(err.message||String(err)).slice(0,160)+' ('+new Date().toLocaleTimeString('tr-TR')+')'); else { syncLog('push',Date.now()); syncLog('err',''); }
   if(pendingSave){ pendingSave=false; pushCloud(); }
 }
