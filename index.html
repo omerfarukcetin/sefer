@@ -900,7 +900,7 @@ function savePages(id,n){
 }
 
 /* ================= BULUT EŞİTLEME (Supabase, Emanet ile aynı hesap) ================= */
-const CFG=window.SEFER_CONFIG||{}, VER='57';
+const CFG=window.SEFER_CONFIG||{}, VER='58';
 let sb=null, sbUser=null, cloudMsg='', saveT=null, saving=false, pendingSave=false, lastPull=0, authMode='in';
 const cloudOn = () => !!(sb&&sbUser);
 function mergeDays(older,newer){
@@ -1501,12 +1501,13 @@ function excuseBox(){
   if(excused(t)) return `<div class="panel excuse"><p>Bugün mazeretli. Serilerin korunuyor.</p><button class="btn ghost" data-act="unexcuse" data-id="${t}">Geri al</button></div>`;
   const broken=S.tasks.filter(x=>scheduled(x,y)&&!isDone(x,y)&&!excused(y)&&(()=>{ let k=addDays(y,-1),g=0; while(g++<60){ if(!scheduled(x,k)||excused(k)){k=addDays(k,-1);continue;} return isDone(x,k);} return false; })());
   if(broken.length && excuseLeft(y)>0 && y>=firstKey())
-    return `<div class="panel excuse warn"><p>Dün yapılmayan görevler yüzünden zincirin ve ${broken.length===1?'bir serin':broken.length+' serin'} kırılmak üzere: ${esc(broken.map(x=>x.name).join(', '))}. Dün hasta ya da yolculukta idiysen mazeret hakkını kullanabilirsin.</p><button class="btn" data-act="excuse" data-id="${y}">Dünü mazeretli say</button></div>`;
+    return `<div class="warn" data-n="${broken.length}"><p style="margin:4px 0 10px">Dün yapılmayan görevler yüzünden zincirin ve ${broken.length===1?'bir serin':broken.length+' serin'} kırılmak üzere: ${esc(broken.map(x=>x.name).join(', '))}. Dün hasta ya da yolculukta idiysen mazeret hakkını kullanabilirsin.</p><button class="btn" data-act="excuse" data-id="${y}">Dünü mazeretli say</button></div>`;
   return '';
 }
 function openNote(k){ modal(`<h3>Günün notu</h3><p class="muted" style="margin:2px 0 10px">${fmtDate(k)}</p><textarea data-f="note" data-id="${k}" rows="6" placeholder="Bugün neler oldu? Neyi okudun, neyi aksattın?">${esc(noteOf(k))}</textarea><p class="muted" style="font-size:var(--t-meta);margin-top:6px">Yazdıkça kaydedilir.</p>`); afterClose=()=>{ const t=document.querySelector('#sheet textarea[data-f="note"]'); if(t){ rec(t.dataset.id).note=t.value; save(); } render(); }; setTimeout(()=>{ const t=document.querySelector('#sheet textarea'); if(t) t.focus(); },80); }
 function chainMenu(){ const k=dk(), left=excuseLeft();
   modal(`<h3>Zinciri kırma</h3><p class="muted" style="margin-top:2px">Planladığın görevlerin ${chainPct()===100?'hepsini':'en az %'+chainPct()+({50:"'sini",75:"'ini",90:"'ını"}[chainPct()]||"'ini")} yaptığın her gün zincire bir halka eklenir. Şu an ${chainNow()} günlük zincirin var, en uzunu ${chainBest()} gün.</p>
+    ${(()=>{ const w=excuseBox(); return w.includes('warn')?`<div class="surebox"><span class="lab">Dün</span>${w}</div>`:''; })()}
     <div class="surebox"><span class="lab">Mazeret</span>${excused(k)?`<p style="margin:4px 0 10px">Bugün mazeretli sayıldı. Serilerin ve zincirin korunuyor.</p><button class="btn ghost" data-act="unexcuse" data-id="${k}">Mazereti geri al</button>`
       :`<p class="muted" style="margin:4px 0 10px">Hastalık, yolculuk gibi günlerde bugünü mazeretli sayarsan serilerin bozulmaz. Bu ay ${Math.max(0,left)} hakkın kaldı.</p><button class="btn" data-act="excuse" data-id="${k}" ${left<=0?'disabled':''}>Bugün mazeretliyim</button>`}</div>
     <button class="linkb" style="margin-top:14px;font-size:var(--t-meta)" data-act="gotakip">Takvimi ve geçmişi gör</button>`); }
@@ -1539,8 +1540,8 @@ function vBugun(){
   const doneItems=[...vitems,...asIt(dini),...asIt(diger)].filter(it=>it.done);
   const ex=excuseBox(), left2=excuseLeft(), barP=need?Math.min(100,n/need*100):100;
   const exToday=excused(k);
-  return `<div class="cols v-bugun"><div class="a-hero"><button class="chainline ${ev&&!linked&&T.length&&!exToday?'risk':''} ${linked||exToday?'ok':''}" data-act="chainmenu" aria-label="Zincir ve mazeret"><span class="clico">${ico('chain')}</span><div class="cltx"><b>${head}</b><small>${exToday?'Bugün mazeretli, serilerin korunuyor.':sub}</small><div class="clbar"><i style="width:${(exToday?100:barP).toFixed(0)}%"></i></div></div><span class="chev">›</span></button>
-    ${vakitStrip()}${ex.includes('warn')?ex:''}${S.ui.quote===false?'':`<div id="siq">${siQuoteHtml()}</div>`}</div><div class="a-tasks">
+  return `<div class="cols v-bugun"><div class="a-hero"><button class="chainline ${(ev&&!linked&&T.length&&!exToday)||ex.includes('warn')?'risk':''} ${linked||exToday?'ok':''}" data-act="chainmenu" aria-label="Zincir ve mazeret"><span class="clico">${ico('chain')}</span><div class="cltx"><b>${head}</b><small>${exToday?'Bugün mazeretli, serilerin korunuyor.':ex.includes('warn')?'Dün eksik kaldı. Mazeretli saymak için dokun.':sub}</small><div class="clbar"><i style="width:${(exToday?100:barP).toFixed(0)}%"></i></div></div><span class="chev">›</span></button>
+    ${vakitStrip()}${S.ui.quote===false?'':`<div id="siq">${siQuoteHtml()}</div>`}</div><div class="a-tasks">
     ${gV}${gD}${gG}
     ${!gV&&!gD&&!gG&&T.length?`<div class="group first"><div class="ghead"><h3>Bugünkü görevlerin tamam</h3></div></div>`:''}
     ${W.length?`<div class="group"><div class="ghead"><h3>Bu hafta</h3><small>${W.filter(t=>weekMet(t,wkStart(k))).length} / ${W.length} hedef tamam</small></div>${W.map(t=>taskRow(t)).join('')}</div>`:''}
