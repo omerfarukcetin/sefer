@@ -358,7 +358,7 @@ nav button.on:before{content:"";position:absolute;top:0;width:28px;height:3px;bo
 .siq{margin-top:12px;text-align:left;width:100%}
 .siqb{display:block;width:100%;text-align:left;cursor:pointer;font:inherit;color:inherit;padding:0}
 .siqn{display:inline-flex;align-items:center;gap:5px;font-size:var(--t-meta)}.siqn .ico{width:14px;height:14px}
-.siq blockquote{margin:6px 0 8px;font-size:var(--t-item);line-height:1.55;color:var(--white);display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;overflow:hidden}
+.siq blockquote{margin:6px 0 8px;font-size:var(--t-item);line-height:1.55;color:var(--white);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .siq small{color:var(--mist);font-size:var(--t-meta)}
 .silink{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0 2px}
 
@@ -505,6 +505,10 @@ nav button.on:before{content:"";position:absolute;top:0;width:28px;height:3px;bo
 .mbook{display:grid;grid-template-columns:1fr 84px auto;gap:10px;align-items:center;padding:10px 12px;border-radius:var(--r-md);background:var(--lapis);border:1px solid var(--lapis3)}
 .mbook .mbt b{display:block;font-size:var(--t-item)}.mbook .mbt small{display:block;color:var(--mist);font-size:var(--t-meta)}.mbook .mbar{margin-top:6px}
 .mbook input{text-align:center;padding:9px 6px}
+button.chainline{width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer}button.chainline .chev{color:var(--mist);font-size:22px;padding-left:4px}
+.noteadd{display:inline-flex;align-items:center;gap:6px;margin:18px 2px 0;font-size:var(--t-body)}.noteadd .ico{width:16px;height:16px}
+.notecard{display:block;width:100%;text-align:left;margin-top:18px;padding:12px 14px;border-radius:var(--r-lg);background:var(--lapis2);border:1px solid var(--lapis3);font:inherit;color:inherit;cursor:pointer}
+.notecard .nt{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:var(--t-body);margin-top:4px}
 /* ---- tutarlılık: tek kutu ve yazı ölçüsü ---- */
 .panel,.hcard,.fold,.chainbox,.weekbar,.scard2,.stat,.hedit,.trow{border-radius:var(--r-lg);padding:var(--pad)}
 .fold{padding:0}.fold summary{padding:var(--pad)}.fold .sgrid,.ybox{padding:0 var(--pad) var(--pad)}
@@ -710,7 +714,8 @@ function vib(p){ if(S.ui.vib===false) return; try{ navigator.vibrate&&navigator.
 let toastT;
 function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2600); }
 function modal(h){ $('sheet').innerHTML=h+`<button class="btn ghost" style="width:100%;margin-top:16px" data-act="close">Kapat</button>`; $('modal').classList.add('open'); }
-function closeModal(){ $('modal').classList.remove('open'); }
+let afterClose=null;
+function closeModal(){ $('modal').classList.remove('open'); if(afterClose){ const f=afterClose; afterClose=null; f(); } }
 
 function lanternSvg(p){ // p: 0..1 günlük ilerleme
   const glow = .15 + .85*p, R=58, C=2*Math.PI*R;
@@ -865,7 +870,7 @@ function savePages(id,n){
 }
 
 /* ================= BULUT EŞİTLEME (Supabase, Emanet ile aynı hesap) ================= */
-const CFG=window.SEFER_CONFIG||{}, VER='54';
+const CFG=window.SEFER_CONFIG||{}, VER='55';
 let sb=null, sbUser=null, cloudMsg='', saveT=null, saving=false, pendingSave=false, lastPull=0, authMode='in';
 const cloudOn = () => !!(sb&&sbUser);
 function mergeDays(older,newer){
@@ -1468,6 +1473,12 @@ function excuseBox(){
     return `<div class="panel excuse warn"><p>Dün yapılmayan görevler yüzünden zincirin ve ${broken.length===1?'bir serin':broken.length+' serin'} kırılmak üzere: ${esc(broken.map(x=>x.name).join(', '))}. Dün hasta ya da yolculukta idiysen mazeret hakkını kullanabilirsin.</p><button class="btn" data-act="excuse" data-id="${y}">Dünü mazeretli say</button></div>`;
   return '';
 }
+function openNote(k){ modal(`<h3>Günün notu</h3><p class="muted" style="margin:2px 0 10px">${fmtDate(k)}</p><textarea data-f="note" data-id="${k}" rows="6" placeholder="Bugün neler oldu? Neyi okudun, neyi aksattın?">${esc(noteOf(k))}</textarea><p class="muted" style="font-size:var(--t-meta);margin-top:6px">Yazdıkça kaydedilir.</p>`); afterClose=()=>{ const t=document.querySelector('#sheet textarea[data-f="note"]'); if(t){ rec(t.dataset.id).note=t.value; save(); } render(); }; setTimeout(()=>{ const t=document.querySelector('#sheet textarea'); if(t) t.focus(); },80); }
+function chainMenu(){ const k=dk(), left=excuseLeft();
+  modal(`<h3>Zinciri kırma</h3><p class="muted" style="margin-top:2px">Planladığın görevlerin ${chainPct()===100?'hepsini':'en az %'+chainPct()+({50:"'sini",75:"'ini",90:"'ını"}[chainPct()]||"'ini")} yaptığın her gün zincire bir halka eklenir. Şu an ${chainNow()} günlük zincirin var, en uzunu ${chainBest()} gün.</p>
+    <div class="surebox"><span class="lab">Mazeret</span>${excused(k)?`<p style="margin:4px 0 10px">Bugün mazeretli sayıldı. Serilerin ve zincirin korunuyor.</p><button class="btn ghost" data-act="unexcuse" data-id="${k}">Mazereti geri al</button>`
+      :`<p class="muted" style="margin:4px 0 10px">Hastalık, yolculuk gibi günlerde bugünü mazeretli sayarsan serilerin bozulmaz. Bu ay ${Math.max(0,left)} hakkın kaldı.</p><button class="btn" data-act="excuse" data-id="${k}" ${left<=0?'disabled':''}>Bugün mazeretliyim</button>`}</div>
+    <button class="linkb" style="margin-top:14px;font-size:var(--t-meta)" data-act="gotakip">Takvimi ve geçmişi gör</button>`); }
 function multiRow(L,vnow){
   const k=dk(), dn=L.filter(t=>isDone(t,k)).length, all=dn===L.length, t0=L[0];
   return `<div class="task multi ${all?'done':''}"><span class="medal" style="--c:${col(t0)}">${ico(t0.icon)}</span>
@@ -1496,15 +1507,14 @@ function vBugun(){
   const gV=grp('Namaz vakitlerinde',vitems,true), gD=grp(vitems.length?'Diğer ibadetler':'İbadet',asIt(dini),!gV), gG=grp('Gelişim',asIt(diger),!gV&&!gD);
   const doneItems=[...vitems,...asIt(dini),...asIt(diger)].filter(it=>it.done);
   const ex=excuseBox(), left2=excuseLeft(), barP=need?Math.min(100,n/need*100):100;
-  return `<div class="cols v-bugun"><div class="a-hero"><section class="chainline ${ev&&!linked&&T.length?'risk':''} ${linked?'ok':''}"><span class="clico">${ico('chain')}</span><div class="cltx"><b>${head}</b><small>${sub}</small><div class="clbar"><i style="width:${barP.toFixed(0)}%"></i></div></div></section>
-    ${vakitStrip()}${ex.includes('warn')?ex:''}<div id="siq">${siQuoteHtml()}</div></div><div class="a-tasks">
+  const exToday=excused(k);
+  return `<div class="cols v-bugun"><div class="a-hero"><button class="chainline ${ev&&!linked&&T.length&&!exToday?'risk':''} ${linked||exToday?'ok':''}" data-act="chainmenu" aria-label="Zincir ve mazeret"><span class="clico">${ico('chain')}</span><div class="cltx"><b>${head}</b><small>${exToday?'Bugün mazeretli, serilerin korunuyor.':sub}</small><div class="clbar"><i style="width:${(exToday?100:barP).toFixed(0)}%"></i></div></div><span class="chev">›</span></button>
+    ${vakitStrip()}${ex.includes('warn')?ex:''}${S.ui.quote===false?'':`<div id="siq">${siQuoteHtml()}</div>`}</div><div class="a-tasks">
     ${gV}${gD}${gG}
     ${!gV&&!gD&&!gG&&T.length?`<div class="group first"><div class="ghead"><h3>Bugünkü görevlerin tamam</h3></div></div>`:''}
     ${W.length?`<div class="group"><div class="ghead"><h3>Bu hafta</h3><small>${W.filter(t=>weekMet(t,wkStart(k))).length} / ${W.length} hedef tamam</small></div>${W.map(t=>taskRow(t)).join('')}</div>`:''}
     ${doneItems.length?`<div class="group donegrp"><div class="ghead"><h3>Tamamlananlar</h3><small>${doneItems.length}</small></div>${doneItems.map(rowOf).join('')}</div>`:''}
-    ${off.length?`<p class="offday">Bugün planlı değil: ${esc(off.map(t=>t.name).join(', '))}</p>`:''}
-    ${ex.includes('warn')?'':ex||`<div class="excuse-link"><button data-act="excuse" data-id="${k}" ${left2<=0?'disabled':''}>Bugün mazeretliyim</button><span>Hastalık, yolculuk gibi günlerde serilerin bozulmaz. Bu ay ${Math.max(0,left2)} hakkın kaldı.</span></div>`}
-    <div class="panel notep"><h3>Günün notu</h3><textarea data-f="note" data-id="${k}" rows="3" placeholder="Bugün neler oldu? Neyi okudun, neyi aksattın?">${esc(noteOf(k))}</textarea></div>
+    ${noteOf(k)?`<button class="notecard" data-act="note" data-id="${k}"><span class="lab">Günün notu</span><span class="nt">${esc(noteOf(k))}</span></button>`:`<button class="linkb noteadd" data-act="note" data-id="${k}">${ico('plus')} Günün notu</button>`}
     </div></div>`;
 }
 
@@ -1644,7 +1654,8 @@ function vAyarlar(){
     const u=S.ui;
     body=`<div class="panel first"><h3>Tema</h3>${seg(u.theme,[['dark','Gece'],['light','Gündüz'],['auto','Cihaza göre']],'uiTheme')}
       <h3 style="margin-top:20px">Yazı boyutu</h3>${seg(String(u.font),[['0.8','Çok küçük'],['0.9','Küçük'],['1','Normal'],['1.12','Büyük'],['1.25','Çok büyük']],'uiFont')}
-      <h3 style="margin-top:20px">Bugün listesi</h3>${seg(u.dense!==false?'1':'0',[['1','Kompakt'],['0','Geniş']],'uiDense')}</div>
+      <h3 style="margin-top:20px">Bugün listesi</h3>${seg(u.dense!==false?'1':'0',[['1','Kompakt'],['0','Geniş']],'uiDense')}
+      <h3 style="margin-top:20px">Günün satırı</h3>${seg(u.quote===false?'0':'1',[['1','Göster'],['0','Gizle']],'uiQuote')}<p class="muted" style="font-size:var(--t-meta);margin-top:6px">Bugün sayfasında Satır İzi'nden gelen alıntı.</p></div>
       <div class="panel"><h3>Ses ve titreşim</h3>
       <label class="switch"><span><b>Titreşim</b><small>Görev tamamlarken ve zikir çekerken</small></span><input type="checkbox" data-f="uiVib" ${u.vib!==false?'checked':''}></label>
       <label class="switch"><span><b>Zamanlayıcı sesi</b><small>Süre dolduğunda kısa bir zil</small></span><input type="checkbox" data-f="uiSound" ${u.sound!==false?'checked':''}></label></div>`;
@@ -1768,6 +1779,7 @@ const ACT={
   hsave:id=>saveHatim(id),
   bedit:id=>openBook(id),
   mbopen:id=>openBooks(id), mbsave:id=>saveBooks(id),
+  note:k=>openNote(k), chainmenu:()=>chainMenu(), gotakip:()=>{ closeModal(); go('takip'); },
   kiddel:id=>{ const c=S.tasks.find(x=>x.id===id); if(!c) return; if(!confirmTwice('kiddel'+id)) return toast(`${c.proj} listeden çıkarılsın mı? Onaylamak için tekrar dokun.`);
     if(c.siBook) siCall('unlink',c.siBook); const pid=c.parent; S.tasks=S.tasks.filter(x=>x.id!==id); save(); render(); openBooks(pid); toast('Kitap listeden çıkarıldı. Okuduğun sayfalar geçmişte kalıyor.'); },
   mbadd:id=>{ const cid=addKid(id); save(false); openBook(cid); },
@@ -1809,13 +1821,14 @@ const ACT={
     const n=(t.hist||[]).length+1; t.proj=t.quran?`${n}. hatim`:'Yeni kitap'; t.start=0; t.projStart=dk(); t.hist=t.hist||[];
     const r=S.days[dk()]; if(r){ if(r.prog) delete r.prog[id]; if(r.done) delete r.done[id]; } save(); render(); editTask(id); toast('Baştan başlandı.'); },
   pgsave:id=>savePages(id,Math.max(1,Math.round(+$('pgn').value||1))),
-  excuse:k=>{ if(excuseLeft(k)<=0) return toast('Bu ayki mazeret hakların bitti.'); rec(k).excused=true; save(); toast(k===dk()?'Bugün mazeretli sayıldı. Serilerin korunuyor.':'Dün mazeretli sayıldı. Serilerin kurtarıldı.'); render(); },
-  unexcuse:k=>{ if(S.days[k]) S.days[k].excused=false; save(); render(); },
+  excuse:k=>{ if(excuseLeft(k)<=0) return toast('Bu ayki mazeret hakların bitti.'); closeModal(); rec(k).excused=true; save(); toast(k===dk()?'Bugün mazeretli sayıldı. Serilerin korunuyor.':'Dün mazeretli sayıldı. Serilerin kurtarıldı.'); render(); },
+  unexcuse:k=>{ if(S.days[k]) S.days[k].excused=false; save(); closeModal(); render(); },
   day:k=>openDay(k),
   calm:d=>{ const cur=dk().slice(0,7), m=calM||cur, [y,mo]=m.split('-').map(Number), n=new Date(y,mo-1+(+d),1); const nm=n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0'); calM=nm>cur?cur:nm; render(); },
   setTab:v=>{ setTab=v; render(); },
   uiTheme:v=>{ S.ui.theme=v; save(); applyUI(); render(); },
   uiFont:v=>{ S.ui.font=+v; save(); applyUI(); render(); },
+  uiQuote:v=>{ S.ui.quote=v==='1'; save(); render(); },
   uiDense:v=>{ S.ui.dense=v==='1'; save(); applyUI(); render(); },
   edit:id=>editTask(id),
   add:()=>{ const id='t'+Date.now(); S.tasks.push({id,name:'Yeni görev',hint:'',icon:'star',type:'check',goal:0,dini:false,days:[...ALL],remind:'',since:dk()}); save(); render(); editTask(id); },
