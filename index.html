@@ -1597,7 +1597,12 @@ function saveHatim(id){
 }
 
 /* ================= GÖRÜNÜMLER ================= */
-function hijri(d=new Date()){ try{ return new Intl.DateTimeFormat('tr-TR-u-ca-islamic-umalqura',{day:'numeric',month:'long',year:'numeric'}).format(d).replace(/^Hicri\s*/,'').replace(/\s*(AH|Hicri)$/,''); }catch(e){ return ''; } }
+const HMONTHS=['Muharrem','Safer','Rebiülevvel','Rebiülahir','Cemaziyelevvel','Cemaziyelahir','Recep','Şaban','Ramazan','Şevval','Zilkade','Zilhicce'];
+function hijri(d=new Date()){ // gün, ay ve yılı sayı olarak alıp ay adını Türkçe yazar; desteklenmiyorsa boş döner
+  try{ const f=new Intl.DateTimeFormat('en-u-ca-islamic-umalqura-nu-latn',{day:'numeric',month:'numeric',year:'numeric'});
+    if(!/islamic/.test(f.resolvedOptions().calendar)) return ''; const p={}; f.formatToParts(d).forEach(x=>p[x.type]=x.value);
+    const y=parseInt(p.year), m=parseInt(p.month), dd=parseInt(p.day);
+    return y>1300&&y<1700&&m>=1&&m<=12&&dd>=1&&dd<=30 ? `${dd} ${HMONTHS[m-1]} ${y}` : ''; }catch(e){ return ''; } }
 function vHeader(){
   const T=todays(), d=T.filter(t=>isDone(t,dk())).length, need=chainNeed(T.length), linked=need&&d>=need, warn=excuseBox().includes('warn');
   const glowNow = linked&&wasLinked===false; setTimeout(()=>{ wasLinked=!!linked; },0); if(wasLinked===null) wasLinked=!!linked;
