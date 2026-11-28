@@ -347,8 +347,9 @@ button.zikr:active{transform:scale(.97)}
 nav#side{position:fixed;bottom:0;left:0;right:0;z-index:6;background:var(--navbg,rgba(15,33,61,.96));backdrop-filter:blur(8px);border-top:1px solid var(--lapis3);padding-bottom:env(safe-area-inset-bottom)}
 nav .in{display:flex;max-width:520px;margin:0 auto}
 .brand,.side-foot{display:none}
-nav button{flex:1;padding:10px 0 12px;font-size:var(--t-tiny);font-weight:700;color:var(--mist);display:flex;flex-direction:column;align-items:center;gap:4px;position:relative}
-nav button .ico{width:23px;height:23px}
+nav button{flex:1;padding:10px 0 12px;font-size:13px;font-weight:700;color:var(--mist);display:flex;flex-direction:column;align-items:center;gap:4px;position:relative}
+nav button .ico{width:25px;height:25px}
+@media (max-width:999px){ nav .in{zoom:var(--zoom,1)} }
 nav button.on{color:var(--saffron)}
 nav button.on:before{content:"";position:absolute;top:0;width:28px;height:3px;border-radius:0 0 4px 4px;background:var(--saffron)}
 
@@ -1024,7 +1025,7 @@ function savePages(id,n){
 }
 
 /* ================= BULUT EŞİTLEME (Supabase, Emanet ile aynı hesap) ================= */
-const CFG=window.SEFER_CONFIG||{}, VER='66';
+const CFG=window.SEFER_CONFIG||{}, VER='67';
 const DIL_ENABLED=false; // İngilizce rehberi şimdilik kapalı; veriler (S.lang) ve kod duruyor
 function dilOff(){ if(DIL_ENABLED) return; const n=S.tasks.length; S.tasks=S.tasks.filter(t=>t.type!=='lang'); if(S.tasks.length!==n) save(); if(tab==='dil') tab='bugun'; }
 let sb=null, sbUser=null, cloudMsg='', saveT=null, saving=false, pendingSave=false, lastPull=0, authMode='in';
