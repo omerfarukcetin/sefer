@@ -734,7 +734,9 @@ S.tasks.forEach(t=>{ if(!t.icon) t.icon=t.res||'star'; if(!Array.isArray(t.days)
   if(t.id==='dinikitap'&&/İlim/.test(t.hint||'')) t.hint='Günde 8 sayfa'; });
 
 /* ================= YARDIMCILAR ================= */
-const dk = (d=new Date()) => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+/* Gün sınırı: varsayılan gece 03.00. O saatten önce yapılanlar bir önceki güne sayılır. */
+const dayEndH = () => { try{ return (S&&S.ui&&S.ui.dayEnd!=null)?+S.ui.dayEnd:3; }catch(e){ return 3; } };
+const dk = (d) => { if(d===undefined) d=new Date(Date.now()-dayEndH()*3600000); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
 const addDays = (k,n) => { const [y,m,d]=k.split('-').map(Number); return dk(new Date(y,m-1,d+n)); };
 const kDate = k => { const [y,m,d]=k.split('-').map(Number); return new Date(y,m-1,d); };
 const wd = k => (kDate(k).getDay()+6)%7;
@@ -999,7 +1001,7 @@ function savePages(id,n){
 }
 
 /* ================= BULUT EŞİTLEME (Supabase, Emanet ile aynı hesap) ================= */
-const CFG=window.SEFER_CONFIG||{}, VER='64';
+const CFG=window.SEFER_CONFIG||{}, VER='65';
 const DIL_ENABLED=false; // İngilizce rehberi şimdilik kapalı; veriler (S.lang) ve kod duruyor
 function dilOff(){ if(DIL_ENABLED) return; const n=S.tasks.length; S.tasks=S.tasks.filter(t=>t.type!=='lang'); if(S.tasks.length!==n) save(); if(tab==='dil') tab='bugun'; }
 let sb=null, sbUser=null, cloudMsg='', saveT=null, saving=false, pendingSave=false, lastPull=0, authMode='in';
@@ -1607,7 +1609,7 @@ function vHeader(){
   const T=todays(), d=T.filter(t=>isDone(t,dk())).length, need=chainNeed(T.length), linked=need&&d>=need, warn=excuseBox().includes('warn');
   const glowNow = linked&&wasLinked===false; setTimeout(()=>{ wasLinked=!!linked; },0); if(wasLinked===null) wasLinked=!!linked;
   return `<div class="hrow"><div class="brandm">${ico('huzur')}</div>
-    <div class="who"><strong>${new Date().toLocaleDateString('tr-TR',{weekday:'long'})}, ${new Date().toLocaleDateString('tr-TR',{day:'numeric',month:'long'})}</strong><span>${hijri()}</span></div>
+    <div class="who"><strong>${kDate(dk()).toLocaleDateString('tr-TR',{weekday:'long'})}, ${kDate(dk()).toLocaleDateString('tr-TR',{day:'numeric',month:'long'})}</strong><span>${hijri(kDate(dk()))}</span></div>
     <button class="pills" data-act="chainmenu" aria-label="Zincir ve mazeret"><span class="pill ${warn?'risk':''}" style="color:var(--saffron)" title="Zincir">${ico('chain')}<span style="color:var(--white)">${chainNow()} gün</span>${warn?'<i class="pdot"></i>':''}</span><span class="pill" style="color:var(--turq)">${ico('check')}<span style="color:var(--white)">${d} / ${T.length}</span></span></button></div>
     ${tab==='bugun'&&T.length?`<div class="hprog ${linked?'ok':''} ${linked&&wasLinked===false?'glow':''}" title="Zincir için ${need} görev"><i style="width:${Math.min(100,need?d/need*100:100).toFixed(0)}%"></i></div>`:''}`;
 }
@@ -1824,6 +1826,7 @@ function vAyarlar(){
     body=`<div class="panel first"><h3>Tema</h3>${seg(u.theme,[['dark','Gece'],['light','Gündüz'],['auto','Cihaza göre']],'uiTheme')}
       <h3 style="margin-top:20px">Yazı boyutu</h3>${seg(String(u.font),[['0.8','Çok küçük'],['0.9','Küçük'],['1','Normal'],['1.12','Büyük'],['1.25','Çok büyük']],'uiFont')}
       <h3 style="margin-top:20px">Bugün listesi</h3>${seg(u.dense!==false?'1':'0',[['1','Kompakt'],['0','Geniş']],'uiDense')}
+      <h3 style="margin-top:20px">Gün ne zaman bitsin?</h3>${seg(String(u.dayEnd!=null?u.dayEnd:3),[['0','00.00'],['2','02.00'],['3','03.00'],['4','04.00']],'uiDayEnd')}<p class="muted" style="font-size:var(--t-meta);margin-top:6px">Bu saatten önce yaptıkların bir önceki güne sayılır. Gece geç saatte yaptığın tesbihat ya da okuma dünün kaydına geçer.</p>
       <h3 style="margin-top:20px">Günün satırı</h3>${seg(u.quote===false?'0':'1',[['1','Göster'],['0','Gizle']],'uiQuote')}<p class="muted" style="font-size:var(--t-meta);margin-top:6px">Bugün sayfasında Satır İzi'nden gelen alıntı.</p></div>
       <div class="panel"><h3>Ses ve titreşim</h3>
       <label class="switch"><span><b>Titreşim</b><small>Görev tamamlarken ve zikir çekerken</small></span><input type="checkbox" data-f="uiVib" ${u.vib!==false?'checked':''}></label>
@@ -1998,6 +2001,7 @@ const ACT={
   setTab:v=>{ setTab=v; render(); },
   uiTheme:v=>{ S.ui.theme=v; save(); applyUI(); render(); },
   uiFont:v=>{ S.ui.font=+v; save(); applyUI(); render(); },
+  uiDayEnd:v=>{ S.ui.dayEnd=+v; save(); render(); toast(v==='0'?'Gün gece yarısı bitiyor.':`Gün gece ${v==='2'?'02':v==='3'?'03':'04'}.00'te bitiyor.`); },
   uiQuote:v=>{ S.ui.quote=v==='1'; save(); render(); },
   uiDense:v=>{ S.ui.dense=v==='1'; save(); applyUI(); render(); },
   edit:id=>editTask(id),
