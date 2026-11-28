@@ -634,6 +634,25 @@ body{background-image:none!important;background:radial-gradient(1200px 380px at 
 @media (prefers-reduced-motion:reduce){.task.pop,.task.pop .tick,.hprog.glow i,.vb.pop{animation:none}}
 @media (max-width:999px){.hrow .brandm{display:none}}
 .who strong{white-space:nowrap}
+
+/* ---- ek temalar (renk paletleri) ---- */
+:root[data-pal=white]{--lapis:#f4f6fa;--lapis2:#ffffff;--lapis3:#e3e8f0;--line:#cfd7e4;--white:#16233d;--mist:#5c6a82;--turq:#0f7f7c;--saffron:#c48a12;--coral:#cc4f36;--sky:#4a63c9;--leaf:#2f8a52;--navbg:rgba(255,255,255,.97);--sidebg:#ffffff;--zbg:#e9eef6}
+:root[data-pal=sand]{--lapis:#ece4d6;--lapis2:#f6f1e7;--lapis3:#ddd1bc;--line:#cdbfa6;--white:#3a2f24;--mist:#7d6d5a;--turq:#2f6f5e;--saffron:#a8641e;--coral:#a5452f;--sky:#5a6c8f;--leaf:#4d7a43;--navbg:rgba(246,241,231,.97);--sidebg:#f3ece0;--zbg:#e4dac7}
+:root[data-pal=black]{--lapis:#0b0d10;--lapis2:#15181d;--lapis3:#23272e;--line:#2e333b;--white:#eceae4;--mist:#9aa0aa;--turq:#3cc2bf;--saffron:#e9b44a;--coral:#e46b55;--navbg:rgba(11,13,16,.96);--sidebg:#101318}
+:root[data-pal=emerald]{--lapis:#0f2a24;--lapis2:#16372f;--lapis3:#22493f;--line:#2c5a4e;--white:#f2efe4;--mist:#a7c0b6;--turq:#5fd0b4;--saffron:#e6b84f;--coral:#e57458;--navbg:rgba(15,42,36,.96);--sidebg:#122f28}
+:root[data-pal=white] #hdr::before,:root[data-pal=sand] #hdr::before{opacity:.35}
+:root[data-pal=white] .tcard,:root[data-pal=white] .panel{box-shadow:0 1px 3px rgba(22,35,61,.07)}
+.thgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;margin-top:6px}
+.thopt{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 6px;border-radius:var(--r-md);border:1.5px solid var(--lapis3);background:var(--lapis);font-size:var(--t-meta);font-weight:700;cursor:pointer}
+.thopt.on{border-color:var(--saffron)}
+.thsw{width:44px;height:28px;border-radius:8px;border:1px solid rgba(128,128,128,.35)}
+.thsw[data-sw=dark]{background:linear-gradient(135deg,#13294b 60%,#e8b03c 60%)}
+.thsw[data-sw=light]{background:linear-gradient(135deg,#efe7d6 60%,#0f6e69 60%)}
+.thsw[data-sw=white]{background:linear-gradient(135deg,#ffffff 60%,#0f7f7c 60%)}
+.thsw[data-sw=black]{background:linear-gradient(135deg,#0b0d10 60%,#e9b44a 60%)}
+.thsw[data-sw=emerald]{background:linear-gradient(135deg,#0f2a24 60%,#e6b84f 60%)}
+.thsw[data-sw=sand]{background:linear-gradient(135deg,#ece4d6 60%,#a8641e 60%)}
+.thsw[data-sw=auto]{background:linear-gradient(135deg,#ffffff 50%,#13294b 50%)}
 </style>
 </head>
 <body>
@@ -683,6 +702,7 @@ const PAL = {
   light:{huzur:'#128a88',ilim:'#4a5fc4',guc:'#cf5236',lisan:'#2f8a52',heart:'#c94468',star:'#b77b0a',meta:'#eef2f8'}
 };
 let COL = PAL.dark;
+const PALMETA={navy:'#13294b',paper:'#efe7d6',white:'#f4f6fa',black:'#0b0d10',emerald:'#0f2a24',sand:'#ece4d6'};
 const ALL = [0,1,2,3,4,5,6];
 const WD = ['Pzt','Sal','Çar','Per','Cum','Cmt','Paz'];
 const DEF_TASKS = [
@@ -833,8 +853,11 @@ function chainHero(){
 function excuseLeft(k=dk()){ const m=k.slice(0,7); return EXCUSES-Object.keys(S.days).filter(d=>d.startsWith(m)&&S.days[d].excused).length; }
 
 /* ================= GÖRÜNÜM AYARLARI ================= */
-function themeNow(){ const t=S.ui.theme; if(t==='auto'){ try{ return matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'; }catch(e){ return 'dark'; } } return t==='light'?'light':'dark'; }
-function applyUI(){ const th=themeNow(); COL=PAL[th]; const root=document.documentElement; root.dataset.theme=th; root.classList.toggle('dense',S.ui.dense!==false); root.style.setProperty('--zoom',S.ui.font||1);
+/* Temalar: her biri açık ya da koyu bir moda (light/dark) ve bir renk paletine (pal) sahip */
+const THEMES={dark:['dark','navy','Lacivert'],light:['light','paper','Krem'],white:['light','white','Beyaz'],black:['dark','black','Siyah'],emerald:['dark','emerald','Zümrüt'],sand:['light','sand','Kum']};
+function themePick(){ const t=S.ui.theme; if(t==='auto'){ let l=false; try{ l=matchMedia('(prefers-color-scheme: light)').matches; }catch(e){} return l?(S.ui.autoLight||'white'):(S.ui.autoDark||'dark'); } return THEMES[t]?t:'dark'; }
+function themeNow(){ return THEMES[themePick()][0]; }
+function applyUI(){ const th=themeNow(), pal=THEMES[themePick()][1]; COL={...PAL[th],meta:PALMETA[pal]||PAL[th].meta}; const root=document.documentElement; root.dataset.theme=th; root.dataset.pal=pal; root.classList.toggle('dense',S.ui.dense!==false); root.style.setProperty('--zoom',S.ui.font||1);
   const m=document.querySelector('meta[name="theme-color"]'); if(m) m.content=COL.meta; }
 try{ matchMedia('(prefers-color-scheme: light)').addEventListener('change',()=>{ if(S.ui.theme==='auto'){ applyUI(); render(); } }); }catch(e){}
 function vib(p){ if(S.ui.vib===false) return; try{ navigator.vibrate&&navigator.vibrate(p); }catch(e){} }
@@ -1001,7 +1024,7 @@ function savePages(id,n){
 }
 
 /* ================= BULUT EŞİTLEME (Supabase, Emanet ile aynı hesap) ================= */
-const CFG=window.SEFER_CONFIG||{}, VER='65';
+const CFG=window.SEFER_CONFIG||{}, VER='66';
 const DIL_ENABLED=false; // İngilizce rehberi şimdilik kapalı; veriler (S.lang) ve kod duruyor
 function dilOff(){ if(DIL_ENABLED) return; const n=S.tasks.length; S.tasks=S.tasks.filter(t=>t.type!=='lang'); if(S.tasks.length!==n) save(); if(tab==='dil') tab='bugun'; }
 let sb=null, sbUser=null, cloudMsg='', saveT=null, saving=false, pendingSave=false, lastPull=0, authMode='in';
@@ -1823,7 +1846,7 @@ function vAyarlar(){
       <div class="panel"><h3>Telefona kur</h3>${installHtml()}</div>`;
   } else if(setTab==='gorunum'){
     const u=S.ui;
-    body=`<div class="panel first"><h3>Tema</h3>${seg(u.theme,[['dark','Gece'],['light','Gündüz'],['auto','Cihaza göre']],'uiTheme')}
+    body=`<div class="panel first"><h3>Tema</h3><div class="thgrid">${[...Object.entries(THEMES),['auto',['','','Cihaza göre']]].map(([k,[m,p,l]])=>`<button class="thopt ${u.theme===k?'on':''}" data-act="uiTheme" data-id="${k}"><span class="thsw" data-sw="${k}"></span>${l}</button>`).join('')}</div>${u.theme==='auto'?'<p class="muted" style="font-size:var(--t-meta);margin-top:6px">Cihaz gündüz modundayken Beyaz, gece modundayken Lacivert kullanılır.</p>':''}
       <h3 style="margin-top:20px">Yazı boyutu</h3>${seg(String(u.font),[['0.8','Çok küçük'],['0.9','Küçük'],['1','Normal'],['1.12','Büyük'],['1.25','Çok büyük']],'uiFont')}
       <h3 style="margin-top:20px">Bugün listesi</h3>${seg(u.dense!==false?'1':'0',[['1','Kompakt'],['0','Geniş']],'uiDense')}
       <h3 style="margin-top:20px">Gün ne zaman bitsin?</h3>${seg(String(u.dayEnd!=null?u.dayEnd:3),[['0','00.00'],['2','02.00'],['3','03.00'],['4','04.00']],'uiDayEnd')}<p class="muted" style="font-size:var(--t-meta);margin-top:6px">Bu saatten önce yaptıkların bir önceki güne sayılır. Gece geç saatte yaptığın tesbihat ya da okuma dünün kaydına geçer.</p>
