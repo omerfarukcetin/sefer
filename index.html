@@ -561,6 +561,17 @@ button.chainline{width:100%;text-align:left;font:inherit;color:inherit;cursor:po
 .ch-leg span{display:inline-flex;align-items:center;gap:5px}.lg{display:inline-block;width:16px;height:9px;border-radius:5px;border:2.4px solid}
 .lg.f{border-color:#e3a937}.lg.e{border-color:var(--turq);border-style:dashed}.lg.b{border-color:var(--coral);border-left-color:transparent;border-right-color:transparent}.lg.td{border-color:var(--mist);border-style:dashed}
 .rapnav{display:flex;align-items:center;gap:10px;margin-top:8px}.rapnav>div{flex:1;text-align:center}.rapnav b{display:block;font-size:var(--t-item)}.rapnav small{color:var(--mist);font-size:var(--t-meta)}
+.chain2 .chtoday{animation:chpulse 1.8s ease-in-out infinite}@keyframes chpulse{50%{opacity:.35}}
+.lg.f{background:linear-gradient(#f8dc88,#c98a1c)!important;border:0!important;height:8px!important;border-radius:4px!important}
+.lg.e{background:var(--turq)!important;border:0!important;height:8px!important;border-radius:4px!important}
+.lg.b{width:8px!important;height:8px!important;border-radius:50%!important;background:var(--coral)!important;border:0!important}
+.lg.td{background:none!important;border:1.6px dashed var(--saffron)!important;height:8px!important;border-radius:4px!important}
+.task.completing{background:color-mix(in srgb,var(--turq) 16%,transparent)!important;transition:background .3s ease}
+.task.completing .tick{background:var(--turq);border-color:var(--turq);color:var(--lapis);transform:scale(1.12);transition:transform .25s cubic-bezier(.3,1.6,.5,1),background .2s}
+.task.completing .tick .ico{opacity:1;transform:none}
+.task.completing .tx b{color:var(--mist);transition:color .3s}
+.task.collapsing{overflow:hidden;height:0!important;padding-top:0!important;padding-bottom:0!important;opacity:0;border-bottom-width:0!important;transition:height .3s ease,padding .3s ease,opacity .22s ease}
+.task.pop{animation:none!important}
 /* ---- tutarlılık: tek kutu ve yazı ölçüsü ---- */
 .panel,.hcard,.fold,.chainbox,.weekbar,.scard2,.stat,.hedit,.trow{border-radius:var(--r-lg);padding:var(--pad)}
 .fold{padding:0}.fold summary{padding:var(--pad)}.fold .sgrid,.ybox{padding:0 var(--pad) var(--pad)}
@@ -808,33 +819,32 @@ function chainSvg(days=14){
 }
 /* Takip sayfası zinciri: her gün aynı biçimde, birbirine geçmiş bir halka. Kırık günde koparılmış iki yarım halka. */
 function chainLinks(days=14){
-  const step=25, lw=34, hh=22, cy=14, W=(days-1)*step+lw+4, WL=['P','S','Ç','P','C','C','P'];
-  const ring=(x,stroke,extra='')=>`<rect x="${x}" y="${cy-hh/2}" width="${lw}" height="${hh}" rx="${hh/2}" fill="none" stroke="${stroke}" stroke-width="3.8" ${extra}/>`;
-  const st=[], xs=[];
-  for(let i=0;i<days;i++){ const k=addDays(dk(),-(days-1-i)); st.push({k,s:dayState(k),today:k===dk()}); xs.push(2+i*step); }
-  const look=d=>{ const pend=d.today&&d.s!=='full'&&d.s!=='ex';
-    if(d.s==='full') return {c:'url(#chg)'};
-    if(d.s==='ex') return {c:'var(--turq)',x:'stroke-dasharray="5 3"'};
-    if(d.s==='rest') return {c:'var(--lapis3)'};
-    if(pend) return {c:'var(--mist)',x:'stroke-dasharray="4 4" opacity=".75"'};
-    return null; }; // kırık
-  let body='', defs='', labels='';
-  for(let i=0;i<days;i++){
-    const d=st[i], L=look(d), x=xs[i];
-    if(L) body+=ring(x,L.c,L.x||'');
-    else { // kırık: iki yarım halka, uçları birbirinden uzaklaşmış
-      body+=`<path d="M${x+lw/2-3} ${cy-hh/2} H${x+hh/2} A${hh/2} ${hh/2} 0 0 0 ${x+hh/2} ${cy+hh/2} H${x+lw/2-6}" fill="none" stroke="var(--coral)" stroke-width="3" stroke-linecap="round" transform="rotate(-10 ${x+lw/2} ${cy})"/>`
-        +`<path d="M${x+lw/2+6} ${cy-hh/2} H${x+lw-hh/2} A${hh/2} ${hh/2} 0 0 1 ${x+lw-hh/2} ${cy+hh/2} H${x+lw/2+3}" fill="none" stroke="var(--coral)" stroke-width="3" stroke-linecap="round" transform="rotate(10 ${x+lw/2} ${cy})"/>`;
-    }
-    // iç içe geçme: bir önceki halkanın sağ ucunun alt yarısı bu halkanın üstünden geçer
-    if(i>0 && L && look(st[i-1])){ const P=look(st[i-1]);
-      defs+=`<clipPath id="chc${i}"><rect x="${x-2}" y="${cy}" width="${xs[i-1]+lw-x+4}" height="${hh}"/></clipPath>`;
-      body+=`<g clip-path="url(#chc${i})">${ring(xs[i-1],P.c,P.x||'')}</g>`; }
-    const lx=x+lw/2, wd=WL[(kDate(d.k).getDay()+6)%7];
-    labels+= d.today ? `<rect x="${lx-8}" y="${cy+hh/2+5}" width="16" height="15" rx="7.5" class="chl-tbg"/><text x="${lx}" y="${cy+hh/2+15.6}" text-anchor="middle" class="chl t">${wd}</text>`
-      : `<text x="${lx}" y="${cy+hh/2+15.6}" text-anchor="middle" class="chl${(kDate(d.k).getDay()+6)%7===0?' mo':''}">${wd}</text>`;
+  /* Modern zincir: art arda tamamlanan günler tek parça, parlak bir şerit olur; her gün şerit içinde ince bir boğumla
+     ayrılır (halka). Kırık gün şeritte boşluk ve küçük kırmızı nokta, bugün henüz bitmediyse kesik çizgili kapsül. */
+  const cw=26, h=16, cy=12, W=days*cw, WL=['P','S','Ç','P','C','C','P'], st=[];
+  for(let i=0;i<days;i++){ const k=addDays(dk(),-(days-1-i)); st.push({k,s:dayState(k),today:k===dk()}); }
+  const solid=d=>d.s==='full'||d.s==='ex';
+  let body='', labels='', i=0;
+  while(i<days){
+    const d=st[i], x=i*cw;
+    if(solid(d)){ let j=i; while(j+1<days&&solid(st[j+1])) j++;
+      const x0=i*cw+2, x1=(j+1)*cw-2;
+      body+=`<rect x="${x0}" y="${cy-h/2}" width="${x1-x0}" height="${h}" rx="${h/2}" fill="url(#chg)" filter="url(#chglow)"/>`;
+      for(let q=i;q<=j;q++){ if(st[q].s==='ex') body+=`<rect x="${q*cw+(q===i?2:0)}" y="${cy-h/2}" width="${cw-(q===i?2:0)-(q===j?2:0)}" height="${h}" rx="${q===i||q===j?h/2:0}" fill="var(--turq)" opacity=".9"/>`;
+        if(q>i) body+=`<path d="M${q*cw} ${cy-h/2+3}v${h-6}" stroke="var(--lapis2)" stroke-width="2" stroke-linecap="round" opacity=".55"/>`;
+        body+=`<rect x="${q*cw+cw/2-5}" y="${cy-1.5}" width="10" height="3" rx="1.5" fill="#fff" opacity=".28"/>`; }
+      i=j+1; continue; }
+    if(d.today) body+=`<rect class="chtoday" x="${x+3}" y="${cy-h/2+1}" width="${cw-6}" height="${h-2}" rx="${(h-2)/2}" fill="none" stroke="var(--saffron)" stroke-width="2" stroke-dasharray="3 3"/>`;
+    else if(d.s==='rest') body+=`<circle cx="${x+cw/2}" cy="${cy}" r="2.5" fill="var(--lapis3)"/>`;
+    else body+=`<circle cx="${x+cw/2}" cy="${cy}" r="3.6" fill="var(--coral)"/><path d="M${x+4} ${cy}h4M${x+cw-8} ${cy}h4" stroke="var(--coral)" stroke-width="2" stroke-linecap="round" opacity=".45"/>`;
+    i++;
   }
-  return `<svg class="chain2" viewBox="0 0 ${W} ${cy+hh/2+22}" role="img" aria-label="Son ${days} günün zinciri: ${st.filter(d=>d.s==='full').length} tam gün"><defs><linearGradient id="chg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f7d983"/><stop offset=".55" stop-color="#e3a937"/><stop offset="1" stop-color="#b9801c"/></linearGradient>${defs}</defs>${body}${labels}</svg>`;
+  st.forEach((d,q)=>{ const lx=q*cw+cw/2, wd=WL[(kDate(d.k).getDay()+6)%7];
+    labels+= d.today ? `<rect x="${lx-8}" y="${cy+h/2+5}" width="16" height="15" rx="7.5" class="chl-tbg"/><text x="${lx}" y="${cy+h/2+15.6}" text-anchor="middle" class="chl t">${wd}</text>`
+      : `<text x="${lx}" y="${cy+h/2+15.6}" text-anchor="middle" class="chl${(kDate(d.k).getDay()+6)%7===0?' mo':''}">${wd}</text>`; });
+  return `<svg class="chain2" viewBox="0 0 ${W} ${cy+h/2+22}" role="img" aria-label="Son ${days} günün zinciri: ${st.filter(d=>d.s==='full').length} tam gün"><defs>
+    <linearGradient id="chg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f8dc88"/><stop offset=".55" stop-color="#e8b444"/><stop offset="1" stop-color="#c98a1c"/></linearGradient>
+    <filter id="chglow" x="-10%" y="-60%" width="120%" height="220%"><feDropShadow dx="0" dy="1.5" stdDeviation="2.2" flood-color="#e8b444" flood-opacity=".35"/></filter></defs>${body}${labels}</svg>`;
 }
 function chainHero(){
   const ch=chainNow(), best=chainBest(), m=dk().slice(0,7), monthFull=Object.keys(S.days).filter(k=>k.startsWith(m)&&k<=dk()&&dayState(k)==='full').length;
@@ -892,8 +902,20 @@ function lanternSvg(p){ // p: 0..1 günlük ilerleme
 let justDone='', wasLinked=null;
 function completeTask(id,n=1){ justDone=id; setTimeout(()=>{ justDone=''; },900);
   const t=S.tasks.find(x=>x.id===id); if(!t) return; const r=rec(); if(r.done[id]) return;
-  r.done[id]={n,t:Date.now()}; vib(12); save(); render();
+  r.done[id]={n,t:Date.now()}; if(!animBusy.size) vib(12); save(); render();
   const T=todays(); if(T.length && T.every(x=>isDone(x,dk()))) toast('Bugünkü görevlerin tamam.');
+}
+/* İşaretleme animasyonu: önce satırda tik dolar ve satır hafifçe renklenir, sonra satır yumuşakça kapanır;
+   ardından görev kaydedilip liste yeniden çizilir (tamamlananlara geçer). */
+let animBusy=new Set();
+function animateDone(id,cb){
+  const el=document.querySelector(`.tcard > .task[data-id="${CSS.escape(id)}"]`);
+  const reduce=(()=>{ try{ return matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){ return false; } })();
+  if(!el||reduce||document.documentElement.classList.contains('nofx')) return cb();
+  if(animBusy.has(id)) return; animBusy.add(id); vib(12);
+  el.classList.add('completing');
+  setTimeout(()=>{ el.style.height=el.offsetHeight+'px'; void el.offsetHeight; el.classList.add('collapsing'); },420);
+  setTimeout(()=>{ animBusy.delete(id); cb(); },420+300);
 }
 function undoTask(id){ const r=rec(); if(!r.done[id]) return; delete r.done[id]; if(r.prog) delete r.prog[id]; save(); render(); }
 function toggleTask(id){
@@ -908,7 +930,7 @@ function toggleTask(id){
   if(t.type==='timer') return openTimer(id);
   if(t.type==='pages') return openPages(id);
   if(t.type==='hatim') return openHatim(id);
-  completeTask(id);
+  animateDone(id,()=>completeTask(id));
 }
 
 /* ---------- zikirmatik ---------- */
@@ -1026,7 +1048,7 @@ function savePages(id,n){
 }
 
 /* ================= BULUT EŞİTLEME (Supabase, Emanet ile aynı hesap) ================= */
-const CFG=window.SEFER_CONFIG||{}, VER='68';
+const CFG=window.SEFER_CONFIG||{}, VER='69';
 const DIL_ENABLED=false; // İngilizce rehberi şimdilik kapalı; veriler (S.lang) ve kod duruyor
 function dilOff(){ if(DIL_ENABLED) return; const n=S.tasks.length; S.tasks=S.tasks.filter(t=>t.type!=='lang'); if(S.tasks.length!==n) save(); if(tab==='dil') tab='bugun'; }
 let sb=null, sbUser=null, cloudMsg='', saveT=null, saving=false, pendingSave=false, lastPull=0, authMode='in';
