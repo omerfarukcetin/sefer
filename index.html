@@ -572,6 +572,8 @@ button.chainline{width:100%;text-align:left;font:inherit;color:inherit;cursor:po
 .task.completing .tx b{color:var(--mist);transition:color .3s}
 .task.collapsing{overflow:hidden;height:0!important;padding-top:0!important;padding-bottom:0!important;opacity:0;border-bottom-width:0!important;transition:height .3s ease,padding .3s ease,opacity .22s ease}
 .task.pop{animation:none!important}
+.vb:disabled{opacity:.35;cursor:default}
+.task.namaz{border-bottom:1px solid var(--lapis3)}
 /* ---- tutarlılık: tek kutu ve yazı ölçüsü ---- */
 .panel,.hcard,.fold,.chainbox,.weekbar,.scard2,.stat,.hedit,.trow{border-radius:var(--r-lg);padding:var(--pad)}
 .fold{padding:0}.fold summary{padding:var(--pad)}.fold .sgrid,.ybox{padding:0 var(--pad) var(--pad)}
@@ -1048,7 +1050,7 @@ function savePages(id,n){
 }
 
 /* ================= BULUT EŞİTLEME (Supabase, Emanet ile aynı hesap) ================= */
-const CFG=window.SEFER_CONFIG||{}, VER='69';
+const CFG=window.SEFER_CONFIG||{}, VER='70';
 const DIL_ENABLED=false; // İngilizce rehberi şimdilik kapalı; veriler (S.lang) ve kod duruyor
 function dilOff(){ if(DIL_ENABLED) return; const n=S.tasks.length; S.tasks=S.tasks.filter(t=>t.type!=='lang'); if(S.tasks.length!==n) save(); if(tab==='dil') tab='bugun'; }
 let sb=null, sbUser=null, cloudMsg='', saveT=null, saving=false, pendingSave=false, lastPull=0, authMode='in';
@@ -1330,7 +1332,7 @@ const atOf = (k,hm) => { const [y,m,d]=k.split('-').map(Number), [h,mi]=hm.split
 const NMZ_END={sabah:'gunes',ogle:'ikindi',ikindi:'aksam',aksam:'yatsi',yatsi:'imsak'};
 const dot = hm => String(hm||'').replace(':','.');
 const prayed = (k,id) => !!(S.days[k]&&S.days[k].nmz&&S.days[k].nmz[id]);
-function markPrayed(id,k=dk(),val){ const r=S.days[k]=S.days[k]||{done:{}}; r.nmz=r.nmz||{}; r.nmz[id]= val==null ? !r.nmz[id] : val; save(); render(); const l=(NAMAZ.find(x=>x[0]===id)||[])[1]||''; toast(r.nmz[id]?`${l} kılındı olarak işaretlendi.`:`${l} işareti kaldırıldı.`); }
+function markPrayed(id,k=dk(),val,quiet){ const r=S.days[k]=S.days[k]||{done:{}}; r.nmz=r.nmz||{}; r.nmz[id]= val==null ? !r.nmz[id] : val; save(); render(); const l=(NAMAZ.find(x=>x[0]===id)||[])[1]||''; if(quiet){ vib(12); return; } toast(r.nmz[id]?`${l} kılındı olarak işaretlendi.`:`${l} işareti kaldırıldı.`); }
 const nmz = () => Object.assign({on:false,list:NAMAZ.map(x=>x[0]),enter:true,before:10}, S.nmz||{});
 function nmzQueue(k,now){
   const c=nmz(), out=[]; if(!c.on) return out; const v=vakitOf(k); if(!v) return out;
@@ -1701,6 +1703,18 @@ function chainMenu(){ const k=dk(), left=excuseLeft();
       :`<p class="muted" style="margin:4px 0 10px">Hastalık, yolculuk gibi günlerde bugünü mazeretli sayarsan serilerin bozulmaz. Bu ay ${Math.max(0,left)} hakkın kaldı.</p><button class="btn" data-act="excuse" data-id="${k}" ${left<=0?'disabled':''}>Bugün mazeretliyim</button>`}</div>
     <button class="linkb" style="margin-top:14px;font-size:var(--t-meta)" data-act="gotakip">Takvimi ve geçmişi gör</button>`); }
 let doneOpen=false, vOpen=false;
+/* Namaz satırı: görev değil, zincire sayılmaz; kıldım işaretini tek dokunuşla verir */
+function namazRow(vnow){
+  const k=dk(), v=vakitOf(k), now=new Date(), hm=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+  const late=k<dk(new Date()); // gün sınırından sonra (gece) önceki günün bütün vakitleri girmiştir
+  const L=[['sabah','Sabah','imsak'],['ogle','Öğle','ogle'],['ikindi','İkindi','ikindi'],['aksam','Akşam','aksam'],['yatsi','Yatsı','yatsi']];
+  const dn=L.filter(([id])=>prayed(k,id)).length;
+  return `<div class="task multi namaz ${L.some(([id])=>id===justPrayed)?'pop':''}"><span class="medal" style="--c:var(--turq)">${ico('huzur')}</span>
+    <span class="tx"><b>Namaz</b><small>${dn} / 5 kılındı</small></span>
+    <span class="vbtns">${L.map(([id,lb,vk])=>{ const d=prayed(k,id), open=late||!v||v[vk]<=hm, nowv=vnow===id||(id==='sabah'&&vnow==='sabah');
+      return `<button class="vb ${d?'on':''} ${!d&&open&&nowv?'now':''} ${id===justPrayed?'pop':''}" data-act="nmzpr" data-id="${id}" ${!d&&!open?'disabled':''} aria-pressed="${d}" aria-label="${lb} namazı ${d?'kılındı':'kılınmadı'}">${d?ico('check'):''}<span>${lb}</span></button>`; }).join('')}</span></div>`;
+}
+let justPrayed='';
 function multiRow(L,vnow){
   const k=dk(), dn=L.filter(t=>isDone(t,k)).length, all=dn===L.length, t0=L[0];
   return `<div class="task multi ${all?'done':''} ${L.some(t=>t.id===justDone)?'pop':''}"><span class="medal" style="--c:${col(t0)}">${ico(t0.icon)}</span>
@@ -1723,10 +1737,10 @@ function vBugun(){
   const byName=new Map(); VT.slice().sort((a,b)=>vord(a.vakit)-vord(b.vakit)).forEach(t=>{ const key=t.name.trim().toLowerCase(); byName.set(key,[...(byName.get(key)||[]),t]); });
   const vitems=[]; byName.forEach(L=>{ if(L.length>1) vitems.push({multi:L, done:L.every(t=>isDone(t,k))}); else vitems.push({t:L[0], done:isDone(L[0],k)}); });
   const rowOf = it => it.multi ? multiRow(it.multi,vnow) : taskRow(it.t);
-  const grp = (title,items,first) => { const open=items.filter(it=>!it.done); if(!open.length) return '';
-    return `<div class="group ${first?'first':''} g-${title==='İbadet'?'ib':'ge'}"><div class="ghead"><h3>${title}</h3><small>${open.length} kaldı</small></div><div class="tcard">${open.map(rowOf).join('')}</div></div>`; };
+  const grp = (title,items,first,pre='') => { const open=items.filter(it=>!it.done); if(!open.length&&!pre) return '';
+    return `<div class="group ${first?'first':''} g-${title==='İbadet'?'ib':'ge'}"><div class="ghead"><h3>${title}</h3><small>${open.length?open.length+' kaldı':'tamam'}</small></div><div class="tcard">${pre}${open.map(rowOf).join('')}</div></div>`; };
   const asIt = L => L.map(t=>({t,done:isDone(t,k)}));
-  const gV='', gD=grp('İbadet',[...vitems,...asIt(dini)],true), gG=grp('Gelişim',asIt(diger),!gD);
+  const gV='', gD=grp('İbadet',[...vitems,...asIt(dini)],true,namazRow(vnow)), gG=grp('Gelişim',asIt(diger),!gD);
   const doneItems=[...vitems,...asIt(dini),...asIt(diger)].filter(it=>it.done);
   const ex=excuseBox(), left2=excuseLeft(), barP=need?Math.min(100,n/need*100):100;
   const exToday=excused(k);
@@ -2019,7 +2033,7 @@ const ACT={
     save(); render(); editTask(id); toast(n?`${n} vakte daha eklendi.`:'Bu görev zaten bütün vakitlerde var.'); },
   cpct:v=>{ S.chainPct=+v; save(); render(); },
   nmzv:v=>{ const c=nmz(), l=c.list.includes(v)?c.list.filter(x=>x!==v):[...c.list,v]; S.nmz={...c,list:NAMAZ.map(x=>x[0]).filter(x=>l.includes(x))}; save(); render(); },
-  nmzpr:v=>markPrayed(v),
+  nmzpr:v=>{ justPrayed=v; setTimeout(()=>{ justPrayed=''; },900); markPrayed(v,dk(),undefined,true); },
   rapor:()=>openRapor(),
   rapwk:k=>openRapor(k),
   sradd:id=>addSure(id),
