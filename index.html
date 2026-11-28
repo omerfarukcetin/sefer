@@ -560,6 +560,7 @@ button.chainline{width:100%;text-align:left;font:inherit;color:inherit;cursor:po
 .ch-leg{display:flex;gap:14px;margin-top:10px;font-size:var(--t-tiny);color:var(--mist);flex-wrap:wrap}
 .ch-leg span{display:inline-flex;align-items:center;gap:5px}.lg{display:inline-block;width:16px;height:9px;border-radius:5px;border:2.4px solid}
 .lg.f{border-color:#e3a937}.lg.e{border-color:var(--turq);border-style:dashed}.lg.b{border-color:var(--coral);border-left-color:transparent;border-right-color:transparent}.lg.td{border-color:var(--mist);border-style:dashed}
+.rapnav{display:flex;align-items:center;gap:10px;margin-top:8px}.rapnav>div{flex:1;text-align:center}.rapnav b{display:block;font-size:var(--t-item)}.rapnav small{color:var(--mist);font-size:var(--t-meta)}
 /* ---- tutarlılık: tek kutu ve yazı ölçüsü ---- */
 .panel,.hcard,.fold,.chainbox,.weekbar,.scard2,.stat,.hedit,.trow{border-radius:var(--r-lg);padding:var(--pad)}
 .fold{padding:0}.fold summary{padding:var(--pad)}.fold .sgrid,.ybox{padding:0 var(--pad) var(--pad)}
@@ -1025,7 +1026,7 @@ function savePages(id,n){
 }
 
 /* ================= BULUT EŞİTLEME (Supabase, Emanet ile aynı hesap) ================= */
-const CFG=window.SEFER_CONFIG||{}, VER='67';
+const CFG=window.SEFER_CONFIG||{}, VER='68';
 const DIL_ENABLED=false; // İngilizce rehberi şimdilik kapalı; veriler (S.lang) ve kod duruyor
 function dilOff(){ if(DIL_ENABLED) return; const n=S.tasks.length; S.tasks=S.tasks.filter(t=>t.type!=='lang'); if(S.tasks.length!==n) save(); if(tab==='dil') tab='bugun'; }
 let sb=null, sbUser=null, cloudMsg='', saveT=null, saving=false, pendingSave=false, lastPull=0, authMode='in';
@@ -1360,9 +1361,12 @@ function rapText(end){
   const lines=items.map(g=>`• ${g.name}: ${gLine(g)}${g.extra?` (${g.extra})`:''}`);
   return `${c.title} (${trDate(a)} – ${trDate(b)})\n${lines.length?lines.join('\n'):'Bu hafta kayıt yok.'}`;
 }
-function openRapor(){
-  const txt=rapText();
-  modal(`<h3>Dua grubu raporu</h3><p class="muted" style="margin:4px 0 10px">Son raporundan bugüne kadar okudukların. Kopyalayıp gruba gönderebilirsin.</p>
+function openRapor(end){
+  end=end||dk(); const [a,b]=rapRange(end), cur=b===dk(), txt=rapText(end), prevEnd=addDays(a,-1);
+  let nextEnd=addDays(b,7); if(nextEnd>dk()) nextEnd=dk();
+  modal(`<h3>Dua grubu raporu</h3>
+    <div class="rapnav"><button class="btn ghost cnav" data-act="rapwk" data-id="${prevEnd}" aria-label="Önceki hafta">‹</button><div><b>${trDate(a)} – ${trDate(b)}</b><small>${cur?'Bu hafta, bugüne kadar':'Geçmiş hafta'}</small></div><button class="btn ghost cnav" data-act="rapwk" data-id="${nextEnd}" aria-label="Sonraki hafta" ${cur?'disabled':''}>›</button></div>
+    <p class="muted" style="margin:4px 0 10px">${cur?'Son raporundan bugüne kadar okudukların. Kopyalayıp gruba gönderebilirsin.':'Bu haftanın raporu. Geçmiş haftaları oklarla gezebilirsin.'}</p>
     <textarea id="raptxt" rows="${Math.min(14,txt.split('\n').length+2)}" style="font-size:var(--t-body);line-height:1.6">${esc(txt)}</textarea>
     <div style="display:flex;gap:8px;margin-top:10px"><button class="btn turq" data-act="rapshare">Paylaş</button><button class="btn" data-act="rapcopy">Kopyala</button></div>
     <p class="muted" style="font-size:var(--t-meta);margin-top:10px">Göndermeden önce metni burada düzenleyebilirsin. Listede olacak görevleri ve gün ile saati Ayarlar → Hatırlatma → Dua grubu raporu'ndan değiştirirsin.</p>`);
@@ -1995,6 +1999,7 @@ const ACT={
   nmzv:v=>{ const c=nmz(), l=c.list.includes(v)?c.list.filter(x=>x!==v):[...c.list,v]; S.nmz={...c,list:NAMAZ.map(x=>x[0]).filter(x=>l.includes(x))}; save(); render(); },
   nmzpr:v=>markPrayed(v),
   rapor:()=>openRapor(),
+  rapwk:k=>openRapor(k),
   sradd:id=>addSure(id),
   srquick:v=>{ const i=v.indexOf('|'); addSure(v.slice(0,i),v.slice(i+1)); },
   srdel:v=>{ const [id,i]=v.split('|'), r=rec(), l=(r.sure||{})[id]||[]; l.splice(+i,1); if(!l.length&&r.done[id]&&!r.done[id].n&&!((r.prog||{})[id])) delete r.done[id]; save(); render(); openPages(id); },
